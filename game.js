@@ -459,7 +459,7 @@ function evaluateMiningInteraction(player, tileId) {
     return { canDamage: true, canDrop: true, effMult: eff, msg: "Harvestable" };
   }
   if (cap.tier < reqTier - 1) {
-    return { canDamage: false, canDrop: false, effMult: 0.0, msg: "DEFLECTED (Tool Too Weak)" };
+    return { canDamage: false, canDrop: false, effMult: 0.0, msg: "DEFLECTED (Tool Weak)" };
   }
   if (cap.type === "hand" && mohs >= 4.0) {
     return { canDamage: false, canDrop: false, effMult: 0.0, msg: "DEFLECTED (Hand Abrasion)" };
@@ -472,10 +472,10 @@ function evaluateMiningInteraction(player, tileId) {
   else if (reqTool === "Axe" && cap.type === "axe") isProperTool = true;
 
   if (!isProperTool) {
-    return { canDamage: true, canDrop: false, effMult: 0.25, msg: "Inefficient Tool (No Drop)" };
+    return { canDamage: true, canDrop: false, effMult: 0.25, msg: "Wrong Tool (No Drop)" };
   }
   if (cap.tier < reqTier) {
-    return { canDamage: true, canDrop: false, effMult: 0.40, msg: "Chipping (Tier Low: No Drop)" };
+    return { canDamage: true, canDrop: false, effMult: 0.40, msg: "Chipping (Tier Low)" };
   }
   return { canDamage: true, canDrop: true, effMult: cap.mult, msg: "Harvestable" };
 }
@@ -591,6 +591,15 @@ class PixelArtGenerator {
     this._bakeAll();
   }
 
+  _hexToRgb(hex) {
+    const c = hex.replace("#", "");
+    return {
+      r: parseInt(c.substring(0, 2), 16),
+      g: parseInt(c.substring(2, 4), 16),
+      b: parseInt(c.substring(4, 6), 16)
+    };
+  }
+
   _bakeAll() {
     for (const [bidStr, data] of Object.entries(BLOCK_DATA)) {
       const bid = Number(bidStr);
@@ -599,31 +608,146 @@ class PixelArtGenerator {
       cvs.height = TILE_SIZE;
       const ctx = cvs.getContext("2d");
 
+      const baseRgb = this._hexToRgb(data.color);
+      const hi = `rgb(${Math.min(255, Math.floor(baseRgb.r * 1.35) + 20)}, ${Math.min(255, Math.floor(baseRgb.g * 1.35) + 20)}, ${Math.min(255, Math.floor(baseRgb.b * 1.35) + 20)})`;
+      const mid = `rgb(${Math.floor(baseRgb.r * 0.85)}, ${Math.floor(baseRgb.g * 0.85)}, ${Math.floor(baseRgb.b * 0.85)})`;
+      const dark = `rgb(${Math.floor(baseRgb.r * 0.60)}, ${Math.floor(baseRgb.g * 0.60)}, ${Math.floor(baseRgb.b * 0.60)})`;
+
       ctx.fillStyle = data.color;
       ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
 
       if (bid === GRASS) {
         ctx.fillStyle = "#6e4628";
         ctx.fillRect(0, 8, TILE_SIZE, TILE_SIZE - 8);
-        ctx.fillStyle = "#4b9128";
-        ctx.fillRect(0, 0, TILE_SIZE, 8);
+        for (let x = 0; x < TILE_SIZE; x++) {
+          for (let y = 8; y < TILE_SIZE; y++) {
+            if ((x * 7 + y * 13) % 9 === 0) { ctx.fillStyle = "#55321e"; ctx.fillRect(x, y, 1, 1); }
+            else if ((x * 11 + y * 5) % 8 === 0) { ctx.fillStyle = "#875a37"; ctx.fillRect(x, y, 1, 1); }
+          }
+        }
+        for (let x = 0; x < TILE_SIZE; x++) {
+          const rootLen = 6 + (x * 5 % 5);
+          for (let y = 0; y < rootLen; y++) {
+            ctx.fillStyle = (y < 2) ? "#73cd32" : (y < 4) ? "#4b9128" : "#2d6e14";
+            ctx.fillRect(x, y, 1, 1);
+          }
+        }
       } else if (bid === CHEST) {
-        ctx.fillStyle = "#643c1e";
+        ctx.fillStyle = "#8c5a2d";
+        ctx.fillRect(2, 2, 28, 28);
+        ctx.strokeStyle = "#503219";
+        ctx.lineWidth = 2;
         ctx.strokeRect(2, 2, 28, 28);
+        ctx.beginPath();
+        ctx.moveTo(2, 12);
+        ctx.lineTo(29, 12);
+        ctx.stroke();
         ctx.fillStyle = "#d7af28";
         ctx.fillRect(14, 10, 4, 6);
+      } else if ([DIRT, MOON_REGOLITH, MARTIAN_SOIL, TITAN_METHANE_CRUST].includes(bid)) {
+        for (let x = 0; x < TILE_SIZE; x++) {
+          for (let y = 0; y < TILE_SIZE; y++) {
+            if ((x * 5 + y * 13) % 7 === 0) { ctx.fillStyle = dark; ctx.fillRect(x, y, 1, 1); }
+            else if ((x * 11 + y * 7) % 6 === 0) { ctx.fillStyle = hi; ctx.fillRect(x, y, 1, 1); }
+          }
+        }
+      } else if (data.name.includes("Ore") || data.name.includes("Crystal") || data.name.includes("Shard")) {
+        ctx.fillStyle = "#73737a";
+        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        for (let x = 0; x < TILE_SIZE; x++) {
+          for (let y = 0; y < TILE_SIZE; y++) {
+            if ((x ^ y) % 6 === 0) { ctx.fillStyle = "#5c5c62"; ctx.fillRect(x, y, 1, 1); }
+          }
+        }
+        const nodules = [[9, 9, 5], [21, 10, 4], [12, 21, 6], [24, 22, 4]];
+        for (const [nx, ny, nr] of nodules) {
+          ctx.fillStyle = dark;
+          ctx.beginPath(); ctx.arc(nx, ny, nr + 1, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = data.color;
+          ctx.beginPath(); ctx.arc(nx, ny, nr, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = hi;
+          ctx.fillRect(nx - 1, ny - 2, 2, 2);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(nx, ny - 1, 1, 1);
+        }
+      } else if (bid === WOOD) {
+        ctx.fillStyle = "#7d502d";
+        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        for (let x = 0; x < TILE_SIZE; x += 5) {
+          ctx.fillStyle = "#5f3c23";
+          ctx.fillRect(x, 0, 2, TILE_SIZE);
+          ctx.fillStyle = "#915f37";
+          ctx.fillRect(x + 2, 0, 1, TILE_SIZE);
+        }
+      } else if (bid === PLANKS) {
+        ctx.fillStyle = "#af7d46";
+        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        for (const y of [9, 19, 29]) {
+          ctx.fillStyle = "#644123";
+          ctx.fillRect(0, y, TILE_SIZE, 2);
+          ctx.fillStyle = "#d7a569";
+          ctx.fillRect(0, y + 1, TILE_SIZE, 1);
+        }
+        ctx.fillStyle = "#3c2814";
+        ctx.fillRect(7, 5, 2, 2);
+        ctx.fillRect(24, 15, 2, 2);
+        ctx.fillRect(7, 25, 2, 2);
+      } else if (bid === STONE_BRICKS || bid === BASALT_BRICKS) {
+        ctx.fillStyle = (bid === STONE_BRICKS) ? "#828287" : "#32323c";
+        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        ctx.strokeStyle = (bid === STONE_BRICKS) ? "#4b4b50" : "#191923";
+        ctx.lineWidth = 2;
+        for (const y of [10, 21, 31]) {
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(TILE_SIZE, y); ctx.stroke();
+        }
+        ctx.strokeRect(0, 0, 16, 10);
+        ctx.strokeRect(8, 10, 16, 11);
+      } else if (bid === GLASS || bid === CRYSTAL_GLASS) {
+        ctx.fillStyle = (bid === CRYSTAL_GLASS) ? "rgba(190, 240, 255, 0.45)" : "rgba(175, 225, 240, 0.35)";
+        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(1, 1, 30, 30);
+        ctx.beginPath();
+        ctx.moveTo(5, 5); ctx.lineTo(14, 14);
+        ctx.moveTo(18, 18); ctx.lineTo(26, 26);
+        ctx.stroke();
       } else if (bid === TORCH) {
         ctx.clearRect(0, 0, TILE_SIZE, TILE_SIZE);
         ctx.fillStyle = "#7d502d";
         ctx.fillRect(14, 12, 5, 17);
         ctx.fillStyle = "#ffb428";
-        ctx.beginPath();
-        ctx.arc(16, 9, 6, 0, Math.PI * 2);
-        ctx.fill();
-      } else if (bid === GLASS || bid === CRYSTAL_GLASS) {
-        ctx.strokeStyle = "rgba(255,255,255,0.7)";
+        ctx.beginPath(); ctx.arc(16, 9, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#ff500a";
+        ctx.beginPath(); ctx.arc(16, 9, 3, 0, Math.PI * 2); ctx.fill();
+      } else if (bid === LAVA) {
+        ctx.fillStyle = "#eb460a";
+        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        ctx.fillStyle = "#ffaf1e";
+        ctx.fillRect(0, 0, TILE_SIZE, 8);
+        ctx.fillStyle = "#ffeb78";
+        ctx.fillRect(4, 3, 9, 3);
+        ctx.fillRect(18, 3, 8, 3);
+      } else {
+        for (let x = 0; x < TILE_SIZE; x++) {
+          for (let y = 0; y < TILE_SIZE; y++) {
+            if ((x ^ y) % 5 === 0) { ctx.fillStyle = mid; ctx.fillRect(x, y, 1, 1); }
+            else if ((x * 3 + y * 7) % 11 === 0) { ctx.fillStyle = dark; ctx.fillRect(x, y, 1, 1); }
+          }
+        }
+      }
+
+      // Universal 3D Edge Bevel
+      if (![AIR, LAVA, TORCH, GLASS, CRYSTAL_GLASS].includes(bid)) {
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
         ctx.lineWidth = 2;
-        ctx.strokeRect(2, 2, 28, 28);
+        ctx.beginPath();
+        ctx.moveTo(0, TILE_SIZE - 1); ctx.lineTo(0, 0); ctx.lineTo(TILE_SIZE - 1, 0);
+        ctx.stroke();
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.45)";
+        ctx.beginPath();
+        ctx.moveTo(TILE_SIZE - 1, 0); ctx.lineTo(TILE_SIZE - 1, TILE_SIZE - 1); ctx.lineTo(0, TILE_SIZE - 1);
+        ctx.stroke();
       }
 
       this.tiles[bid] = cvs;
@@ -794,325 +918,6 @@ class InventoryManager {
 
   getSelected() {
     return this.slots[this.selectedHotbar];
-  }
-}
-
-// ==========================================
-// WORLD GENERATOR & LIQUIDS
-// ==========================================
-class World {
-  constructor(width, height) {
-    this.width = width;
-    this.height = height;
-    this.tiles = Array.from({ length: width }, () => new Array(height).fill(AIR));
-    this.damage_map = new Map();
-    this.fluid_tick = 0;
-    this.current_planet = "Earth";
-  }
-
-  _spawnVein(oreId, minY, maxY, count, size, validHosts) {
-    for (let i = 0; i < count; i++) {
-      let vx = 3 + Math.floor(Math.random() * (this.width - 6));
-      let vy = minY + Math.floor(Math.random() * (maxY - minY));
-      for (let s = 0; s < size; s++) {
-        if (vx >= 0 && vx < this.width && vy >= 0 && vy < this.height) {
-          if (validHosts.includes(this.tiles[vx][vy])) {
-            this.tiles[vx][vy] = oreId;
-          }
-        }
-        vx += (Math.random() < 0.5 ? -1 : 1);
-        vy += (Math.random() < 0.5 ? -1 : 1);
-      }
-    }
-  }
-
-  _carveCaves(count = 16, length = 55, minY = 35, maxY = 135) {
-    for (let c = 0; c < count; c++) {
-      let cx = 10 + Math.floor(Math.random() * (this.width - 20));
-      let cy = minY + Math.floor(Math.random() * (maxY - minY));
-      for (let l = 0; l < length; l++) {
-        const radius = Math.random() < 0.4 ? 1 : 2;
-        for (let dx = -radius; dx <= radius; dx++) {
-          for (let dy = -radius; dy <= radius; dy++) {
-            const tx = cx + dx;
-            const ty = cy + dy;
-            if (tx >= 1 && tx < this.width - 1 && ty >= minY && ty < this.height - 2) {
-              if (![INNER_CORE_METAL, CORE_CRYSTAL].includes(this.tiles[tx][ty])) {
-                this.tiles[tx][ty] = AIR;
-              }
-            }
-          }
-        }
-        cx += Math.floor(Math.random() * 3) - 1;
-        cy += Math.floor(Math.random() * 3) - 1;
-      }
-    }
-  }
-
-  _spawnStructures(count = 8, minY = 35, maxY = 125) {
-    for (let i = 0; i < count; i++) {
-      const rx = 10 + Math.floor(Math.random() * (this.width - 24));
-      const ry = minY + Math.floor(Math.random() * (maxY - minY));
-      const w = 7 + Math.floor(Math.random() * 5);
-      const h = 5 + Math.floor(Math.random() * 3);
-
-      const stType = ["ancient_shrine", "abandoned_lab", "dungeon_room"][Math.floor(Math.random() * 3)];
-      const wallBlock = (stType === "ancient_shrine") ? MARBLE_BLOCK : (stType === "abandoned_lab") ? TECH_PLATING : STONE_BRICKS;
-      const pillarBlock = (stType === "ancient_shrine") ? STONE_PILLAR : (stType === "abandoned_lab") ? IRON_BARS : BASALT_BRICKS;
-      const lightBlock = (stType === "ancient_shrine") ? LANTERN : (stType === "abandoned_lab") ? NEON_LAMP : TORCH;
-
-      for (let dx = 0; dx < w; dx++) {
-        for (let dy = 0; dy < h; dy++) {
-          const tx = rx + dx;
-          const ty = ry + dy;
-          if (tx >= 0 && tx < this.width && ty >= 0 && ty < this.height) {
-            if (dx === 0 || dx === w - 1 || dy === 0 || dy === h - 1) {
-              this.tiles[tx][ty] = wallBlock;
-            } else {
-              this.tiles[tx][ty] = AIR;
-            }
-          }
-        }
-      }
-
-      this.tiles[rx + Math.floor(w / 2)][ry + 1] = lightBlock;
-      if (w >= 8) {
-        for (let dy = 1; dy < h - 1; dy++) {
-          this.tiles[rx + 2][ry + dy] = pillarBlock;
-          this.tiles[rx + w - 3][ry + dy] = pillarBlock;
-        }
-      }
-
-      const floorY = ry + h - 2;
-      const midX = rx + Math.floor(w / 2);
-      this.tiles[midX][floorY] = WORKBENCH;
-      this.tiles[midX - 1][floorY] = WOOD_CHAIR;
-      this.tiles[midX + 1][floorY] = CHEST;
-    }
-  }
-
-  generate(planetName = "Earth") {
-    this.current_planet = planetName;
-    this.damage_map.clear();
-    this.tiles = Array.from({ length: this.width }, () => new Array(this.height).fill(AIR));
-
-    if (planetName === "Earth") {
-      this._generateEarth();
-    } else {
-      this._generateExtraterrestrial(planetName);
-    }
-  }
-
-  _generateEarth() {
-    const heights = [];
-    for (let x = 0; x < this.width; x++) {
-      const h = Math.floor(CRUST_SURFACE + Math.sin(x * 0.12) * 5 + Math.sin(x * 0.04) * 7);
-      heights.push(h);
-    }
-
-    for (let x = 0; x < this.width; x++) {
-      const g = heights[x];
-      for (let y = g; y < this.height; y++) {
-        const noise = Math.floor(Math.sin(x * 0.4 + y * 0.2) * 2.5);
-        if (y === g) this.tiles[x][y] = GRASS;
-        else if (y < g + 5) this.tiles[x][y] = DIRT;
-        else if (y < CRUST_BOTTOM + noise) this.tiles[x][y] = STONE;
-        else if (y < UPPER_MANTLE_BOTTOM + noise) this.tiles[x][y] = (x + y) % 3 !== 0 ? PERIDOTITE : BASALT;
-        else if (y < LOWER_MANTLE_BOTTOM + noise) this.tiles[x][y] = ((x ^ y) % 4 === 0) ? MAGMA_STONE : BASALT;
-        else if (y < OUTER_CORE_BOTTOM + noise) this.tiles[x][y] = ((x + y) % 2 === 0) ? MOLTEN_CORE : MAGMA_STONE;
-        else this.tiles[x][y] = (Math.random() < 0.22) ? CORE_CRYSTAL : INNER_CORE_METAL;
-      }
-    }
-
-    this._carveCaves(16, 55, 35, 135);
-    this._spawnVein(COAL_ORE, 30, 80, 45, 10, [STONE, DIRT]);
-    this._spawnVein(IRON_ORE, 35, 90, 36, 8, [STONE, BASALT]);
-    this._spawnVein(GOLD_ORE, 45, 105, 24, 7, [STONE, PERIDOTITE]);
-    this._spawnVein(DIAMOND_ORE, 55, 115, 18, 6, [PERIDOTITE, BASALT]);
-    this._spawnVein(OBSIDIAN, 70, 130, 20, 9, [BASALT, MAGMA_STONE]);
-    this._spawnVein(LAVA, 85, 140, 15, 11, [MAGMA_STONE, MOLTEN_CORE, AIR]);
-    this._spawnStructures(9, 38, 115);
-
-    for (let x = 2; x < this.width - 3; x++) {
-      const g = heights[x];
-      if (x % 6 === 3 && g > 10 && this.tiles[x][g] === GRASS) {
-        const trunk = 4 + Math.floor(Math.random() * 3);
-        for (let th = 1; th <= trunk; th++) this.tiles[x][g - th] = WOOD;
-        for (let lx = x - 2; lx <= x + 2; lx++) {
-          for (let ly = g - trunk - 2; ly <= g - trunk; ly++) {
-            if (lx >= 0 && lx < this.width && ly >= 0 && ly < this.height && this.tiles[lx][ly] === AIR) {
-              this.tiles[lx][ly] = LEAVES;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  _generateExtraterrestrial(pName) {
-    const pdata = PLANET_DATA[pName] || PLANET_DATA["Moon"];
-    const surfBid = pdata.surface_block;
-    const baseBid = pdata.base_block;
-    const oreBid = pdata.ore_block;
-
-    const heights = [];
-    for (let x = 0; x < this.width; x++) {
-      heights.push(Math.floor(CRUST_SURFACE + Math.sin(x * 0.18) * 6 + Math.cos(x * 0.05) * 5));
-    }
-
-    for (let x = 0; x < this.width; x++) {
-      const g = heights[x];
-      for (let y = g; y < this.height; y++) {
-        if (y < g + 4) this.tiles[x][y] = surfBid;
-        else this.tiles[x][y] = baseBid;
-      }
-    }
-
-    this._carveCaves(14, 45, 35, 140);
-    this._spawnVein(oreBid, 35, 140, 40, 9, [baseBid, surfBid]);
-    this._spawnVein(DIAMOND_ORE, 55, 145, 16, 6, [baseBid]);
-    this._spawnStructures(6, 36, 120);
-  }
-
-  getTile(x, y) {
-    if (x >= 0 && x < this.width && y >= 0 && y < this.height) return this.tiles[x][y];
-    return STONE;
-  }
-
-  setTile(x, y, tile) {
-    if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
-      this.tiles[x][y] = tile;
-      this.damage_map.delete(`${x},${y}`);
-    }
-  }
-
-  updateLiquids(particles, sound) {
-    this.fluid_tick++;
-    if (this.fluid_tick % 8 !== 0) return;
-
-    for (let y = this.height - 2; y >= 1; y--) {
-      for (let x = 1; x < this.width - 1; x++) {
-        if (this.tiles[x][y] === LAVA) {
-          for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
-            const nb = this.getTile(nx, ny);
-            if ([WOOD, LEAVES, PLANKS, BOOKSHELF, WORKBENCH, WOOD_TABLE, WOOD_CHAIR].includes(nb)) {
-              if (Math.random() < 0.35) {
-                this.setTile(nx, ny, AIR);
-                sound.play("burn");
-              }
-            }
-          }
-
-          if (this.tiles[x][y + 1] === AIR) {
-            this.tiles[x][y + 1] = LAVA;
-            this.tiles[x][y] = AIR;
-          } else if (this.tiles[x - 1][y] === AIR) {
-            this.tiles[x - 1][y] = LAVA;
-            this.tiles[x][y] = AIR;
-          } else if (this.tiles[x + 1][y] === AIR) {
-            this.tiles[x + 1][y] = LAVA;
-            this.tiles[x][y] = AIR;
-          }
-        }
-      }
-    }
-  }
-
-  static getLayerInfo(tileY, planetName = "Earth") {
-    if (planetName !== "Earth") {
-      const pdata = PLANET_DATA[planetName] || PLANET_DATA["Moon"];
-      const depth = Math.max(0, Math.floor((tileY - CRUST_SURFACE) * 12));
-      return { name: pdata.name, depth, temp: "Alien Lithosphere", pressure: pdata.hazard };
-    }
-    if (tileY < CRUST_SURFACE) return { name: "Atmosphere", depth: 0, temp: "22 C", pressure: "1.0 atm" };
-    if (tileY < CRUST_BOTTOM) {
-      const d = Math.floor((tileY - CRUST_SURFACE) * 13);
-      return { name: "Crust", depth: d, temp: `${25 + Math.floor(d * 0.07)} C`, pressure: `${(d * 0.0003).toFixed(2)} GPa` };
-    }
-    if (tileY < UPPER_MANTLE_BOTTOM) {
-      const d = 350 + Math.floor((tileY - CRUST_BOTTOM) * 14.2);
-      return { name: "Upper Mantle", depth: d, temp: `${500 + Math.floor((d - 350) * 1.5)} C`, pressure: `${(10 + (d - 350) * 0.03).toFixed(1)} GPa` };
-    }
-    if (tileY < LOWER_MANTLE_BOTTOM) {
-      const d = 750 + Math.floor((tileY - UPPER_MANTLE_BOTTOM) * 15.6);
-      return { name: "Lower Mantle", depth: d, temp: `${1100 + Math.floor((d - 750) * 1.8)} C`, pressure: `${(24 + (d - 750) * 0.15).toFixed(1)} GPa` };
-    }
-    if (tileY < OUTER_CORE_BOTTOM) {
-      const d = 1200 + Math.floor((tileY - LOWER_MANTLE_BOTTOM) * 14.8);
-      return { name: "Outer Core (Molten)", depth: d, temp: `${2800 + Math.floor((d - 1200) * 3.4)} C`, pressure: `${(135 + (d - 1200) * 0.45).toFixed(1)} GPa` };
-    }
-    const d = 1550 + Math.floor((tileY - OUTER_CORE_BOTTOM) * 18.2);
-    return { name: "Inner Core (Solid)", depth: d, temp: `${5400 + Math.floor((d - 1550) * 1.2)} C`, pressure: `${(330 + (d - 1550) * 0.6).toFixed(1)} GPa` };
-  }
-}
-
-// ==========================================
-// DYNAMIC LIGHTING
-// ==========================================
-class OptimizedLighting {
-  constructor() {
-    this.canvas = document.createElement("canvas");
-    this.canvas.width = LIGHT_W;
-    this.canvas.height = LIGHT_H;
-    this.ctx = this.canvas.getContext("2d");
-  }
-
-  render(mainCtx, player, world, camX, camY) {
-    const pTy = Math.floor(player.y / TILE_SIZE);
-    let amb = "#28262a";
-    if (world.current_planet === "Earth") {
-      if (pTy < CRUST_SURFACE) amb = "#b0b0ba";
-      else if (pTy < CRUST_BOTTOM) amb = "#28262a";
-      else if (pTy < UPPER_MANTLE_BOTTOM) amb = "#231c1e";
-      else if (pTy < LOWER_MANTLE_BOTTOM) amb = "#502819";
-      else if (pTy < OUTER_CORE_BOTTOM) amb = "#964b14";
-      else amb = "#b4aa82";
-    } else {
-      amb = (pTy < CRUST_SURFACE) ? "#2d2d37" : "#191920";
-    }
-
-    this.ctx.fillStyle = amb;
-    this.ctx.fillRect(0, 0, LIGHT_W, LIGHT_H);
-    this.ctx.globalCompositeOperation = "lighter";
-
-    const px = Math.floor((player.x + player.w / 2 - camX) / LIGHT_SCALE);
-    const py = Math.floor((player.y + player.h / 2 - camY) / LIGHT_SCALE);
-    const grad = this.ctx.createRadialGradient(px, py, 4, px, py, 35);
-    grad.addColorStop(0, "rgba(255, 230, 180, 1)");
-    grad.addColorStop(1, "rgba(0, 0, 0, 0)");
-    this.ctx.fillStyle = grad;
-    this.ctx.beginPath();
-    this.ctx.arc(px, py, 35, 0, Math.PI * 2);
-    this.ctx.fill();
-
-    const minTx = Math.max(0, Math.floor(camX / TILE_SIZE));
-    const maxTx = Math.min(world.width, Math.ceil((camX + SCREEN_WIDTH) / TILE_SIZE));
-    const minTy = Math.max(0, Math.floor(camY / TILE_SIZE));
-    const maxTy = Math.min(world.height, Math.ceil((camY + SCREEN_HEIGHT) / TILE_SIZE));
-
-    for (let tx = minTx; tx < maxTx; tx++) {
-      for (let ty = minTy; ty < maxTy; ty++) {
-        const t = world.getTile(tx, ty);
-        if (BLOCK_DATA[t] && BLOCK_DATA[t].light) {
-          const lx = Math.floor((tx * TILE_SIZE + TILE_SIZE / 2 - camX) / LIGHT_SCALE);
-          const ly = Math.floor((ty * TILE_SIZE + TILE_SIZE / 2 - camY) / LIGHT_SCALE);
-          const rad = Math.floor(BLOCK_DATA[t].light / LIGHT_SCALE);
-          const g = this.ctx.createRadialGradient(lx, ly, 2, lx, ly, rad);
-          g.addColorStop(0, "rgba(255, 210, 120, 0.9)");
-          g.addColorStop(1, "rgba(0, 0, 0, 0)");
-          this.ctx.fillStyle = g;
-          this.ctx.beginPath();
-          this.ctx.arc(lx, ly, rad, 0, Math.PI * 2);
-          this.ctx.fill();
-        }
-      }
-    }
-
-    this.ctx.globalCompositeOperation = "source-over";
-    mainCtx.save();
-    mainCtx.globalCompositeOperation = "multiply";
-    mainCtx.drawImage(this.canvas, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    mainCtx.restore();
   }
 }
 
@@ -1460,6 +1265,9 @@ class AstroStrataEngine {
     this.soundTimer = 0;
     this.autoSaveTimer = 0;
 
+    // Dedicated Target Aim System
+    this.lockedTargetTile = null;
+
     this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     this.activeTouches = new Map();
 
@@ -1546,6 +1354,7 @@ class AstroStrataEngine {
       this.particles = [];
       this.floatTexts = [];
       this.activeWorldKey = sectorId;
+      this.lockedTargetTile = null;
       this.state = "PLAYING";
       this.sound.play("craft");
       return true;
@@ -1767,6 +1576,12 @@ class AstroStrataEngine {
       const pos = getCanvasPos(e);
       this.mouse.x = pos.x;
       this.mouse.y = pos.y;
+      if (this.state === "PLAYING" && !this.isTouchDevice) {
+        this.lockedTargetTile = {
+          tx: Math.floor((pos.x + this.camX) / TILE_SIZE),
+          ty: Math.floor((pos.y + this.camY) / TILE_SIZE)
+        };
+      }
     });
 
     this.canvas.addEventListener("mousedown", (e) => {
@@ -1800,7 +1615,7 @@ class AstroStrataEngine {
       }
     });
 
-    // Touch Listeners
+    // Multi-Touch Event Handlers
     this.canvas.addEventListener("touchstart", (e) => {
       e.preventDefault();
       this.sound.init();
@@ -1809,10 +1624,10 @@ class AstroStrataEngine {
       for (let i = 0; i < e.changedTouches.length; i++) {
         const t = e.changedTouches[i];
         const pos = getTouchPos(t);
-        this.mouse.x = pos.x;
-        this.mouse.y = pos.y;
 
         if (this.state !== "PLAYING") {
+          this.mouse.x = pos.x;
+          this.mouse.y = pos.y;
           this.activeTouches.set(t.identifier, { type: "menu", ...pos });
           this.handleLeftClick();
           continue;
@@ -1841,6 +1656,13 @@ class AstroStrataEngine {
             }
             if (btn.id === "mine") {
               this.mouse.down = true;
+              if (!this.lockedTargetTile) {
+                const aheadX = this.player.x + (this.player.facingRight ? this.player.w + 12 : -12);
+                this.lockedTargetTile = {
+                  tx: Math.floor(aheadX / TILE_SIZE),
+                  ty: Math.floor((this.player.y + this.player.h / 2) / TILE_SIZE)
+                };
+              }
             }
             if (btn.id === "place") {
               this.handleRightClick();
@@ -1849,8 +1671,13 @@ class AstroStrataEngine {
           }
         }
 
+        // Tapping into the active world sets a permanent target lock
         if (!handled) {
           this.activeTouches.set(t.identifier, { type: "world", ...pos });
+          this.lockedTargetTile = {
+            tx: Math.floor((pos.x + this.camX) / TILE_SIZE),
+            ty: Math.floor((pos.y + this.camY) / TILE_SIZE)
+          };
           this.mouse.down = true;
         }
       }
@@ -1863,8 +1690,10 @@ class AstroStrataEngine {
         const pos = getTouchPos(t);
         const existing = this.activeTouches.get(t.identifier);
         if (existing && existing.type === "world") {
-          this.mouse.x = pos.x;
-          this.mouse.y = pos.y;
+          this.lockedTargetTile = {
+            tx: Math.floor((pos.x + this.camX) / TILE_SIZE),
+            ty: Math.floor((pos.y + this.camY) / TILE_SIZE)
+          };
         }
       }
     }, { passive: false });
@@ -1901,7 +1730,6 @@ class AstroStrataEngine {
         this.sound.play("click");
       }
     } else if (this.state === "WORLD_SELECT") {
-      // Sector Card Click Detection
       for (let i = 0; i < Math.min(5, this.worldsList.length); i++) {
         const cardY = 110 + i * 72;
         if (mx >= SCREEN_WIDTH / 2 - 320 && mx <= SCREEN_WIDTH / 2 + 320 && my >= cardY && my <= cardY + 62) {
@@ -1957,7 +1785,6 @@ class AstroStrataEngine {
         this.sound.play("click");
       }
     } else if (this.state === "PLAYING") {
-      // Hotbar Direct Selection
       const hotbarY = SCREEN_HEIGHT - 60;
       const hotbarStartX = SCREEN_WIDTH / 2 - 240;
       if (my >= hotbarY && my <= hotbarY + 44 && mx >= hotbarStartX && mx <= hotbarStartX + 480) {
@@ -1999,16 +1826,11 @@ class AstroStrataEngine {
   }
 
   handleRightClick() {
-    const mx = this.mouse.x;
-    const my = this.mouse.y;
-
     if (this.state === "PLAYING") {
-      const worldMx = mx + this.camX;
-      const worldMy = my + this.camY;
-      const tgx = Math.floor(worldMx / TILE_SIZE);
-      const tgy = Math.floor(worldMy / TILE_SIZE);
+      const target = this.getAimTarget();
+      if (!target) return;
 
-      const pDist = Math.hypot(worldMx - (this.player.x + this.player.w / 2), worldMy - (this.player.y + this.player.h / 2));
+      const pDist = Math.hypot((target.tx * TILE_SIZE + 16) - (this.player.x + this.player.w / 2), (target.ty * TILE_SIZE + 16) - (this.player.y + this.player.h / 2));
       if (pDist > 180) return;
 
       const sel = this.player.inv.getSelected();
@@ -2017,9 +1839,9 @@ class AstroStrataEngine {
         return;
       }
 
-      const clickedBlock = this.world.getTile(tgx, tgy);
+      const clickedBlock = this.world.getTile(target.tx, target.ty);
       if (clickedBlock === CHEST) {
-        this.lootChest(tgx, tgy);
+        this.lootChest(target.tx, target.ty);
         return;
       } else if (clickedBlock === LAUNCHPAD) {
         this.state = "STAR_MAP";
@@ -2033,18 +1855,18 @@ class AstroStrataEngine {
 
       // Block Placement Logic
       if (sel && BLOCK_DATA[sel.item] && clickedBlock === AIR) {
-        const placeRect = { x: tgx * TILE_SIZE, y: tgy * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE };
+        const placeRect = { x: target.tx * TILE_SIZE, y: target.ty * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE };
         const pRect = { x: this.player.x, y: this.player.y, w: this.player.w, h: this.player.h };
 
         if (!(placeRect.x < pRect.x + pRect.w && placeRect.x + placeRect.w > pRect.x &&
               placeRect.y < pRect.y + pRect.h && placeRect.y + placeRect.h > pRect.y)) {
-          this.world.setTile(tgx, tgy, sel.item);
+          this.world.setTile(target.tx, target.ty, sel.item);
           this.player.inv.removeItem(sel.item, 1);
           this.sound.play("place");
         }
       }
     } else if (this.state === "INVENTORY") {
-      this.handleInventoryClick(mx, my, 3);
+      this.handleInventoryClick(this.mouse.x, this.mouse.y, 3);
     }
   }
 
@@ -2180,15 +2002,26 @@ class AstroStrataEngine {
     });
   }
 
+  getAimTarget() {
+    if (this.lockedTargetTile) return this.lockedTargetTile;
+    if (!this.player) return null;
+    const aheadX = this.player.x + (this.player.facingRight ? this.player.w + 12 : -12);
+    return {
+      tx: Math.floor(aheadX / TILE_SIZE),
+      ty: Math.floor((this.player.y + this.player.h / 2) / TILE_SIZE)
+    };
+  }
+
   processContinuousDigging() {
     if (!this.mouse.down || this.state !== "PLAYING" || !this.player) return;
 
-    const worldMx = this.mouse.x + this.camX;
-    const worldMy = this.mouse.y + this.camY;
-    const tgx = Math.floor(worldMx / TILE_SIZE);
-    const tgy = Math.floor(worldMy / TILE_SIZE);
+    const target = this.getAimTarget();
+    if (!target) return;
 
-    const pDist = Math.hypot(worldMx - (this.player.x + this.player.w / 2), worldMy - (this.player.y + this.player.h / 2));
+    const tgx = target.tx;
+    const tgy = target.ty;
+
+    const pDist = Math.hypot((tgx * TILE_SIZE + 16) - (this.player.x + this.player.w / 2), (tgy * TILE_SIZE + 16) - (this.player.y + this.player.h / 2));
     if (pDist > 180) return;
 
     const t = this.world.getTile(tgx, tgy);
@@ -2352,7 +2185,7 @@ class AstroStrataEngine {
       this.ctx.font = "bold 15px 'Courier New', monospace";
       this.ctx.fillText("ENTER EXPEDITION / SECTORS", SCREEN_WIDTH / 2, 340);
 
-      // Version tag in bottom-left corner
+      // Version Indicator
       this.ctx.fillStyle = "#606880";
       this.ctx.font = "bold 13px monospace";
       this.ctx.textAlign = "left";
@@ -2392,7 +2225,6 @@ class AstroStrataEngine {
         }
       }
 
-      // Action Buttons at Bottom
       const hasWorlds = this.worldsList.length > 0;
       const buttons = [
         { label: "ENTER SECTOR", x: SCREEN_WIDTH / 2 - 330, w: 155, active: hasWorlds, color: COLOR_GOLD },
@@ -2493,42 +2325,68 @@ class AstroStrataEngine {
 
     if (this.player) this.lighting.render(this.ctx, this.player, this.world, this.camX, this.camY);
 
-    // Aiming Reticle
-    const worldMx = this.mouse.x + this.camX;
-    const worldMy = this.mouse.y + this.camY;
-    const hoverTx = Math.floor(worldMx / TILE_SIZE);
-    const hoverTy = Math.floor(worldMy / TILE_SIZE);
-    const pDist = Math.hypot(worldMx - (this.player.x + this.player.w / 2), worldMy - (this.player.y + this.player.h / 2));
-    const inReach = pDist <= 180;
+    // Aiming Reticle & In-World Mining Progress Bar
+    const aim = this.getAimTarget();
+    if (aim) {
+      const pDist = Math.hypot((aim.tx * TILE_SIZE + 16) - (this.player.x + this.player.w / 2), (aim.ty * TILE_SIZE + 16) - (this.player.y + this.player.h / 2));
+      const inReach = pDist <= 180;
+      const rDx = Math.floor(aim.tx * TILE_SIZE - this.camX);
+      const rDy = Math.floor(aim.ty * TILE_SIZE - this.camY);
 
-    const rDx = Math.floor(hoverTx * TILE_SIZE - this.camX);
-    const rDy = Math.floor(hoverTy * TILE_SIZE - this.camY);
-    this.ctx.strokeStyle = inReach ? COLOR_GOLD : "rgba(235, 60, 60, 0.6)";
-    this.ctx.lineWidth = 1.5;
-    this.ctx.strokeRect(rDx, rDy, TILE_SIZE, TILE_SIZE);
+      this.ctx.strokeStyle = inReach ? COLOR_GOLD : "rgba(235, 60, 60, 0.6)";
+      this.ctx.lineWidth = 2;
+      this.ctx.strokeRect(rDx, rDy, TILE_SIZE, TILE_SIZE);
 
-    // Inspector HUD
-    const hoverTile = this.world.getTile(hoverTx, hoverTy);
-    if (hoverTile !== AIR && BLOCK_DATA[hoverTile]) {
-      const bdata = BLOCK_DATA[hoverTile];
-      const hx = SCREEN_WIDTH - 290;
-      const hy = 16;
-      this.ctx.fillStyle = "rgba(18, 22, 32, 0.9)";
-      this.ctx.fillRect(hx, hy, 270, 78);
-      this.ctx.strokeStyle = COLOR_GOLD;
-      this.ctx.strokeRect(hx, hy, 270, 78);
+      const targetTile = this.world.getTile(aim.tx, aim.ty);
+      const dmg = this.world.damage_map.get(`${aim.tx},${aim.ty}`);
 
-      this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.textAlign = "left";
-      this.ctx.font = "bold 13px 'Courier New', monospace";
-      this.ctx.fillText(bdata.name, hx + 12, hy + 20);
+      // Render Floating Block Durability Bar
+      if (dmg && BLOCK_DATA[targetTile]) {
+        const pct = Math.min(1.0, dmg / BLOCK_DATA[targetTile].hardness);
+        const barW = 32;
+        const barH = 5;
+        this.ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+        this.ctx.fillRect(rDx, rDy - 8, barW, barH);
+        this.ctx.fillStyle = COLOR_GOLD;
+        this.ctx.fillRect(rDx, rDy - 8, Math.floor(barW * pct), barH);
+        this.ctx.strokeStyle = "#ffffff";
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(rDx, rDy - 8, barW, barH);
+      }
 
-      const evalInfo = evaluateMiningInteraction(this.player, hoverTile);
-      this.ctx.fillStyle = evalInfo.canDrop ? COLOR_EXP : COLOR_HP;
-      this.ctx.font = "11px monospace";
-      this.ctx.fillText(`Mohs: ${bdata.mohs} | [${evalInfo.msg}]`, hx + 12, hy + 38);
-      this.ctx.fillStyle = COLOR_CYAN;
-      this.ctx.fillText(`Req: ${bdata.req_tool} (${TIER_NAMES[bdata.req_tier]})`, hx + 12, hy + 56);
+      // Target Inspector in Top-Right
+      if (targetTile !== AIR && BLOCK_DATA[targetTile]) {
+        const bdata = BLOCK_DATA[targetTile];
+        const hx = SCREEN_WIDTH - 290;
+        const hy = 16;
+        this.ctx.fillStyle = "rgba(18, 22, 32, 0.9)";
+        this.ctx.fillRect(hx, hy, 270, 85);
+        this.ctx.strokeStyle = COLOR_GOLD;
+        this.ctx.strokeRect(hx, hy, 270, 85);
+
+        this.ctx.fillStyle = COLOR_GOLD;
+        this.ctx.textAlign = "left";
+        this.ctx.font = "bold 13px 'Courier New', monospace";
+        this.ctx.fillText(bdata.name, hx + 12, hy + 20);
+
+        const evalInfo = evaluateMiningInteraction(this.player, targetTile);
+        this.ctx.fillStyle = evalInfo.canDrop ? COLOR_EXP : COLOR_HP;
+        this.ctx.font = "11px monospace";
+        this.ctx.fillText(`Mohs: ${bdata.mohs} | [${evalInfo.msg}]`, hx + 12, hy + 38);
+        this.ctx.fillStyle = COLOR_CYAN;
+        this.ctx.fillText(`Req: ${bdata.req_tool} (${TIER_NAMES[bdata.req_tier]})`, hx + 12, hy + 54);
+
+        // Progress in HUD
+        const curDmg = dmg || 0.0;
+        const pct = Math.min(1.0, curDmg / bdata.hardness);
+        this.ctx.fillStyle = "rgba(40, 50, 70, 0.8)";
+        this.ctx.fillRect(hx + 12, hy + 64, 246, 12);
+        this.ctx.fillStyle = COLOR_GOLD;
+        this.ctx.fillRect(hx + 12, hy + 64, Math.floor(246 * pct), 12);
+        this.ctx.fillStyle = COLOR_WHITE;
+        this.ctx.font = "bold 9px monospace";
+        this.ctx.fillText(`${Math.floor(pct * 100)}% (${curDmg.toFixed(1)}s / ${bdata.hardness}s)`, hx + 85, hy + 73);
+      }
     }
 
     // Geomechanics Layer HUD

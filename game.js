@@ -1,14 +1,16 @@
 // =============================================================================
-// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (V2.0)
+// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (V0.3.0)
 // =============================================================================
 
+const VERSION_STRING = "v0.3.0-web";
 const SCREEN_WIDTH = 1280;
 const SCREEN_HEIGHT = 720;
 const TILE_SIZE = 32;
 const WORLD_WIDTH = 110;
 const WORLD_HEIGHT = 160;
 const FPS = 60;
-const SAVES_STORAGE_KEY = "astrostrata_saved_sectors_v2";
+const SAVES_INDEX_KEY = "astrostrata_sectors_index_v3";
+const SECTOR_DATA_PREFIX = "astrostrata_sector_data_";
 
 const LIGHT_SCALE = 4;
 const LIGHT_W = Math.floor(SCREEN_WIDTH / LIGHT_SCALE);
@@ -119,46 +121,46 @@ const TIER_NAMES = {
 };
 
 const BLOCK_DATA = {
-  [CHEST]: { name: "Loot Cache", hardness: 1.2, mohs: 2.5, color: "#a56e2d", drop: CHEST, req_tier: 0, req_tool: "Axe", desc: "Subterranean cache with survival gear." },
-  [DIRT]: { name: "Dirt", hardness: 0.8, mohs: 1.5, color: "#734b2d", drop: DIRT, req_tier: 0, req_tool: "Shovel", desc: "Soft organic topsoil." },
-  [GRASS]: { name: "Grass Block", hardness: 0.8, mohs: 1.5, color: "#4b9128", drop: DIRT, req_tier: 0, req_tool: "Shovel", desc: "Root-bound surface humus layer." },
-  [STONE]: { name: "Crust Stone", hardness: 2.0, mohs: 5.5, color: "#787880", drop: STONE, req_tier: 1, req_tool: "Pickaxe", desc: "Brittle continental granitic bedrock." },
-  [COAL_ORE]: { name: "Coal Ore", hardness: 2.2, mohs: 3.0, color: "#28282d", drop: "Coal", req_tier: 1, req_tool: "Pickaxe", desc: "Compressed carbon fuel matrix.", xp: 12 },
-  [IRON_ORE]: { name: "Iron Ore", hardness: 2.8, mohs: 5.5, color: "#b98769", drop: "Iron Ore", req_tier: 2, req_tool: "Pickaxe", desc: "Dense banded iron formation.", xp: 20 },
-  [GOLD_ORE]: { name: "Gold Ore", hardness: 3.4, mohs: 4.5, color: "#e6c328", drop: "Gold Ore", req_tier: 3, req_tool: "Pickaxe", desc: "Heavy auriferous quartz vein.", xp: 35 },
-  [DIAMOND_ORE]: { name: "Diamond Ore", hardness: 4.8, mohs: 10.0, color: "#50e1ff", drop: "Diamond", req_tier: 3, req_tool: "Pickaxe", desc: "Kimberlite diamond crystallization.", xp: 80 },
-  [WOOD]: { name: "Wood Log", hardness: 1.3, mohs: 2.5, color: "#825532", drop: WOOD, req_tier: 0, req_tool: "Axe", desc: "Combustible timber. Burns near lava!" },
-  [LEAVES]: { name: "Leaves", hardness: 0.3, mohs: 1.0, color: "#289632", drop: null, req_tier: 0, req_tool: "Any", desc: "Soft solar-capture canopy." },
+  [CHEST]: { name: "Loot Cache", hardness: 1.2, mohs: 2.5, color: "#a56e2d", drop: CHEST, req_tier: 0, req_tool: "Axe", desc: "Subterranean cache with survival supplies." },
+  [DIRT]: { name: "Dirt", hardness: 0.7, mohs: 1.5, color: "#734b2d", drop: DIRT, req_tier: 0, req_tool: "Shovel", desc: "Soft organic topsoil." },
+  [GRASS]: { name: "Grass Block", hardness: 0.7, mohs: 1.5, color: "#4b9128", drop: DIRT, req_tier: 0, req_tool: "Shovel", desc: "Root-bound surface humus layer." },
+  [STONE]: { name: "Crust Stone", hardness: 1.8, mohs: 5.5, color: "#787880", drop: STONE, req_tier: 1, req_tool: "Pickaxe", desc: "Brittle continental granitic bedrock." },
+  [COAL_ORE]: { name: "Coal Ore", hardness: 2.0, mohs: 3.0, color: "#28282d", drop: "Coal", req_tier: 1, req_tool: "Pickaxe", desc: "Compressed carbon fuel matrix.", xp: 12 },
+  [IRON_ORE]: { name: "Iron Ore", hardness: 2.6, mohs: 5.5, color: "#b98769", drop: "Iron Ore", req_tier: 2, req_tool: "Pickaxe", desc: "Dense banded iron formation.", xp: 20 },
+  [GOLD_ORE]: { name: "Gold Ore", hardness: 3.2, mohs: 4.5, color: "#e6c328", drop: "Gold Ore", req_tier: 3, req_tool: "Pickaxe", desc: "Heavy auriferous quartz vein.", xp: 35 },
+  [DIAMOND_ORE]: { name: "Diamond Ore", hardness: 4.5, mohs: 10.0, color: "#50e1ff", drop: "Diamond", req_tier: 3, req_tool: "Pickaxe", desc: "Kimberlite diamond crystallization.", xp: 80 },
+  [WOOD]: { name: "Wood Log", hardness: 1.2, mohs: 2.5, color: "#825532", drop: WOOD, req_tier: 0, req_tool: "Axe", desc: "Combustible timber. Burns near lava!" },
+  [LEAVES]: { name: "Leaves", hardness: 0.25, mohs: 1.0, color: "#289632", drop: null, req_tier: 0, req_tool: "Any", desc: "Soft solar-capture canopy." },
   [PLANKS]: { name: "Wood Planks", hardness: 1.0, mohs: 2.5, color: "#af7d46", drop: PLANKS, req_tier: 0, req_tool: "Axe", desc: "Processed lumber." },
   [TORCH]: { name: "Torch", hardness: 0.1, mohs: 1.0, color: "#ffb428", drop: TORCH, req_tier: 0, req_tool: "Any", desc: "Illuminates dark subterranean caverns.", light: 140 },
-  [WORKBENCH]: { name: "Workbench", hardness: 1.5, mohs: 2.5, color: "#966437", drop: WORKBENCH, req_tier: 0, req_tool: "Axe", desc: "Workshop station for tools & gear." },
-  [FURNACE]: { name: "Stone Furnace", hardness: 2.2, mohs: 5.5, color: "#64646e", drop: FURNACE, req_tier: 2, req_tool: "Pickaxe", desc: "Thermal forge station for smelting.", light: 110 },
-  [STONE_BRICKS]: { name: "Stone Bricks", hardness: 2.2, mohs: 5.5, color: "#828287", drop: STONE_BRICKS, req_tier: 1, req_tool: "Pickaxe", desc: "Chiseled load-bearing masonry." },
-  [BASALT_BRICKS]: { name: "Basalt Bricks", hardness: 3.8, mohs: 6.5, color: "#32323c", drop: BASALT_BRICKS, req_tier: 3, req_tool: "Pickaxe", desc: "Sintered volcanic paving stones." },
-  [GLASS]: { name: "Glass Block", hardness: 0.5, mohs: 5.5, color: "#afe1f0", drop: null, req_tier: 0, req_tool: "Any", desc: "Transparent fused silica window." },
-  [LANTERN]: { name: "Hanging Lantern", hardness: 0.6, mohs: 5.0, color: "#ffcd4b", drop: LANTERN, req_tier: 3, req_tool: "Pickaxe", desc: "Forged iron illuminating armature.", light: 160 },
-  [BOOKSHELF]: { name: "Oak Bookshelf", hardness: 1.4, mohs: 2.5, color: "#8c5a37", drop: BOOKSHELF, req_tier: 0, req_tool: "Axe", desc: "Timber casing with research tomes." },
-  [IRON_BARS]: { name: "Iron Bars", hardness: 2.6, mohs: 5.5, color: "#aaafbe", drop: IRON_BARS, req_tier: 2, req_tool: "Pickaxe", desc: "Ductile forged security lattice." },
-  [PERIDOTITE]: { name: "Peridotite", hardness: 3.5, mohs: 6.5, color: "#415f3c", drop: PERIDOTITE, req_tier: 3, req_tool: "Pickaxe", desc: "Dense coarse Upper Mantle rock.", xp: 25 },
-  [BASALT]: { name: "Dense Basalt", hardness: 4.0, mohs: 6.0, color: "#2d2d37", drop: BASALT, req_tier: 3, req_tool: "Pickaxe", desc: "Aphanitic mafic volcanic rock.", xp: 30 },
-  [OBSIDIAN]: { name: "Mantle Obsidian", hardness: 5.5, mohs: 6.0, color: "#1c1428", drop: "Obsidian", req_tier: 4, req_tool: "Pickaxe", desc: "Conchoidal volcanic glass.", xp: 60 },
-  [MAGMA_STONE]: { name: "Magma Stone", hardness: 4.5, mohs: 7.0, color: "#9b3719", drop: MAGMA_STONE, req_tier: 4, req_tool: "Pickaxe", desc: "Superheated Lower Mantle block.", xp: 45, light: 70 },
-  [MOLTEN_CORE]: { name: "Molten Iron Slag", hardness: 5.8, mohs: 7.5, color: "#eb6914", drop: "Liquid Iron", req_tier: 5, req_tool: "Drill", desc: "Superpressured molten iron-nickel.", xp: 80, light: 120 },
-  [INNER_CORE_METAL]: { name: "Solid Core Alloy", hardness: 7.0, mohs: 8.5, color: "#e1e1f5", drop: "Core Metal", req_tier: 5, req_tool: "Drill", desc: "Crystalline iron-nickel under 330 GPa.", xp: 140, light: 80 },
-  [CORE_CRYSTAL]: { name: "Inner Core Shard", hardness: 8.5, mohs: 9.5, color: "#fff096", drop: "Core Shard", req_tier: 5, req_tool: "Drill", desc: "Harmonic energy crystal from Earth's core.", xp: 250, light: 150 },
+  [WORKBENCH]: { name: "Workbench", hardness: 1.4, mohs: 2.5, color: "#966437", drop: WORKBENCH, req_tier: 0, req_tool: "Axe", desc: "Workshop station for tools & gear." },
+  [FURNACE]: { name: "Stone Furnace", hardness: 2.0, mohs: 5.5, color: "#64646e", drop: FURNACE, req_tier: 2, req_tool: "Pickaxe", desc: "Thermal forge station for smelting ingots.", light: 110 },
+  [STONE_BRICKS]: { name: "Stone Bricks", hardness: 2.0, mohs: 5.5, color: "#828287", drop: STONE_BRICKS, req_tier: 1, req_tool: "Pickaxe", desc: "Chiseled load-bearing masonry." },
+  [BASALT_BRICKS]: { name: "Basalt Bricks", hardness: 3.5, mohs: 6.5, color: "#32323c", drop: BASALT_BRICKS, req_tier: 3, req_tool: "Pickaxe", desc: "Sintered volcanic paving stones." },
+  [GLASS]: { name: "Glass Block", hardness: 0.4, mohs: 5.5, color: "#afe1f0", drop: null, req_tier: 0, req_tool: "Any", desc: "Transparent fused silica window." },
+  [LANTERN]: { name: "Hanging Lantern", hardness: 0.5, mohs: 5.0, color: "#ffcd4b", drop: LANTERN, req_tier: 3, req_tool: "Pickaxe", desc: "Forged iron illuminating armature.", light: 160 },
+  [BOOKSHELF]: { name: "Oak Bookshelf", hardness: 1.2, mohs: 2.5, color: "#8c5a37", drop: BOOKSHELF, req_tier: 0, req_tool: "Axe", desc: "Timber casing with research tomes." },
+  [IRON_BARS]: { name: "Iron Bars", hardness: 2.4, mohs: 5.5, color: "#aaafbe", drop: IRON_BARS, req_tier: 2, req_tool: "Pickaxe", desc: "Ductile forged security lattice." },
+  [PERIDOTITE]: { name: "Peridotite", hardness: 3.2, mohs: 6.5, color: "#415f3c", drop: PERIDOTITE, req_tier: 3, req_tool: "Pickaxe", desc: "Dense coarse Upper Mantle rock.", xp: 25 },
+  [BASALT]: { name: "Dense Basalt", hardness: 3.8, mohs: 6.0, color: "#2d2d37", drop: BASALT, req_tier: 3, req_tool: "Pickaxe", desc: "Aphanitic mafic volcanic rock.", xp: 30 },
+  [OBSIDIAN]: { name: "Mantle Obsidian", hardness: 5.0, mohs: 6.0, color: "#1c1428", drop: "Obsidian", req_tier: 4, req_tool: "Pickaxe", desc: "Conchoidal volcanic glass.", xp: 60 },
+  [MAGMA_STONE]: { name: "Magma Stone", hardness: 4.2, mohs: 7.0, color: "#9b3719", drop: MAGMA_STONE, req_tier: 4, req_tool: "Pickaxe", desc: "Superheated Lower Mantle thermal block.", xp: 45, light: 70 },
+  [MOLTEN_CORE]: { name: "Molten Iron Slag", hardness: 5.5, mohs: 7.5, color: "#eb6914", drop: "Liquid Iron", req_tier: 5, req_tool: "Drill", desc: "Superpressured molten iron-nickel.", xp: 80, light: 120 },
+  [INNER_CORE_METAL]: { name: "Solid Core Alloy", hardness: 6.5, mohs: 8.5, color: "#e1e1f5", drop: "Core Metal", req_tier: 5, req_tool: "Drill", desc: "Crystalline iron-nickel under 330 GPa.", xp: 140, light: 80 },
+  [CORE_CRYSTAL]: { name: "Inner Core Shard", hardness: 8.0, mohs: 9.5, color: "#fff096", drop: "Core Shard", req_tier: 5, req_tool: "Drill", desc: "Harmonic energy crystal from Earth's core.", xp: 250, light: 150 },
   [LAVA]: { name: "Liquid Lava", hardness: 999, mohs: 0.0, color: "#ff550a", drop: null, req_tier: 0, req_tool: "Bucket", desc: "Viscous molten silicate melt.", light: 145, liquid: true },
 
-  [LAUNCHPAD]: { name: "Aerospace Launchpad", hardness: 3.5, mohs: 6.5, color: "#4b5064", drop: LAUNCHPAD, req_tier: 3, req_tool: "Pickaxe", desc: "Station for assembling & launching Rockets.", light: 100 },
-  [ASSEMBLER]: { name: "Circuit Assembler", hardness: 2.8, mohs: 5.5, color: "#237387", drop: ASSEMBLER, req_tier: 2, req_tool: "Pickaxe", desc: "Precision fabricator for electronics." },
-  [PARTICLE_COLLIDER]: { name: "Particle Collider", hardness: 5.0, mohs: 7.5, color: "#9632d2", drop: PARTICLE_COLLIDER, req_tier: 4, req_tool: "Pickaxe", desc: "Synchrotron for antimatter synthesis.", light: 130 },
+  [LAUNCHPAD]: { name: "Aerospace Launchpad", hardness: 3.2, mohs: 6.5, color: "#4b5064", drop: LAUNCHPAD, req_tier: 3, req_tool: "Pickaxe", desc: "Station for assembling & launching Rockets.", light: 100 },
+  [ASSEMBLER]: { name: "Circuit Assembler", hardness: 2.5, mohs: 5.5, color: "#237387", drop: ASSEMBLER, req_tier: 2, req_tool: "Pickaxe", desc: "Precision fabricator for advanced electronics." },
+  [PARTICLE_COLLIDER]: { name: "Particle Collider", hardness: 4.5, mohs: 7.5, color: "#9632d2", drop: PARTICLE_COLLIDER, req_tier: 4, req_tool: "Pickaxe", desc: "Synchrotron for antimatter synthesis.", light: 130 },
 
-  [STONE_PILLAR]: { name: "Stone Pillar", hardness: 2.0, mohs: 5.5, color: "#a0a0a8", drop: STONE_PILLAR, req_tier: 1, req_tool: "Pickaxe", desc: "Classical carved architectural pillar." },
-  [MARBLE_BLOCK]: { name: "Marble Block", hardness: 1.8, mohs: 4.5, color: "#ebf0f5", drop: MARBLE_BLOCK, req_tier: 1, req_tool: "Pickaxe", desc: "Pristine calcitic metamorphic rock." },
-  [NEON_LAMP]: { name: "Neon Cyber-Lamp", hardness: 0.8, mohs: 3.0, color: "#50ffdc", drop: NEON_LAMP, req_tier: 1, req_tool: "Any", desc: "High-efficiency argon gas luminary.", light: 180 },
-  [TECH_PLATING]: { name: "Hull Plating", hardness: 4.0, mohs: 6.5, color: "#373c4b", drop: TECH_PLATING, req_tier: 3, req_tool: "Pickaxe", desc: "Titanium alloy plate." },
-  [WOOD_TABLE]: { name: "Oak Table", hardness: 1.1, mohs: 2.5, color: "#9b6941", drop: WOOD_TABLE, req_tier: 0, req_tool: "Axe", desc: "Rustic domestic timber table." },
-  [WOOD_CHAIR]: { name: "Oak Chair", hardness: 0.8, mohs: 2.5, color: "#915f37", drop: WOOD_CHAIR, req_tier: 0, req_tool: "Axe", desc: "Sturdy carved wooden chair." },
-  [CRYSTAL_GLASS]: { name: "Crystal Glass", hardness: 1.1, mohs: 6.5, color: "#bef0ff", drop: CRYSTAL_GLASS, req_tier: 1, req_tool: "Pickaxe", desc: "Diamond-reinforced blast glass." }
+  [STONE_PILLAR]: { name: "Stone Pillar", hardness: 1.8, mohs: 5.5, color: "#a0a0a8", drop: STONE_PILLAR, req_tier: 1, req_tool: "Pickaxe", desc: "Classical carved architectural pillar." },
+  [MARBLE_BLOCK]: { name: "Marble Block", hardness: 1.6, mohs: 4.5, color: "#ebf0f5", drop: MARBLE_BLOCK, req_tier: 1, req_tool: "Pickaxe", desc: "Pristine calcitic metamorphic rock." },
+  [NEON_LAMP]: { name: "Neon Cyber-Lamp", hardness: 0.6, mohs: 3.0, color: "#50ffdc", drop: NEON_LAMP, req_tier: 1, req_tool: "Any", desc: "High-efficiency argon gas luminary.", light: 180 },
+  [TECH_PLATING]: { name: "Hull Plating", hardness: 3.6, mohs: 6.5, color: "#373c4b", drop: TECH_PLATING, req_tier: 3, req_tool: "Pickaxe", desc: "Corrosion-resistant titanium alloy plate." },
+  [WOOD_TABLE]: { name: "Oak Table", hardness: 1.0, mohs: 2.5, color: "#9b6941", drop: WOOD_TABLE, req_tier: 0, req_tool: "Axe", desc: "Rustic domestic timber table." },
+  [WOOD_CHAIR]: { name: "Oak Chair", hardness: 0.7, mohs: 2.5, color: "#915f37", drop: WOOD_CHAIR, req_tier: 0, req_tool: "Axe", desc: "Sturdy carved wooden chair." },
+  [CRYSTAL_GLASS]: { name: "Crystal Glass", hardness: 1.0, mohs: 6.5, color: "#bef0ff", drop: CRYSTAL_GLASS, req_tier: 1, req_tool: "Pickaxe", desc: "Diamond-reinforced blast glass." }
 };
 
 const PLANET_DATA = {
@@ -478,7 +480,7 @@ function evaluateMiningInteraction(player, tileId) {
   return { canDamage: true, canDrop: true, effMult: cap.mult, msg: "Harvestable" };
 }
 
-// Touch Control Definitions
+// Touch Control Layout
 const TOUCH_CONTROLS = {
   btnLeft:  { id: "left",  x: 25,  y: SCREEN_HEIGHT - 120, w: 70, h: 70, label: "◀" },
   btnRight: { id: "right", x: 105, y: SCREEN_HEIGHT - 120, w: 70, h: 70, label: "▶" },
@@ -662,13 +664,13 @@ class PixelArtGenerator {
       this.icons[name] = cvs;
     }
 
-    // 10 Crack Overlays
+    // 10 Progressive Crack Overlays
     for (let stage = 0; stage < 10; stage++) {
       const cvs = document.createElement("canvas");
       cvs.width = TILE_SIZE;
       cvs.height = TILE_SIZE;
       const ctx = cvs.getContext("2d");
-      ctx.strokeStyle = `rgba(0, 0, 0, ${0.4 + stage * 0.06})`;
+      ctx.strokeStyle = `rgba(0, 0, 0, ${0.45 + stage * 0.05})`;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(16, 16);
@@ -1432,7 +1434,7 @@ class AstroStrataEngine {
     this.selectedWorldIdx = 0;
     this.activeWorldKey = null;
 
-    this.inputWorldName = "New World";
+    this.inputWorldName = "New Sector";
     this.selectedCreateClass = "Warrior";
     this.nameInputActive = false;
 
@@ -1443,7 +1445,6 @@ class AstroStrataEngine {
     this.floatTexts = [];
 
     this.cursorItem = null;
-    this.hoveredTooltipData = null;
     this.camX = 0;
     this.camY = 0;
 
@@ -1457,27 +1458,101 @@ class AstroStrataEngine {
     this.keys = {};
     this.mouse = { x: 0, y: 0, down: false, rightDown: false };
     this.soundTimer = 0;
+    this.autoSaveTimer = 0;
 
     this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     this.activeTouches = new Map();
 
-    this.loadSavedWorlds();
+    this.loadSectorIndex();
     this.setupListeners();
   }
 
-  loadSavedWorlds() {
+  loadSectorIndex() {
     try {
-      const raw = localStorage.getItem(SAVES_STORAGE_KEY);
+      const raw = localStorage.getItem(SAVES_INDEX_KEY);
       this.worldsList = raw ? JSON.parse(raw) : [];
     } catch (e) {
       this.worldsList = [];
     }
+    if (this.selectedWorldIdx >= this.worldsList.length) {
+      this.selectedWorldIdx = Math.max(0, this.worldsList.length - 1);
+    }
   }
 
-  saveSavedWorlds() {
+  saveSectorIndex() {
     try {
-      localStorage.setItem(SAVES_STORAGE_KEY, JSON.stringify(this.worldsList));
+      localStorage.setItem(SAVES_INDEX_KEY, JSON.stringify(this.worldsList));
     } catch (e) {}
+  }
+
+  saveCurrentSector() {
+    if (!this.activeWorldKey || !this.player) return;
+    const sectorData = {
+      id: this.activeWorldKey,
+      player: {
+        x: this.player.x,
+        y: this.player.y,
+        hp: this.player.hp,
+        max_hp: this.player.max_hp,
+        level: this.player.level,
+        xp: this.player.xp,
+        xp_next: this.player.xp_next,
+        pClass: this.player.pClass,
+        slots: this.player.inv.slots,
+        armor: this.player.inv.armor
+      },
+      world: {
+        tiles: this.world.tiles,
+        planet: this.world.current_planet
+      }
+    };
+
+    try {
+      localStorage.setItem(SECTOR_DATA_PREFIX + this.activeWorldKey, JSON.stringify(sectorData));
+      const entry = this.worldsList.find(w => w.id === this.activeWorldKey);
+      if (entry) {
+        entry.savedAt = new Date().toLocaleDateString();
+        entry.planet = this.world.current_planet;
+        entry.level = this.player.level;
+        this.saveSectorIndex();
+      }
+    } catch (e) {
+      console.warn("Storage quota full or disabled:", e);
+    }
+  }
+
+  loadSectorGame(sectorId) {
+    const raw = localStorage.getItem(SECTOR_DATA_PREFIX + sectorId);
+    if (!raw) return false;
+
+    try {
+      const data = JSON.parse(raw);
+      this.world = new World(WORLD_WIDTH, WORLD_HEIGHT);
+      this.world.tiles = data.world.tiles;
+      this.world.current_planet = data.world.planet || "Earth";
+
+      const pData = data.player;
+      this.player = new Player(pData.x, pData.y, pData.pClass || "Warrior");
+      this.player.hp = pData.hp;
+      this.player.max_hp = pData.max_hp;
+      this.player.level = pData.level;
+      this.player.xp = pData.xp;
+      this.player.xp_next = pData.xp_next;
+      this.player.inv.slots = pData.slots;
+      this.player.inv.armor = pData.armor;
+
+      this.enemies = [new SlimeEnemy(this.player.x + 180, this.player.y - 20, "Crust")];
+      this.projectiles = [];
+      this.particles = [];
+      this.floatTexts = [];
+      this.activeWorldKey = sectorId;
+      this.state = "PLAYING";
+      this.sound.play("craft");
+      return true;
+    } catch (e) {
+      console.error("Failed to load sector:", e);
+      return false;
+    }
   }
 
   isNearStation(targetBlock) {
@@ -1507,24 +1582,43 @@ class AstroStrataEngine {
     }
 
     this.player = new Player(spawnX, spawnY, chosenClass);
+    this.player.inv.addItem("Wood Pickaxe", 1);
+    this.player.inv.addItem("Wood Axe", 1);
+    this.player.inv.addItem("Wood Sword", 1);
+    this.player.inv.addItem(TORCH, 16);
+
     this.enemies = [new SlimeEnemy(spawnX + 180, spawnY - 20, "Crust")];
     this.projectiles = [];
     this.particles = [];
     this.floatTexts = [];
     this.gameWon = false;
 
-    const newWorld = {
-      id: "sector_" + Date.now(),
+    const newSector = {
+      id: "sec_" + Date.now(),
       name: cleanName,
       pClass: chosenClass,
       planet: "Earth",
+      level: 1,
       savedAt: new Date().toLocaleDateString()
     };
-    this.worldsList.push(newWorld);
-    this.activeWorldKey = newWorld.id;
-    this.saveSavedWorlds();
+
+    this.worldsList.push(newSector);
+    this.selectedWorldIdx = this.worldsList.length - 1;
+    this.activeWorldKey = newSector.id;
+    this.saveSectorIndex();
+    this.saveCurrentSector();
 
     this.state = "PLAYING";
+  }
+
+  deleteSelectedSector() {
+    if (this.worldsList.length === 0) return;
+    const target = this.worldsList[this.selectedWorldIdx];
+    localStorage.removeItem(SECTOR_DATA_PREFIX + target.id);
+    this.worldsList.splice(this.selectedWorldIdx, 1);
+    this.selectedWorldIdx = Math.max(0, this.selectedWorldIdx - 1);
+    this.saveSectorIndex();
+    this.sound.play("break_stone");
   }
 
   travelToPlanet(targetPlanet) {
@@ -1556,6 +1650,7 @@ class AstroStrataEngine {
 
     this.state = "PLAYING";
     this.floatTexts.push(new FloatingText(this.player.x, this.player.y - 40, `TOUCHDOWN: ${pdata.name.toUpperCase()}!`, COLOR_CYAN, 90));
+    this.saveCurrentSector();
   }
 
   lootChest(gx, gy) {
@@ -1705,7 +1800,7 @@ class AstroStrataEngine {
       }
     });
 
-    // Touch Listeners (Mobile Multi-Touch)
+    // Touch Listeners
     this.canvas.addEventListener("touchstart", (e) => {
       e.preventDefault();
       this.sound.init();
@@ -1801,21 +1896,42 @@ class AstroStrataEngine {
 
     if (this.state === "MENU") {
       if (mx >= SCREEN_WIDTH / 2 - 160 && mx <= SCREEN_WIDTH / 2 + 160 && my >= 310 && my <= 358) {
+        this.loadSectorIndex();
         this.state = "WORLD_SELECT";
         this.sound.play("click");
       }
     } else if (this.state === "WORLD_SELECT") {
-      const bPlay = { x: SCREEN_WIDTH / 2 - 320, y: SCREEN_HEIGHT - 90, w: 150, h: 44 };
-      const bCreate = { x: SCREEN_WIDTH / 2 - 155, y: SCREEN_HEIGHT - 90, w: 150, h: 44 };
+      // Sector Card Click Detection
+      for (let i = 0; i < Math.min(5, this.worldsList.length); i++) {
+        const cardY = 110 + i * 72;
+        if (mx >= SCREEN_WIDTH / 2 - 320 && mx <= SCREEN_WIDTH / 2 + 320 && my >= cardY && my <= cardY + 62) {
+          if (this.selectedWorldIdx === i) {
+            this.loadSectorGame(this.worldsList[i].id);
+          } else {
+            this.selectedWorldIdx = i;
+            this.sound.play("click");
+          }
+          return;
+        }
+      }
 
-      if (mx >= bCreate.x && mx <= bCreate.x + bCreate.w && my >= bCreate.y && my <= bCreate.y + bCreate.h) {
+      const bPlay = { x: SCREEN_WIDTH / 2 - 330, y: SCREEN_HEIGHT - 80, w: 155, h: 44 };
+      const bCreate = { x: SCREEN_WIDTH / 2 - 165, y: SCREEN_HEIGHT - 80, w: 155, h: 44 };
+      const bDelete = { x: SCREEN_WIDTH / 2 + 5, y: SCREEN_HEIGHT - 80, w: 150, h: 44 };
+      const bBack = { x: SCREEN_WIDTH / 2 + 165, y: SCREEN_HEIGHT - 80, w: 155, h: 44 };
+
+      if (mx >= bPlay.x && mx <= bPlay.x + bPlay.w && my >= bPlay.y && my <= bPlay.y + bPlay.h && this.worldsList.length > 0) {
+        const targetSector = this.worldsList[this.selectedWorldIdx];
+        this.loadSectorGame(targetSector.id);
+      } else if (mx >= bCreate.x && mx <= bCreate.x + bCreate.w && my >= bCreate.y && my <= bCreate.y + bCreate.h) {
         this.state = "CREATE_WORLD";
         this.inputWorldName = `Sector ${this.worldsList.length + 1}`;
         this.sound.play("click");
-      } else if (mx >= bPlay.x && mx <= bPlay.x + bPlay.w && my >= bPlay.y && my <= bPlay.y + bPlay.h && this.worldsList.length > 0) {
-        const w = this.worldsList[this.selectedWorldIdx];
-        this.newWorldGame(w.name, w.pClass);
-        this.sound.play("craft");
+      } else if (mx >= bDelete.x && mx <= bDelete.x + bDelete.w && my >= bDelete.y && my <= bDelete.y + bDelete.h) {
+        this.deleteSelectedSector();
+      } else if (mx >= bBack.x && mx <= bBack.x + bBack.w && my >= bBack.y && my <= bBack.y + bBack.h) {
+        this.state = "MENU";
+        this.sound.play("click");
       }
     } else if (this.state === "CREATE_WORLD") {
       const nameBox = { x: SCREEN_WIDTH / 2 - 200, y: 175, w: 400, h: 44 };
@@ -1831,11 +1947,28 @@ class AstroStrataEngine {
       }
 
       const btnConfirm = { x: SCREEN_WIDTH / 2 - 210, y: 520, w: 200, h: 44 };
+      const btnCancel = { x: SCREEN_WIDTH / 2 + 10, y: 520, w: 200, h: 44 };
+
       if (mx >= btnConfirm.x && mx <= btnConfirm.x + btnConfirm.w && my >= btnConfirm.y && my <= btnConfirm.y + btnConfirm.h) {
         this.newWorldGame(this.inputWorldName, this.selectedCreateClass);
         this.sound.play("craft");
+      } else if (mx >= btnCancel.x && mx <= btnCancel.x + btnCancel.w && my >= btnCancel.y && my <= btnCancel.y + btnCancel.h) {
+        this.state = "WORLD_SELECT";
+        this.sound.play("click");
       }
     } else if (this.state === "PLAYING") {
+      // Hotbar Direct Selection
+      const hotbarY = SCREEN_HEIGHT - 60;
+      const hotbarStartX = SCREEN_WIDTH / 2 - 240;
+      if (my >= hotbarY && my <= hotbarY + 44 && mx >= hotbarStartX && mx <= hotbarStartX + 480) {
+        const clickedIdx = Math.floor((mx - hotbarStartX) / 48);
+        if (clickedIdx >= 0 && clickedIdx < 10) {
+          this.player.inv.selectedHotbar = clickedIdx;
+          this.sound.play("click");
+          return;
+        }
+      }
+
       const sel = this.player.inv.getSelected();
       const worldMx = mx + this.camX;
       const worldMy = my + this.camY;
@@ -1854,7 +1987,14 @@ class AstroStrataEngine {
       this.handleStarMapClick(mx, my);
     } else if (this.state === "PAUSE") {
       if (my >= 300 && my <= 342) this.state = "PLAYING";
-      else if (my >= 408 && my <= 450) this.state = "WORLD_SELECT";
+      else if (my >= 354 && my <= 396) {
+        this.saveCurrentSector();
+        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "SECTOR SAVED!", COLOR_GOLD));
+      } else if (my >= 408 && my <= 450) {
+        this.saveCurrentSector();
+        this.loadSectorIndex();
+        this.state = "WORLD_SELECT";
+      }
     }
   }
 
@@ -1896,7 +2036,6 @@ class AstroStrataEngine {
         const placeRect = { x: tgx * TILE_SIZE, y: tgy * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE };
         const pRect = { x: this.player.x, y: this.player.y, w: this.player.w, h: this.player.h };
 
-        // Do not place inside the player
         if (!(placeRect.x < pRect.x + pRect.w && placeRect.x + placeRect.w > pRect.x &&
               placeRect.y < pRect.y + pRect.h && placeRect.y + placeRect.h > pRect.y)) {
           this.world.setTile(tgx, tgy, sel.item);
@@ -1941,7 +2080,7 @@ class AstroStrataEngine {
       catX += 68;
     }
 
-    // Slots Clicks
+    // Slots Interaction
     for (let i = 0; i < 30; i++) {
       const srec = getSlotRect(i);
       if (mx >= srec.x && mx <= srec.x + srec.w && my >= srec.y && my <= srec.y + srec.h) {
@@ -2146,6 +2285,11 @@ class AstroStrataEngine {
       this.camX = Math.max(0, Math.min(this.camX, this.world.width * TILE_SIZE - SCREEN_WIDTH));
       this.camY = Math.max(0, Math.min(this.camY, this.world.height * TILE_SIZE - SCREEN_HEIGHT));
 
+      this.autoSaveTimer++;
+      if (this.autoSaveTimer % 900 === 0) {
+        this.saveCurrentSector();
+      }
+
       for (let i = this.projectiles.length - 1; i >= 0; i--) {
         const p = this.projectiles[i];
         p.update();
@@ -2207,6 +2351,12 @@ class AstroStrataEngine {
       this.ctx.fillStyle = COLOR_WHITE;
       this.ctx.font = "bold 15px 'Courier New', monospace";
       this.ctx.fillText("ENTER EXPEDITION / SECTORS", SCREEN_WIDTH / 2, 340);
+
+      // Version tag in bottom-left corner
+      this.ctx.fillStyle = "#606880";
+      this.ctx.font = "bold 13px monospace";
+      this.ctx.textAlign = "left";
+      this.ctx.fillText(VERSION_STRING, 24, SCREEN_HEIGHT - 24);
       return;
     }
 
@@ -2216,31 +2366,51 @@ class AstroStrataEngine {
       this.ctx.textAlign = "center";
       this.ctx.fillText("EXPEDITION SECTOR ARCHIVE", SCREEN_WIDTH / 2, 60);
 
-      for (let i = 0; i < Math.min(5, this.worldsList.length); i++) {
-        const w = this.worldsList[i];
-        const cardY = 110 + i * 72;
-        this.ctx.fillStyle = (i === this.selectedWorldIdx) ? "#28344e" : "#192030";
-        this.ctx.fillRect(SCREEN_WIDTH / 2 - 320, cardY, 640, 62);
-        this.ctx.strokeStyle = (i === this.selectedWorldIdx) ? COLOR_GOLD : "#404c64";
-        this.ctx.strokeRect(SCREEN_WIDTH / 2 - 320, cardY, 640, 62);
+      if (this.worldsList.length === 0) {
+        this.ctx.fillStyle = "#8892b0";
+        this.ctx.font = "16px monospace";
+        this.ctx.fillText("No sectors established. Click 'CREATE SECTOR' below.", SCREEN_WIDTH / 2, 240);
+      } else {
+        for (let i = 0; i < Math.min(5, this.worldsList.length); i++) {
+          const w = this.worldsList[i];
+          const cardY = 110 + i * 72;
+          const isSelected = (i === this.selectedWorldIdx);
 
-        this.ctx.fillStyle = COLOR_WHITE;
-        this.ctx.font = "bold 16px 'Courier New', monospace";
-        this.ctx.textAlign = "left";
-        this.ctx.fillText(w.name, SCREEN_WIDTH / 2 - 300, cardY + 26);
-        this.ctx.fillStyle = COLOR_CYAN;
-        this.ctx.font = "12px 'Courier New', monospace";
-        this.ctx.fillText(`Class: ${w.pClass} | Location: ${w.planet} | Date: ${w.savedAt}`, SCREEN_WIDTH / 2 - 300, cardY + 46);
+          this.ctx.fillStyle = isSelected ? "#28344e" : "#192030";
+          this.ctx.fillRect(SCREEN_WIDTH / 2 - 320, cardY, 640, 62);
+          this.ctx.strokeStyle = isSelected ? COLOR_GOLD : "#404c64";
+          this.ctx.lineWidth = isSelected ? 2 : 1;
+          this.ctx.strokeRect(SCREEN_WIDTH / 2 - 320, cardY, 640, 62);
+
+          this.ctx.fillStyle = COLOR_WHITE;
+          this.ctx.font = "bold 16px 'Courier New', monospace";
+          this.ctx.textAlign = "left";
+          this.ctx.fillText(w.name, SCREEN_WIDTH / 2 - 300, cardY + 26);
+          this.ctx.fillStyle = COLOR_CYAN;
+          this.ctx.font = "12px 'Courier New', monospace";
+          this.ctx.fillText(`Class: ${w.pClass} | Location: ${w.planet} | Date: ${w.savedAt}`, SCREEN_WIDTH / 2 - 300, cardY + 46);
+        }
       }
 
-      this.ctx.fillStyle = "#1e2436";
-      this.ctx.fillRect(SCREEN_WIDTH / 2 - 155, SCREEN_HEIGHT - 90, 150, 44);
-      this.ctx.strokeStyle = COLOR_GOLD;
-      this.ctx.strokeRect(SCREEN_WIDTH / 2 - 155, SCREEN_HEIGHT - 90, 150, 44);
-      this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.textAlign = "center";
-      this.ctx.font = "bold 14px 'Courier New', monospace";
-      this.ctx.fillText("CREATE SECTOR", SCREEN_WIDTH / 2 - 80, SCREEN_HEIGHT - 63);
+      // Action Buttons at Bottom
+      const hasWorlds = this.worldsList.length > 0;
+      const buttons = [
+        { label: "ENTER SECTOR", x: SCREEN_WIDTH / 2 - 330, w: 155, active: hasWorlds, color: COLOR_GOLD },
+        { label: "CREATE SECTOR", x: SCREEN_WIDTH / 2 - 165, w: 155, active: true, color: COLOR_WHITE },
+        { label: "DELETE", x: SCREEN_WIDTH / 2 + 5, w: 150, active: hasWorlds, color: COLOR_HP },
+        { label: "MAIN MENU", x: SCREEN_WIDTH / 2 + 165, w: 155, active: true, color: COLOR_WHITE }
+      ];
+
+      for (const btn of buttons) {
+        this.ctx.fillStyle = btn.active ? "#1e2436" : "#12141c";
+        this.ctx.fillRect(btn.x, SCREEN_HEIGHT - 80, btn.w, 44);
+        this.ctx.strokeStyle = btn.active ? btn.color : "#333948";
+        this.ctx.strokeRect(btn.x, SCREEN_HEIGHT - 80, btn.w, 44);
+        this.ctx.fillStyle = btn.active ? btn.color : "#606880";
+        this.ctx.textAlign = "center";
+        this.ctx.font = "bold 13px 'Courier New', monospace";
+        this.ctx.fillText(btn.label, btn.x + btn.w / 2, SCREEN_HEIGHT - 53);
+      }
       return;
     }
 
@@ -2278,6 +2448,13 @@ class AstroStrataEngine {
       this.ctx.strokeRect(SCREEN_WIDTH / 2 - 210, 520, 200, 44);
       this.ctx.fillStyle = COLOR_GOLD;
       this.ctx.fillText("LAUNCH SECTOR", SCREEN_WIDTH / 2 - 110, 547);
+
+      this.ctx.fillStyle = "#1e2436";
+      this.ctx.fillRect(SCREEN_WIDTH / 2 + 10, 520, 200, 44);
+      this.ctx.strokeStyle = "#404c64";
+      this.ctx.strokeRect(SCREEN_WIDTH / 2 + 10, 520, 200, 44);
+      this.ctx.fillStyle = COLOR_WHITE;
+      this.ctx.fillText("CANCEL", SCREEN_WIDTH / 2 + 110, 547);
       return;
     }
 
@@ -2441,7 +2618,7 @@ class AstroStrataEngine {
       this.ctx.font = "bold 20px 'Courier New', monospace";
       this.ctx.fillText("WORKSHOP & FABRICATION MATRIX", INV_UI_X + 24, INV_UI_Y + 36);
 
-      // Close [X] Button
+      // Close Button [X]
       this.ctx.fillStyle = "#e63c3c";
       this.ctx.fillRect(INV_UI_X + 735, INV_UI_Y + 12, 30, 30);
       this.ctx.strokeStyle = COLOR_WHITE;
@@ -2495,7 +2672,7 @@ class AstroStrataEngine {
         }
       }
 
-      // Recipes List with explicit CRAFT buttons
+      // Recipes List
       const displayedRecipes = this.getFilteredRecipes();
       const visibleSlice = displayedRecipes.slice(this.recipeScrollOffset, this.recipeScrollOffset + 9);
       for (let idx = 0; idx < visibleSlice.length; idx++) {
@@ -2528,7 +2705,6 @@ class AstroStrataEngine {
         this.ctx.font = "10px monospace";
         this.ctx.fillText(reqTexts.join(" "), INV_UI_X + 310, recY + 18);
 
-        // Craft button
         const craftBtn = { x: INV_UI_X + 675, y: recY + 2, w: 65, h: 22 };
         this.ctx.fillStyle = canCraft ? "#236437" : "#303440";
         this.ctx.fillRect(craftBtn.x, craftBtn.y, craftBtn.w, craftBtn.h);
@@ -2577,6 +2753,33 @@ class AstroStrataEngine {
         this.ctx.fillText("LAUNCH", INV_UI_X + 680, cardY + 52);
       }
     }
+
+    // Pause Menu Overlay
+    if (this.state === "PAUSE") {
+      this.ctx.fillStyle = "rgba(5, 5, 10, 0.85)";
+      this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+      this.ctx.fillStyle = COLOR_GOLD;
+      this.ctx.font = "bold 28px 'Courier New', monospace";
+      this.ctx.textAlign = "center";
+      this.ctx.fillText("EXPEDITION PAUSED", SCREEN_WIDTH / 2, 230);
+
+      const pauseOpts = [
+        { label: "RESUME SECTOR", y: 300 },
+        { label: "SAVE SECTOR PROGRESS", y: 354 },
+        { label: "QUIT TO SECTOR ARCHIVE", y: 408 }
+      ];
+
+      for (const opt of pauseOpts) {
+        this.ctx.fillStyle = "#1e2436";
+        this.ctx.fillRect(SCREEN_WIDTH / 2 - 160, opt.y, 320, 42);
+        this.ctx.strokeStyle = COLOR_GOLD;
+        this.ctx.strokeRect(SCREEN_WIDTH / 2 - 160, opt.y, 320, 42);
+        this.ctx.fillStyle = COLOR_WHITE;
+        this.ctx.font = "bold 14px 'Courier New', monospace";
+        this.ctx.fillText(opt.label, SCREEN_WIDTH / 2, opt.y + 26);
+      }
+    }
   }
 
   run() {
@@ -2589,7 +2792,7 @@ class AstroStrataEngine {
   }
 }
 
-// Global Launcher
+// Global Bootstrap
 window.addEventListener("DOMContentLoaded", () => {
   const game = new AstroStrataEngine();
   const startBtn = document.getElementById("start-btn");

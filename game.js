@@ -1,5 +1,5 @@
 // =============================================================================
-// ASTROSTRATA: REIGNITION — COMPLETE WEB ENGINE
+// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE
 // =============================================================================
 
 const SCREEN_WIDTH = 1280;
@@ -8,7 +8,7 @@ const TILE_SIZE = 32;
 const WORLD_WIDTH = 110;
 const WORLD_HEIGHT = 160;
 const FPS = 60;
-const SAVES_STORAGE_KEY = "astrostrata_saved_worlds_v1";
+const SAVES_STORAGE_KEY = "astrostrata_saved_sectors_v1";
 
 const LIGHT_SCALE = 4;
 const LIGHT_W = Math.floor(SCREEN_WIDTH / LIGHT_SCALE);
@@ -34,7 +34,7 @@ const OUTER_CORE_BOTTOM = 140;
 const INNER_CORE_BOTTOM = WORLD_HEIGHT;
 
 // ==========================================
-// BLOCK & TILE IDENTIFIERS
+// TILE & BLOCK IDENTIFIERS
 // ==========================================
 const AIR = 0;
 const DIRT = 1;
@@ -119,7 +119,7 @@ const TIER_NAMES = {
 };
 
 const BLOCK_DATA = {
-  [CHEST]: { name: "Loot Chest", hardness: 1.5, mohs: 2.5, color: "#a56e2d", drop: CHEST, req_tier: 0, req_tool: "Axe", desc: "Subterranean cache with basic survival supplies." },
+  [CHEST]: { name: "Loot Cache", hardness: 1.5, mohs: 2.5, color: "#a56e2d", drop: CHEST, req_tier: 0, req_tool: "Axe", desc: "Subterranean cache with survival supplies." },
   [DIRT]: { name: "Dirt", hardness: 0.8, mohs: 1.5, color: "#734b2d", drop: DIRT, req_tier: 0, req_tool: "Shovel", desc: "Soft, cohesive organic topsoil." },
   [GRASS]: { name: "Grass Block", hardness: 0.8, mohs: 1.5, color: "#4b9128", drop: DIRT, req_tier: 0, req_tool: "Shovel", desc: "Root-bound surface humus layer." },
   [STONE]: { name: "Crust Stone", hardness: 2.2, mohs: 5.5, color: "#787880", drop: STONE, req_tier: 1, req_tool: "Pickaxe", desc: "Brittle continental granitic bedrock." },
@@ -479,7 +479,20 @@ function evaluateMiningInteraction(player, tileId) {
 }
 
 // ==========================================
-// PROCEDURAL AUDIO SYNTHESIZER (WEB AUDIO API)
+// MOBILE VIRTUAL CONTROLS MAPPING
+// ==========================================
+const TOUCH_CONTROLS = {
+  btnLeft:  { id: "left",  x: 25,  y: SCREEN_HEIGHT - 115, w: 65, h: 65, label: "◀" },
+  btnRight: { id: "right", x: 100, y: SCREEN_HEIGHT - 115, w: 65, h: 65, label: "▶" },
+  btnJump:  { id: "jump",  x: 62,  y: SCREEN_HEIGHT - 190, w: 65, h: 65, label: "▲" },
+  btnMine:  { id: "mine",  x: SCREEN_WIDTH - 165, y: SCREEN_HEIGHT - 115, w: 65, h: 65, label: "DIG" },
+  btnPlace: { id: "place", x: SCREEN_WIDTH - 85,  y: SCREEN_HEIGHT - 115, w: 65, h: 65, label: "USE" },
+  btnInv:   { id: "inv",   x: SCREEN_WIDTH - 85,  y: 18, w: 68, h: 36, label: "INV" },
+  btnHeal:  { id: "heal",  x: SCREEN_WIDTH - 165, y: 18, w: 68, h: 36, label: "HEAL" }
+};
+
+// ==========================================
+// PROCEDURAL AUDIO SYNTHESIZER
 // ==========================================
 class SoundEngine {
   constructor() {
@@ -915,7 +928,7 @@ class World {
     this._spawnVein(LAVA, 85, 140, 15, 11, [MAGMA_STONE, MOLTEN_CORE, AIR]);
     this._spawnStructures(9, 38, 115);
 
-    // Trees
+    // Canopy Trees
     for (let x = 2; x < this.width - 3; x++) {
       const g = heights[x];
       if (x % 6 === 3 && g > 10 && this.tiles[x][g] === GRASS) {
@@ -976,7 +989,6 @@ class World {
     for (let y = this.height - 2; y >= 1; y--) {
       for (let x = 1; x < this.width - 1; x++) {
         if (this.tiles[x][y] === LAVA) {
-          // Burn wood
           for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
             const nb = this.getTile(nx, ny);
             if ([WOOD, LEAVES, PLANKS, BOOKSHELF, WORKBENCH, WOOD_TABLE, WOOD_CHAIR].includes(nb)) {
@@ -1057,10 +1069,9 @@ class OptimizedLighting {
 
     this.ctx.fillStyle = amb;
     this.ctx.fillRect(0, 0, LIGHT_W, LIGHT_H);
-
     this.ctx.globalCompositeOperation = "lighter";
 
-    // Player torch glow
+    // Player personal glow
     const px = Math.floor((player.x + player.w / 2 - camX) / LIGHT_SCALE);
     const py = Math.floor((player.y + player.h / 2 - camY) / LIGHT_SCALE);
     const grad = this.ctx.createRadialGradient(px, py, 4, px, py, 35);
@@ -1364,7 +1375,7 @@ class Player {
     ctx.fillRect(dx + (this.facingRight ? 4 : 10), dy + 24 + bob, 5, 14 + Math.floor(leg2Off));
     ctx.fillRect(dx + (this.facingRight ? 10 : 4), dy + 24 + bob, 5, 14 + Math.floor(leg1Off));
 
-    // Torso & Suits
+    // Torso & Environmental Suits
     const torsoY = dy + 10 + Math.floor(bob + breath);
     const chest = this.inv.armor.chest;
     ctx.fillStyle = (chest === "Thermal Suit") ? "#ff6e19" : (chest === "Core Exosuit") ? "#282d3c" : (chest === "Acid-Resistant Suit") ? "#8cd246" : this.color;
@@ -1411,9 +1422,9 @@ class Player {
 }
 
 // ==========================================
-// MAIN CONTROLLER & STATE MANAGER
+// ASTROSTRATA MAIN ENGINE CONTROLLER
 // ==========================================
-class EarthTerrariaRPG {
+class AstroStrataEngine {
   constructor() {
     this.canvas = document.getElementById("gameCanvas");
     this.ctx = this.canvas.getContext("2d");
@@ -1453,6 +1464,10 @@ class EarthTerrariaRPG {
     this.keys = {};
     this.mouse = { x: 0, y: 0, down: false, rightDown: false };
 
+    // Mobile / Touch handling
+    this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    this.activeTouches = new Map();
+
     this.loadSavedWorlds();
     this.setupListeners();
   }
@@ -1485,7 +1500,7 @@ class EarthTerrariaRPG {
   }
 
   newWorldGame(name, chosenClass) {
-    const cleanName = name.trim() || `World ${this.worldsList.length + 1}`;
+    const cleanName = name.trim() || `Sector ${this.worldsList.length + 1}`;
     this.world = new World(WORLD_WIDTH, WORLD_HEIGHT);
     this.world.generate("Earth");
 
@@ -1506,7 +1521,7 @@ class EarthTerrariaRPG {
     this.gameWon = false;
 
     const newWorld = {
-      id: "world_" + Date.now(),
+      id: "sector_" + Date.now(),
       name: cleanName,
       pClass: chosenClass,
       planet: "Earth",
@@ -1629,7 +1644,6 @@ class EarthTerrariaRPG {
         }
       }
 
-      // Hotbar numerical keys (1 to 0)
       if (e.code.startsWith("Digit") || e.code.startsWith("Numpad")) {
         const d = parseInt(e.key, 10);
         if (!isNaN(d)) {
@@ -1650,6 +1664,18 @@ class EarthTerrariaRPG {
       return { x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sy };
     };
 
+    const getTouchPos = (touch) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const sx = SCREEN_WIDTH / rect.width;
+      const sy = SCREEN_HEIGHT / rect.height;
+      return { x: (touch.clientX - rect.left) * sx, y: (touch.clientY - rect.top) * sy };
+    };
+
+    const pointInRect = (px, py, r) => {
+      return px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
+    };
+
+    // Mouse Listeners
     this.canvas.addEventListener("mousemove", (e) => {
       const pos = getCanvasPos(e);
       this.mouse.x = pos.x;
@@ -1686,6 +1712,99 @@ class EarthTerrariaRPG {
         this.planetScrollOffset = Math.max(0, Math.min(PLANET_ORDER.length - 4, this.planetScrollOffset + (e.deltaY > 0 ? 1 : -1)));
       }
     });
+
+    // Touch Listeners (Mobile Multi-Touch)
+    this.canvas.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      this.sound.init();
+      this.isTouchDevice = true;
+
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        const pos = getTouchPos(t);
+        this.mouse.x = pos.x;
+        this.mouse.y = pos.y;
+
+        if (this.state !== "PLAYING") {
+          this.activeTouches.set(t.identifier, { type: "menu", ...pos });
+          this.handleLeftClick();
+          continue;
+        }
+
+        let handled = false;
+        for (const [key, btn] of Object.entries(TOUCH_CONTROLS)) {
+          if (pointInRect(pos.x, pos.y, btn)) {
+            this.activeTouches.set(t.identifier, { type: btn.id, ...pos });
+            handled = true;
+
+            if (btn.id === "left")  this.keys["KeyA"] = true;
+            if (btn.id === "right") this.keys["KeyD"] = true;
+            if (btn.id === "jump")  this.keys["KeyW"] = true;
+            if (btn.id === "inv") {
+              this.state = (this.state === "PLAYING") ? "INVENTORY" : "PLAYING";
+              this.sound.play("click");
+            }
+            if (btn.id === "heal") {
+              if (this.player.inv.countItem("Health Potion") > 0) {
+                this.player.inv.removeItem("Health Potion", 1);
+                this.player.hp = Math.min(this.player.max_hp, this.player.hp + 50);
+                this.sound.play("potion");
+                this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "+50 HP", COLOR_EXP));
+              }
+            }
+            if (btn.id === "mine") {
+              this.mouse.down = true;
+              this.handleLeftClick();
+            }
+            if (btn.id === "place") {
+              this.mouse.rightDown = true;
+              this.handleRightClick();
+            }
+            break;
+          }
+        }
+
+        if (!handled) {
+          this.activeTouches.set(t.identifier, { type: "world", ...pos });
+          this.mouse.down = true;
+          this.handleLeftClick();
+        }
+      }
+    }, { passive: false });
+
+    this.canvas.addEventListener("touchmove", (e) => {
+      e.preventDefault();
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        const pos = getTouchPos(t);
+        const existing = this.activeTouches.get(t.identifier);
+        if (existing && existing.type === "world") {
+          this.mouse.x = pos.x;
+          this.mouse.y = pos.y;
+        }
+      }
+    }, { passive: false });
+
+    const handleTouchEnd = (e) => {
+      e.preventDefault();
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        const existing = this.activeTouches.get(t.identifier);
+        if (!existing) continue;
+
+        if (existing.type === "left")  this.keys["KeyA"] = false;
+        if (existing.type === "right") this.keys["KeyD"] = false;
+        if (existing.type === "jump")  this.keys["KeyW"] = false;
+        if (existing.type === "mine")  this.mouse.down = false;
+        if (existing.type === "place") this.mouse.rightDown = false;
+        if (existing.type === "world") this.mouse.down = false;
+
+        this.activeTouches.delete(t.identifier);
+      }
+    };
+
+    this.canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
+    this.canvas.addEventListener("touchcancel", handleTouchEnd, { passive: false });
   }
 
   handleLeftClick() {
@@ -1703,7 +1822,7 @@ class EarthTerrariaRPG {
 
       if (mx >= bCreate.x && mx <= bCreate.x + bCreate.w && my >= bCreate.y && my <= bCreate.y + bCreate.h) {
         this.state = "CREATE_WORLD";
-        this.inputWorldName = `World ${this.worldsList.length + 1}`;
+        this.inputWorldName = `Sector ${this.worldsList.length + 1}`;
         this.sound.play("click");
       } else if (mx >= bPlay.x && mx <= bPlay.x + bPlay.w && my >= bPlay.y && my <= bPlay.y + bPlay.h && this.worldsList.length > 0) {
         const w = this.worldsList[this.selectedWorldIdx];
@@ -1807,7 +1926,6 @@ class EarthTerrariaRPG {
   handleInventoryClick(mx, my, btn) {
     const rx = INV_UI_X + 24;
 
-    // Search bar click
     if (mx >= rx && mx <= rx + 200 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 249) {
       this.searchActive = true;
       this.sound.play("click");
@@ -1816,7 +1934,6 @@ class EarthTerrariaRPG {
       this.searchActive = false;
     }
 
-    // Category Tabs
     const categories = ["ALL", "TOOLS", "WEAPONS", "ARMOR", "ROCKETS", "BLOCKS"];
     let catX = rx + 240;
     for (const cat of categories) {
@@ -1829,7 +1946,6 @@ class EarthTerrariaRPG {
       catX += 68;
     }
 
-    // Slot interaction
     for (let i = 0; i < 30; i++) {
       const srec = getSlotRect(i);
       if (mx >= srec.x && mx <= srec.x + srec.w && my >= srec.y && my <= srec.y + srec.h) {
@@ -1859,7 +1975,6 @@ class EarthTerrariaRPG {
       }
     }
 
-    // Recipe crafting click
     const displayedRecipes = this.getFilteredRecipes();
     const visibleSlice = displayedRecipes.slice(this.recipeScrollOffset, this.recipeScrollOffset + 9);
     for (let idx = 0; idx < visibleSlice.length; idx++) {
@@ -2035,7 +2150,7 @@ class EarthTerrariaRPG {
 
       this.ctx.fillStyle = COLOR_WHITE;
       this.ctx.font = "bold 15px 'Courier New', monospace";
-      this.ctx.fillText("ENTER EXPEDITION / WORLDS", SCREEN_WIDTH / 2, 340);
+      this.ctx.fillText("ENTER EXPEDITION / SECTORS", SCREEN_WIDTH / 2, 340);
       return;
     }
 
@@ -2043,7 +2158,7 @@ class EarthTerrariaRPG {
       this.ctx.fillStyle = COLOR_GOLD;
       this.ctx.font = "bold 28px 'Courier New', monospace";
       this.ctx.textAlign = "center";
-      this.ctx.fillText("EXPEDITION WORLD SELECT", SCREEN_WIDTH / 2, 60);
+      this.ctx.fillText("EXPEDITION SECTOR ARCHIVE", SCREEN_WIDTH / 2, 60);
 
       for (let i = 0; i < Math.min(5, this.worldsList.length); i++) {
         const w = this.worldsList[i];
@@ -2069,7 +2184,7 @@ class EarthTerrariaRPG {
       this.ctx.fillStyle = COLOR_GOLD;
       this.ctx.textAlign = "center";
       this.ctx.font = "bold 14px 'Courier New', monospace";
-      this.ctx.fillText("CREATE WORLD", SCREEN_WIDTH / 2 - 80, SCREEN_HEIGHT - 63);
+      this.ctx.fillText("CREATE SECTOR", SCREEN_WIDTH / 2 - 80, SCREEN_HEIGHT - 63);
       return;
     }
 
@@ -2077,7 +2192,7 @@ class EarthTerrariaRPG {
       this.ctx.fillStyle = COLOR_GOLD;
       this.ctx.font = "bold 28px 'Courier New', monospace";
       this.ctx.textAlign = "center";
-      this.ctx.fillText("ESTABLISH NEW SECTOR", SCREEN_WIDTH / 2, 60);
+      this.ctx.fillText("INITIALIZE SECTOR PROFILE", SCREEN_WIDTH / 2, 60);
 
       this.ctx.fillStyle = "#141824";
       this.ctx.fillRect(SCREEN_WIDTH / 2 - 200, 175, 400, 44);
@@ -2106,7 +2221,7 @@ class EarthTerrariaRPG {
       this.ctx.strokeStyle = COLOR_GOLD;
       this.ctx.strokeRect(SCREEN_WIDTH / 2 - 210, 520, 200, 44);
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.fillText("INITIALIZE WORLD", SCREEN_WIDTH / 2 - 110, 547);
+      this.ctx.fillText("LAUNCH SECTOR", SCREEN_WIDTH / 2 - 110, 547);
       return;
     }
 
@@ -2137,7 +2252,7 @@ class EarthTerrariaRPG {
 
     if (this.player) this.lighting.render(this.ctx, this.player, this.world, this.camX, this.camY);
 
-    // Live HWyla Inspector HUD
+    // Geological Target Inspector
     const worldMx = this.mouse.x + this.camX;
     const worldMy = this.mouse.y + this.camY;
     const hoverTx = Math.floor(worldMx / TILE_SIZE);
@@ -2217,6 +2332,29 @@ class EarthTerrariaRPG {
           this.ctx.fillText(`${slot.count}`, bx + 26, by + 38);
         }
       }
+    }
+
+    // Touch Virtual Controls Overlay
+    if (this.state === "PLAYING" && this.isTouchDevice) {
+      this.ctx.save();
+      for (const [key, btn] of Object.entries(TOUCH_CONTROLS)) {
+        let isActive = false;
+        for (const [tid, touch] of this.activeTouches) {
+          if (touch.type === btn.id) { isActive = true; break; }
+        }
+
+        this.ctx.fillStyle = isActive ? "rgba(255, 215, 0, 0.4)" : "rgba(20, 26, 40, 0.65)";
+        this.ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
+        this.ctx.strokeStyle = isActive ? COLOR_GOLD : "rgba(90, 220, 255, 0.5)";
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
+
+        this.ctx.fillStyle = isActive ? COLOR_GOLD : COLOR_WHITE;
+        this.ctx.font = "bold 16px 'Courier New', monospace";
+        this.ctx.textAlign = "center";
+        this.ctx.fillText(btn.label, btn.x + btn.w / 2, btn.y + btn.h / 2 + 5);
+      }
+      this.ctx.restore();
     }
 
     // Inventory & Crafting Matrix
@@ -2327,7 +2465,7 @@ class EarthTerrariaRPG {
 
 // Global Launcher
 window.addEventListener("DOMContentLoaded", () => {
-  const game = new EarthTerrariaRPG();
+  const game = new AstroStrataEngine();
   const startBtn = document.getElementById("start-btn");
   const overlay = document.getElementById("loading-overlay");
 

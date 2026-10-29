@@ -1,5 +1,5 @@
 // =============================================================================
-// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (V0.3.0)
+// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 1 / 2)
 // =============================================================================
 
 const VERSION_STRING = "v0.3.0-web";
@@ -490,6 +490,9 @@ const TOUCH_CONTROLS = {
   btnInv:   { id: "inv",   x: SCREEN_WIDTH - 85,  y: 18, w: 68, h: 36, label: "INV" },
   btnHeal:  { id: "heal",  x: SCREEN_WIDTH - 165, y: 18, w: 68, h: 36, label: "HEAL" }
 };
+// =============================================================================
+// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 2 / 2)
+// =============================================================================
 
 // ==========================================
 // PROCEDURAL AUDIO SYNTHESIZER
@@ -507,6 +510,9 @@ class SoundEngine {
     if (!AudioContextClass) return;
     this.ctx = new AudioContextClass();
     this.enabled = true;
+    if (this.ctx.state === "suspended") {
+      this.ctx.resume();
+    }
     this._bakeAllSounds();
   }
 
@@ -737,7 +743,6 @@ class PixelArtGenerator {
         }
       }
 
-      // Universal 3D Edge Bevel
       if (![AIR, LAVA, TORCH, GLASS, CRYSTAL_GLASS].includes(bid)) {
         ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
         ctx.lineWidth = 2;
@@ -788,7 +793,6 @@ class PixelArtGenerator {
       this.icons[name] = cvs;
     }
 
-    // 10 Progressive Crack Overlays
     for (let stage = 0; stage < 10; stage++) {
       const cvs = document.createElement("canvas");
       cvs.width = TILE_SIZE;
@@ -870,354 +874,321 @@ class FloatingText {
 }
 
 // ==========================================
-// INVENTORY MANAGER
+// WORLD GENERATOR & LIQUIDS
 // ==========================================
-class InventoryManager {
-  constructor() {
-    this.slots = new Array(30).fill(null);
-    this.armor = { helmet: null, chest: null, boots: null };
-    this.selectedHotbar = 0;
+class World {
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
+    this.tiles = Array.from({ length: width }, () => new Array(height).fill(AIR));
+    this.damage_map = new Map();
+    this.fluid_tick = 0;
+    this.current_planet = "Earth";
   }
 
-  addItem(item, count = 1) {
-    for (let i = 0; i < 30; i++) {
-      if (this.slots[i] && this.slots[i].item === item) {
-        this.slots[i].count += count;
-        return true;
-      }
-    }
-    for (let i = 0; i < 30; i++) {
-      if (this.slots[i] === null) {
-        this.slots[i] = { item, count };
-        return true;
-      }
-    }
-    return false;
-  }
-
-  removeItem(item, count = 1) {
-    for (let i = 0; i < 30; i++) {
-      if (this.slots[i] && this.slots[i].item === item) {
-        if (this.slots[i].count >= count) {
-          this.slots[i].count -= count;
-          if (this.slots[i].count <= 0) this.slots[i] = null;
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  countItem(item) {
-    let sum = 0;
-    for (const s of this.slots) {
-      if (s && s.item === item) sum += s.count;
-    }
-    return sum;
-  }
-
-  getSelected() {
-    return this.slots[this.selectedHotbar];
-  }
-}
-
-// ==========================================
-// ENTITIES: SLIME, PROJECTILE, PLAYER
-// ==========================================
-class SlimeEnemy {
-  constructor(x, y, etype = "Crust") {
-    this.x = x;
-    this.y = y;
-    this.w = 28;
-    this.h = 22;
-    this.vx = 0;
-    this.vy = 0;
-    this.type = etype;
-    this.max_hp = (etype === "Crust") ? 35 : (etype === "Mantle") ? 90 : 220;
-    this.hp = this.max_hp;
-    this.damage = (etype === "Crust") ? 12 : (etype === "Mantle") ? 24 : 45;
-    this.color = (etype === "Crust") ? "#50c864" : (etype === "Mantle") ? "#dc5a28" : "#fff078";
-    this.jumpTimer = Math.floor(Math.random() * 60) + 30;
-    this.onGround = false;
-  }
-
-  update(world, player) {
-    this.vy = Math.min(9, this.vy + 0.35);
-    this.jumpTimer--;
-    if (this.jumpTimer <= 0 && this.onGround) {
-      this.jumpTimer = Math.floor(Math.random() * 60) + 40;
-      this.vy = -7.2;
-      this.vx = (player.x > this.x ? 1 : -1) * (2 + Math.random());
-    }
-
-    if (this.onGround) this.vx *= 0.82;
-    this.x += this.vx;
-    this.y += this.vy;
-
-    const tx = Math.floor((this.x + this.w / 2) / TILE_SIZE);
-    const ty = Math.floor((this.y + this.h) / TILE_SIZE);
-    if (![AIR, TORCH, LAVA, LANTERN, NEON_LAMP].includes(world.getTile(tx, ty))) {
-      this.y = ty * TILE_SIZE - this.h;
-      this.vy = 0;
-      this.onGround = true;
-    } else {
-      this.onGround = false;
-    }
-  }
-
-  draw(ctx, camX, camY) {
-    ctx.fillStyle = this.color;
-    ctx.beginPath();
-    ctx.ellipse(this.x - camX + this.w / 2, this.y - camY + this.h / 2, this.w / 2, this.h / 2, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(this.x - camX + 8, this.y - camY + 6, 3, 3);
-    ctx.fillRect(this.x - camX + 16, this.y - camY + 6, 3, 3);
-  }
-}
-
-class Projectile {
-  constructor(x, y, tx, ty, damage, ptype = "magic") {
-    this.x = x;
-    this.y = y;
-    this.damage = damage;
-    this.type = ptype;
-    this.life = 75;
-    const ang = Math.atan2(ty - y, tx - x);
-    const speed = (ptype === "dynamite") ? 8.0 : (ptype === "pulse") ? 11.5 : 9.5;
-    this.vx = Math.cos(ang) * speed;
-    this.vy = Math.sin(ang) * speed - ((ptype === "dynamite") ? 2.5 : 0);
-  }
-
-  update() {
-    this.x += this.vx;
-    this.y += this.vy;
-    if (this.type === "dynamite") this.vy += 0.22;
-    this.life--;
-  }
-
-  draw(ctx, camX, camY) {
-    const px = Math.floor(this.x - camX);
-    const py = Math.floor(this.y - camY);
-    if (this.type === "dynamite") {
-      ctx.fillStyle = "#dc3232";
-      ctx.fillRect(px - 4, py - 4, 8, 8);
-    } else if (this.type === "arrow") {
-      ctx.strokeStyle = "#e6c88c";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(px - this.vx, py - this.vy);
-      ctx.lineTo(px, py);
-      ctx.stroke();
-    } else {
-      ctx.fillStyle = (this.type === "ice") ? "#82e1ff" : COLOR_CYAN;
-      ctx.beginPath();
-      ctx.arc(px, py, 5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-}
-
-class Player {
-  constructor(x, y, chosenClass = "Warrior") {
-    this.x = x;
-    this.y = y;
-    this.w = 20;
-    this.h = 42;
-    this.vx = 0.0;
-    this.vy = 0.0;
-    this.onGround = false;
-    this.facingRight = true;
-    this.inLava = false;
-
-    this.pClass = chosenClass;
-    const stats = CLASSES[chosenClass];
-    this.max_hp = stats.hp;
-    this.hp = this.max_hp;
-    this.base_damage = stats.dmg;
-    this.move_speed = stats.speed;
-    this.mine_mult = stats.mine_speed;
-    this.color = stats.color;
-
-    this.level = 1;
-    this.xp = 0;
-    this.xp_next = 100;
-    this.inv = new InventoryManager();
-
-    this.animTick = 0;
-    this.walkPhase = 0.0;
-    this.isMoving = false;
-    this.attackCooldown = 0;
-    this.swingAnim = 0;
-    this.speedBuffTimer = 0;
-  }
-
-  addXp(amt, floatTexts, sound) {
-    this.xp += amt;
-    floatTexts.push(new FloatingText(this.x + 10, this.y - 10, `+${amt} XP`, COLOR_EXP));
-    while (this.xp >= this.xp_next) {
-      this.xp -= this.xp_next;
-      this.level++;
-      this.xp_next = Math.floor(this.xp_next * 1.45);
-      this.max_hp += 18;
-      this.hp = this.max_hp;
-      this.base_damage += 4;
-      this.mine_mult += 0.15;
-      sound.play("level_up");
-      floatTexts.push(new FloatingText(this.x + 10, this.y - 28, "LEVEL UP!", COLOR_GOLD, 70));
-    }
-  }
-
-  update(world, keys, sound) {
-    this.animTick++;
-    this.inLava = false;
-    const tx = Math.floor((this.x + this.w / 2) / TILE_SIZE);
-    const ty = Math.floor((this.y + this.h / 2) / TILE_SIZE);
-    if (world.getTile(tx, ty) === LAVA) this.inLava = true;
-
-    let speedFactor = this.inLava ? 0.45 : 1.0;
-    if (this.speedBuffTimer > 0) {
-      this.speedBuffTimer--;
-      speedFactor *= 1.45;
-    }
-
-    let targetVx = 0;
-    this.isMoving = false;
-    if (keys["KeyA"] || keys["ArrowLeft"]) {
-      targetVx = -this.move_speed * speedFactor;
-      this.facingRight = false;
-      this.isMoving = true;
-    }
-    if (keys["KeyD"] || keys["ArrowRight"]) {
-      targetVx = this.move_speed * speedFactor;
-      this.facingRight = true;
-      this.isMoving = true;
-    }
-    this.vx += (targetVx - this.vx) * 0.25;
-
-    if (this.isMoving && this.onGround) this.walkPhase += 0.25;
-    else this.walkPhase *= 0.8;
-
-    const pGrav = (this.inv.countItem("Gravity Stabilizer") > 0) ? 0.42 : (PLANET_DATA[world.current_planet]?.gravity || 0.42);
-
-    if (keys["KeyW"] || keys["Space"] || keys["ArrowUp"]) {
-      if (this.onGround) {
-        this.vy = -8.2 * Math.sqrt(pGrav / 0.42);
-        sound.play("jump");
-      } else if (this.inLava) {
-        this.vy = -3.2;
-      }
-    }
-
-    this.vy += this.inLava ? 0.16 : pGrav;
-    this.vy = Math.min(this.inLava ? 4.2 : 13.0, this.vy);
-
-    this.x += this.vx;
-    this._colX(world);
-    this.y += this.vy;
-    this._colY(world);
-
-    if (this.attackCooldown > 0) this.attackCooldown--;
-    if (this.swingAnim > 0) this.swingAnim--;
-  }
-
-  _colX(world) {
-    const left = Math.floor(this.x / TILE_SIZE);
-    const right = Math.floor((this.x + this.w) / TILE_SIZE);
-    const top = Math.floor(this.y / TILE_SIZE);
-    const bottom = Math.floor((this.y + this.h - 1) / TILE_SIZE);
-
-    for (let ty = top; ty <= bottom; ty++) {
-      for (let tx = left; tx <= right; tx++) {
-        if (![AIR, TORCH, LAVA, LANTERN, NEON_LAMP, WOOD_TABLE, WOOD_CHAIR].includes(world.getTile(tx, ty))) {
-          if (this.vx > 0) this.x = tx * TILE_SIZE - this.w;
-          else if (this.vx < 0) this.x = (tx + 1) * TILE_SIZE;
-          this.vx = 0;
-        }
-      }
-    }
-  }
-
-  _colY(world) {
-    this.onGround = false;
-    const left = Math.floor(this.x / TILE_SIZE);
-    const right = Math.floor((this.x + this.w - 1) / TILE_SIZE);
-    const top = Math.floor(this.y / TILE_SIZE);
-    const bottom = Math.floor((this.y + this.h) / TILE_SIZE);
-
-    for (let ty = top; ty <= bottom; ty++) {
-      for (let tx = left; tx <= right; tx++) {
-        if (![AIR, TORCH, LAVA, LANTERN, NEON_LAMP, WOOD_TABLE, WOOD_CHAIR].includes(world.getTile(tx, ty))) {
-          if (this.vy > 0) {
-            this.y = ty * TILE_SIZE - this.h;
-            this.onGround = true;
-          } else if (this.vy < 0) {
-            this.y = (ty + 1) * TILE_SIZE;
+  _spawnVein(oreId, minY, maxY, count, size, validHosts) {
+    for (let i = 0; i < count; i++) {
+      let vx = 3 + Math.floor(Math.random() * (this.width - 6));
+      let vy = minY + Math.floor(Math.random() * (maxY - minY));
+      for (let s = 0; s < size; s++) {
+        if (vx >= 0 && vx < this.width && vy >= 0 && vy < this.height) {
+          if (validHosts.includes(this.tiles[vx][vy])) {
+            this.tiles[vx][vy] = oreId;
           }
-          this.vy = 0;
+        }
+        vx += (Math.random() < 0.5 ? -1 : 1);
+        vy += (Math.random() < 0.5 ? -1 : 1);
+      }
+    }
+  }
+
+  _carveCaves(count = 16, length = 55, minY = 35, maxY = 135) {
+    for (let c = 0; c < count; c++) {
+      let cx = 10 + Math.floor(Math.random() * (this.width - 20));
+      let cy = minY + Math.floor(Math.random() * (maxY - minY));
+      for (let l = 0; l < length; l++) {
+        const radius = Math.random() < 0.4 ? 1 : 2;
+        for (let dx = -radius; dx <= radius; dx++) {
+          for (let dy = -radius; dy <= radius; dy++) {
+            const tx = cx + dx;
+            const ty = cy + dy;
+            if (tx >= 1 && tx < this.width - 1 && ty >= minY && ty < this.height - 2) {
+              if (![INNER_CORE_METAL, CORE_CRYSTAL].includes(this.tiles[tx][ty])) {
+                this.tiles[tx][ty] = AIR;
+              }
+            }
+          }
+        }
+        cx += Math.floor(Math.random() * 3) - 1;
+        cy += Math.floor(Math.random() * 3) - 1;
+      }
+    }
+  }
+
+  _spawnStructures(count = 8, minY = 35, maxY = 125) {
+    for (let i = 0; i < count; i++) {
+      const rx = 10 + Math.floor(Math.random() * (this.width - 24));
+      const ry = minY + Math.floor(Math.random() * (maxY - minY));
+      const w = 7 + Math.floor(Math.random() * 5);
+      const h = 5 + Math.floor(Math.random() * 3);
+
+      const stType = ["ancient_shrine", "abandoned_lab", "dungeon_room"][Math.floor(Math.random() * 3)];
+      const wallBlock = (stType === "ancient_shrine") ? MARBLE_BLOCK : (stType === "abandoned_lab") ? TECH_PLATING : STONE_BRICKS;
+      const pillarBlock = (stType === "ancient_shrine") ? STONE_PILLAR : (stType === "abandoned_lab") ? IRON_BARS : BASALT_BRICKS;
+      const lightBlock = (stType === "ancient_shrine") ? LANTERN : (stType === "abandoned_lab") ? NEON_LAMP : TORCH;
+
+      for (let dx = 0; dx < w; dx++) {
+        for (let dy = 0; dy < h; dy++) {
+          const tx = rx + dx;
+          const ty = ry + dy;
+          if (tx >= 0 && tx < this.width && ty >= 0 && ty < this.height) {
+            if (dx === 0 || dx === w - 1 || dy === 0 || dy === h - 1) {
+              this.tiles[tx][ty] = wallBlock;
+            } else {
+              this.tiles[tx][ty] = AIR;
+            }
+          }
+        }
+      }
+
+      this.tiles[rx + Math.floor(w / 2)][ry + 1] = lightBlock;
+      if (w >= 8) {
+        for (let dy = 1; dy < h - 1; dy++) {
+          this.tiles[rx + 2][ry + dy] = pillarBlock;
+          this.tiles[rx + w - 3][ry + dy] = pillarBlock;
+        }
+      }
+
+      const floorY = ry + h - 2;
+      const midX = rx + Math.floor(w / 2);
+      this.tiles[midX][floorY] = WORKBENCH;
+      this.tiles[midX - 1][floorY] = WOOD_CHAIR;
+      this.tiles[midX + 1][floorY] = CHEST;
+    }
+  }
+
+  generate(planetName = "Earth") {
+    this.current_planet = planetName;
+    this.damage_map.clear();
+    this.tiles = Array.from({ length: this.width }, () => new Array(this.height).fill(AIR));
+
+    if (planetName === "Earth") {
+      this._generateEarth();
+    } else {
+      this._generateExtraterrestrial(planetName);
+    }
+  }
+
+  _generateEarth() {
+    const heights = [];
+    for (let x = 0; x < this.width; x++) {
+      const h = Math.floor(CRUST_SURFACE + Math.sin(x * 0.12) * 5 + Math.sin(x * 0.04) * 7);
+      heights.push(h);
+    }
+
+    for (let x = 0; x < this.width; x++) {
+      const g = heights[x];
+      for (let y = g; y < this.height; y++) {
+        const noise = Math.floor(Math.sin(x * 0.4 + y * 0.2) * 2.5);
+        if (y === g) this.tiles[x][y] = GRASS;
+        else if (y < g + 5) this.tiles[x][y] = DIRT;
+        else if (y < CRUST_BOTTOM + noise) this.tiles[x][y] = STONE;
+        else if (y < UPPER_MANTLE_BOTTOM + noise) this.tiles[x][y] = (x + y) % 3 !== 0 ? PERIDOTITE : BASALT;
+        else if (y < LOWER_MANTLE_BOTTOM + noise) this.tiles[x][y] = ((x ^ y) % 4 === 0) ? MAGMA_STONE : BASALT;
+        else if (y < OUTER_CORE_BOTTOM + noise) this.tiles[x][y] = ((x + y) % 2 === 0) ? MOLTEN_CORE : MAGMA_STONE;
+        else this.tiles[x][y] = (Math.random() < 0.22) ? CORE_CRYSTAL : INNER_CORE_METAL;
+      }
+    }
+
+    this._carveCaves(16, 55, 35, 135);
+    this._spawnVein(COAL_ORE, 30, 80, 45, 10, [STONE, DIRT]);
+    this._spawnVein(IRON_ORE, 35, 90, 36, 8, [STONE, BASALT]);
+    this._spawnVein(GOLD_ORE, 45, 105, 24, 7, [STONE, PERIDOTITE]);
+    this._spawnVein(DIAMOND_ORE, 55, 115, 18, 6, [PERIDOTITE, BASALT]);
+    this._spawnVein(OBSIDIAN, 70, 130, 20, 9, [BASALT, MAGMA_STONE]);
+    this._spawnVein(LAVA, 85, 140, 15, 11, [MAGMA_STONE, MOLTEN_CORE, AIR]);
+    this._spawnStructures(9, 38, 115);
+
+    for (let x = 2; x < this.width - 3; x++) {
+      const g = heights[x];
+      if (x % 6 === 3 && g > 10 && this.tiles[x][g] === GRASS) {
+        const trunk = 4 + Math.floor(Math.random() * 3);
+        for (let th = 1; th <= trunk; th++) this.tiles[x][g - th] = WOOD;
+        for (let lx = x - 2; lx <= x + 2; lx++) {
+          for (let ly = g - trunk - 2; ly <= g - trunk; ly++) {
+            if (lx >= 0 && lx < this.width && ly >= 0 && ly < this.height && this.tiles[lx][ly] === AIR) {
+              this.tiles[lx][ly] = LEAVES;
+            }
+          }
         }
       }
     }
   }
 
-  draw(ctx, camX, camY, art) {
-    const dx = Math.floor(this.x - camX);
-    const dy = Math.floor(this.y - camY);
+  _generateExtraterrestrial(pName) {
+    const pdata = PLANET_DATA[pName] || PLANET_DATA["Moon"];
+    const surfBid = pdata.surface_block;
+    const baseBid = pdata.base_block;
+    const oreBid = pdata.ore_block;
 
-    const breath = (!this.isMoving) ? Math.sin(this.animTick * 0.08) * 1.2 : 0;
-    const bob = (this.isMoving && this.onGround) ? Math.sin(this.walkPhase * 2) * 1.5 : 0;
-    const leg1Off = this.onGround ? Math.sin(this.walkPhase) * 6 : 2;
-    const leg2Off = this.onGround ? -Math.sin(this.walkPhase) * 6 : -3;
-
-    if (this.inv.countItem("Oxygen Tank") > 0) {
-      const oxX = dx + (this.facingRight ? 1 : 13);
-      ctx.fillStyle = "#d2e1f5";
-      ctx.fillRect(oxX, dy + 12 + Math.floor(bob), 6, 14);
+    const heights = [];
+    for (let x = 0; x < this.width; x++) {
+      heights.push(Math.floor(CRUST_SURFACE + Math.sin(x * 0.18) * 6 + Math.cos(x * 0.05) * 5));
     }
 
-    ctx.fillStyle = this.color;
-    ctx.fillRect(dx + (this.facingRight ? 4 : 10), dy + 24 + bob, 5, 14 + Math.floor(leg2Off));
-    ctx.fillRect(dx + (this.facingRight ? 10 : 4), dy + 24 + bob, 5, 14 + Math.floor(leg1Off));
-
-    const torsoY = dy + 10 + Math.floor(bob + breath);
-    const chest = this.inv.armor.chest;
-    ctx.fillStyle = (chest === "Thermal Suit") ? "#ff6e19" : (chest === "Core Exosuit") ? "#282d3c" : (chest === "Acid-Resistant Suit") ? "#8cd246" : this.color;
-    ctx.fillRect(dx + 2, torsoY, 16, 16);
-
-    const headY = dy + Math.floor(bob + breath);
-    ctx.fillStyle = "#ebd2b4";
-    ctx.fillRect(dx + 3, headY, 14, 11);
-    ctx.fillStyle = "#141419";
-    const eyeX = dx + (this.facingRight ? 12 : 4);
-    ctx.fillRect(eyeX, headY + 4, 3, 3);
-
-    if (this.inv.armor.helmet === "Iron Helmet") {
-      ctx.fillStyle = "#b9bece";
-      ctx.fillRect(dx + 2, headY - 2, 16, 8);
-    }
-
-    const armX = dx + (this.facingRight ? 14 : 2);
-    const armY = torsoY + 4;
-    ctx.strokeStyle = "#ebd2b4";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(armX, armY);
-
-    if (this.swingAnim > 0) {
-      const ang = (this.swingAnim / 10.0) * Math.PI * 0.8;
-      const ox = Math.cos(ang) * 22 * (this.facingRight ? 1 : -1);
-      const oy = -Math.sin(ang) * 20;
-      ctx.lineTo(armX + ox, armY + oy);
-      ctx.stroke();
-
-      const sel = this.inv.getSelected();
-      if (sel && art.icons[sel.item]) {
-        ctx.drawImage(art.icons[sel.item], armX + ox - 12, armY + oy - 12, 24, 24);
+    for (let x = 0; x < this.width; x++) {
+      const g = heights[x];
+      for (let y = g; y < this.height; y++) {
+        if (y < g + 4) this.tiles[x][y] = surfBid;
+        else this.tiles[x][y] = baseBid;
       }
-    } else {
-      ctx.lineTo(armX + (this.facingRight ? 3 : -3), armY + 12);
-      ctx.stroke();
     }
+
+    this._carveCaves(14, 45, 35, 140);
+    this._spawnVein(oreBid, 35, 140, 40, 9, [baseBid, surfBid]);
+    this._spawnVein(DIAMOND_ORE, 55, 145, 16, 6, [baseBid]);
+    this._spawnStructures(6, 36, 120);
+  }
+
+  getTile(x, y) {
+    if (x >= 0 && x < this.width && y >= 0 && y < this.height) return this.tiles[x][y];
+    return STONE;
+  }
+
+  setTile(x, y, tile) {
+    if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+      this.tiles[x][y] = tile;
+      this.damage_map.delete(`${x},${y}`);
+    }
+  }
+
+  updateLiquids(particles, sound) {
+    this.fluid_tick++;
+    if (this.fluid_tick % 8 !== 0) return;
+
+    for (let y = this.height - 2; y >= 1; y--) {
+      for (let x = 1; x < this.width - 1; x++) {
+        if (this.tiles[x][y] === LAVA) {
+          for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
+            const nb = this.getTile(nx, ny);
+            if ([WOOD, LEAVES, PLANKS, BOOKSHELF, WORKBENCH, WOOD_TABLE, WOOD_CHAIR].includes(nb)) {
+              if (Math.random() < 0.35) {
+                this.setTile(nx, ny, AIR);
+                sound.play("burn");
+              }
+            }
+          }
+
+          if (this.tiles[x][y + 1] === AIR) {
+            this.tiles[x][y + 1] = LAVA;
+            this.tiles[x][y] = AIR;
+          } else if (this.tiles[x - 1][y] === AIR) {
+            this.tiles[x - 1][y] = LAVA;
+            this.tiles[x][y] = AIR;
+          } else if (this.tiles[x + 1][y] === AIR) {
+            this.tiles[x + 1][y] = LAVA;
+            this.tiles[x][y] = AIR;
+          }
+        }
+      }
+    }
+  }
+
+  static getLayerInfo(tileY, planetName = "Earth") {
+    if (planetName !== "Earth") {
+      const pdata = PLANET_DATA[planetName] || PLANET_DATA["Moon"];
+      const depth = Math.max(0, Math.floor((tileY - CRUST_SURFACE) * 12));
+      return { name: pdata.name, depth, temp: "Alien Lithosphere", pressure: pdata.hazard };
+    }
+    if (tileY < CRUST_SURFACE) return { name: "Atmosphere", depth: 0, temp: "22 C", pressure: "1.0 atm" };
+    if (tileY < CRUST_BOTTOM) {
+      const d = Math.floor((tileY - CRUST_SURFACE) * 13);
+      return { name: "Crust", depth: d, temp: `${25 + Math.floor(d * 0.07)} C`, pressure: `${(d * 0.0003).toFixed(2)} GPa` };
+    }
+    if (tileY < UPPER_MANTLE_BOTTOM) {
+      const d = 350 + Math.floor((tileY - CRUST_BOTTOM) * 14.2);
+      return { name: "Upper Mantle", depth: d, temp: `${500 + Math.floor((d - 350) * 1.5)} C`, pressure: `${(10 + (d - 350) * 0.03).toFixed(1)} GPa` };
+    }
+    if (tileY < LOWER_MANTLE_BOTTOM) {
+      const d = 750 + Math.floor((tileY - UPPER_MANTLE_BOTTOM) * 15.6);
+      return { name: "Lower Mantle", depth: d, temp: `${1100 + Math.floor((d - 750) * 1.8)} C`, pressure: `${(24 + (d - 750) * 0.15).toFixed(1)} GPa` };
+    }
+    if (tileY < OUTER_CORE_BOTTOM) {
+      const d = 1200 + Math.floor((tileY - LOWER_MANTLE_BOTTOM) * 14.8);
+      return { name: "Outer Core (Molten)", depth: d, temp: `${2800 + Math.floor((d - 1200) * 3.4)} C`, pressure: `${(135 + (d - 1200) * 0.45).toFixed(1)} GPa` };
+    }
+    const d = 1550 + Math.floor((tileY - OUTER_CORE_BOTTOM) * 18.2);
+    return { name: "Inner Core (Solid)", depth: d, temp: `${5400 + Math.floor((d - 1550) * 1.2)} C`, pressure: `${(330 + (d - 1550) * 0.6).toFixed(1)} GPa` };
+  }
+}
+
+// ==========================================
+// DYNAMIC LIGHTING
+// ==========================================
+class OptimizedLighting {
+  constructor() {
+    this.canvas = document.createElement("canvas");
+    this.canvas.width = LIGHT_W;
+    this.canvas.height = LIGHT_H;
+    this.ctx = this.canvas.getContext("2d");
+  }
+
+  render(mainCtx, player, world, camX, camY) {
+    const pTy = Math.floor(player.y / TILE_SIZE);
+    let amb = "#28262a";
+    if (world.current_planet === "Earth") {
+      if (pTy < CRUST_SURFACE) amb = "#b0b0ba";
+      else if (pTy < CRUST_BOTTOM) amb = "#28262a";
+      else if (pTy < UPPER_MANTLE_BOTTOM) amb = "#231c1e";
+      else if (pTy < LOWER_MANTLE_BOTTOM) amb = "#502819";
+      else if (pTy < OUTER_CORE_BOTTOM) amb = "#964b14";
+      else amb = "#b4aa82";
+    } else {
+      amb = (pTy < CRUST_SURFACE) ? "#2d2d37" : "#191920";
+    }
+
+    this.ctx.fillStyle = amb;
+    this.ctx.fillRect(0, 0, LIGHT_W, LIGHT_H);
+    this.ctx.globalCompositeOperation = "lighter";
+
+    const px = Math.floor((player.x + player.w / 2 - camX) / LIGHT_SCALE);
+    const py = Math.floor((player.y + player.h / 2 - camY) / LIGHT_SCALE);
+    const grad = this.ctx.createRadialGradient(px, py, 4, px, py, 35);
+    grad.addColorStop(0, "rgba(255, 230, 180, 1)");
+    grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+    this.ctx.fillStyle = grad;
+    this.ctx.beginPath();
+    this.ctx.arc(px, py, 35, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    const minTx = Math.max(0, Math.floor(camX / TILE_SIZE));
+    const maxTx = Math.min(world.width, Math.ceil((camX + SCREEN_WIDTH) / TILE_SIZE));
+    const minTy = Math.max(0, Math.floor(camY / TILE_SIZE));
+    const maxTy = Math.min(world.height, Math.ceil((camY + SCREEN_HEIGHT) / TILE_SIZE));
+
+    for (let tx = minTx; tx < maxTx; tx++) {
+      for (let ty = minTy; ty < maxTy; ty++) {
+        const t = world.getTile(tx, ty);
+        if (BLOCK_DATA[t] && BLOCK_DATA[t].light) {
+          const lx = Math.floor((tx * TILE_SIZE + TILE_SIZE / 2 - camX) / LIGHT_SCALE);
+          const ly = Math.floor((ty * TILE_SIZE + TILE_SIZE / 2 - camY) / LIGHT_SCALE);
+          const rad = Math.floor(BLOCK_DATA[t].light / LIGHT_SCALE);
+          const g = this.ctx.createRadialGradient(lx, ly, 2, lx, ly, rad);
+          g.addColorStop(0, "rgba(255, 210, 120, 0.9)");
+          g.addColorStop(1, "rgba(0, 0, 0, 0)");
+          this.ctx.fillStyle = g;
+          this.ctx.beginPath();
+          this.ctx.arc(lx, ly, rad, 0, Math.PI * 2);
+          this.ctx.fill();
+        }
+      }
+    }
+
+    this.ctx.globalCompositeOperation = "source-over";
+    mainCtx.save();
+    mainCtx.globalCompositeOperation = "multiply";
+    mainCtx.drawImage(this.canvas, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    mainCtx.restore();
   }
 }
 
@@ -1265,7 +1236,6 @@ class AstroStrataEngine {
     this.soundTimer = 0;
     this.autoSaveTimer = 0;
 
-    // Dedicated Target Aim System
     this.lockedTargetTile = null;
 
     this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
@@ -1615,7 +1585,7 @@ class AstroStrataEngine {
       }
     });
 
-    // Multi-Touch Event Handlers
+    // Multi-Touch Listeners
     this.canvas.addEventListener("touchstart", (e) => {
       e.preventDefault();
       this.sound.init();
@@ -1671,7 +1641,6 @@ class AstroStrataEngine {
           }
         }
 
-        // Tapping into the active world sets a permanent target lock
         if (!handled) {
           this.activeTouches.set(t.identifier, { type: "world", ...pos });
           this.lockedTargetTile = {
@@ -1853,7 +1822,6 @@ class AstroStrataEngine {
         return;
       }
 
-      // Block Placement Logic
       if (sel && BLOCK_DATA[sel.item] && clickedBlock === AIR) {
         const placeRect = { x: target.tx * TILE_SIZE, y: target.ty * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE };
         const pRect = { x: this.player.x, y: this.player.y, w: this.player.w, h: this.player.h };
@@ -1873,14 +1841,12 @@ class AstroStrataEngine {
   handleInventoryClick(mx, my, btn) {
     const rx = INV_UI_X + 24;
 
-    // Explicit Close Button [X]
     if (mx >= INV_UI_X + 735 && mx <= INV_UI_X + 765 && my >= INV_UI_Y + 12 && my <= INV_UI_Y + 42) {
       this.state = "PLAYING";
       this.sound.play("click");
       return;
     }
 
-    // Search Box Focus
     if (mx >= rx && mx <= rx + 200 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 249) {
       this.searchActive = true;
       this.sound.play("click");
@@ -1889,7 +1855,6 @@ class AstroStrataEngine {
       this.searchActive = false;
     }
 
-    // Category Tabs
     const categories = ["ALL", "TOOLS", "WEAPONS", "ARMOR", "ROCKETS", "BLOCKS"];
     let catX = rx + 240;
     for (const cat of categories) {
@@ -1902,7 +1867,6 @@ class AstroStrataEngine {
       catX += 68;
     }
 
-    // Slots Interaction
     for (let i = 0; i < 30; i++) {
       const srec = getSlotRect(i);
       if (mx >= srec.x && mx <= srec.x + srec.w && my >= srec.y && my <= srec.y + srec.h) {
@@ -1932,7 +1896,6 @@ class AstroStrataEngine {
       }
     }
 
-    // Recipes Click
     const displayedRecipes = this.getFilteredRecipes();
     const visibleSlice = displayedRecipes.slice(this.recipeScrollOffset, this.recipeScrollOffset + 9);
     for (let idx = 0; idx < visibleSlice.length; idx++) {
@@ -2185,7 +2148,6 @@ class AstroStrataEngine {
       this.ctx.font = "bold 15px 'Courier New', monospace";
       this.ctx.fillText("ENTER EXPEDITION / SECTORS", SCREEN_WIDTH / 2, 340);
 
-      // Version Indicator
       this.ctx.fillStyle = "#606880";
       this.ctx.font = "bold 13px monospace";
       this.ctx.textAlign = "left";
@@ -2340,7 +2302,7 @@ class AstroStrataEngine {
       const targetTile = this.world.getTile(aim.tx, aim.ty);
       const dmg = this.world.damage_map.get(`${aim.tx},${aim.ty}`);
 
-      // Render Floating Block Durability Bar
+      // Floating Block Durability Bar
       if (dmg && BLOCK_DATA[targetTile]) {
         const pct = Math.min(1.0, dmg / BLOCK_DATA[targetTile].hardness);
         const barW = 32;
@@ -2354,7 +2316,7 @@ class AstroStrataEngine {
         this.ctx.strokeRect(rDx, rDy - 8, barW, barH);
       }
 
-      // Target Inspector in Top-Right
+      // Target Inspector
       if (targetTile !== AIR && BLOCK_DATA[targetTile]) {
         const bdata = BLOCK_DATA[targetTile];
         const hx = SCREEN_WIDTH - 290;
@@ -2376,7 +2338,6 @@ class AstroStrataEngine {
         this.ctx.fillStyle = COLOR_CYAN;
         this.ctx.fillText(`Req: ${bdata.req_tool} (${TIER_NAMES[bdata.req_tier]})`, hx + 12, hy + 54);
 
-        // Progress in HUD
         const curDmg = dmg || 0.0;
         const pct = Math.min(1.0, curDmg / bdata.hardness);
         this.ctx.fillStyle = "rgba(40, 50, 70, 0.8)";
@@ -2650,17 +2611,51 @@ class AstroStrataEngine {
   }
 }
 
-// Global Bootstrap
-window.addEventListener("DOMContentLoaded", () => {
-  const game = new AstroStrataEngine();
-  const startBtn = document.getElementById("start-btn");
+// Global Bootstrap that executes whether DOM is loading or already interactive
+function startAstroStrataApp() {
   const overlay = document.getElementById("loading-overlay");
+  const startBtn = document.getElementById("start-btn");
 
-  startBtn.classList.remove("hidden");
-  startBtn.addEventListener("click", () => {
-    game.sound.init();
-    overlay.classList.add("fade-out");
-  });
+  let gameInstance = null;
+  try {
+    gameInstance = new AstroStrataEngine();
+  } catch (err) {
+    console.error("Game engine startup error:", err);
+    alert("Startup error: " + err.message);
+    return;
+  }
 
-  game.run();
-});
+  const dismissAndPlay = (e) => {
+    if (e) e.preventDefault();
+    try {
+      gameInstance.sound.init();
+    } catch (audioErr) {
+      console.warn("Audio Context init warning:", audioErr);
+    }
+    if (overlay) {
+      overlay.classList.add("fade-out");
+      setTimeout(() => {
+        overlay.style.display = "none";
+      }, 350);
+    }
+  };
+
+  if (startBtn) {
+    startBtn.addEventListener("click", dismissAndPlay);
+    startBtn.addEventListener("touchend", dismissAndPlay);
+  }
+
+  if (overlay) {
+    overlay.addEventListener("click", (e) => {
+      if (e.target !== startBtn) dismissAndPlay(e);
+    });
+  }
+
+  gameInstance.run();
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", startAstroStrataApp);
+} else {
+  startAstroStrataApp();
+}

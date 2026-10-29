@@ -1,5 +1,5 @@
 // =============================================================================
-// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE
+// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (V2.0)
 // =============================================================================
 
 const SCREEN_WIDTH = 1280;
@@ -8,7 +8,7 @@ const TILE_SIZE = 32;
 const WORLD_WIDTH = 110;
 const WORLD_HEIGHT = 160;
 const FPS = 60;
-const SAVES_STORAGE_KEY = "astrostrata_saved_sectors_v1";
+const SAVES_STORAGE_KEY = "astrostrata_saved_sectors_v2";
 
 const LIGHT_SCALE = 4;
 const LIGHT_W = Math.floor(SCREEN_WIDTH / LIGHT_SCALE);
@@ -119,46 +119,46 @@ const TIER_NAMES = {
 };
 
 const BLOCK_DATA = {
-  [CHEST]: { name: "Loot Cache", hardness: 1.5, mohs: 2.5, color: "#a56e2d", drop: CHEST, req_tier: 0, req_tool: "Axe", desc: "Subterranean cache with survival supplies." },
-  [DIRT]: { name: "Dirt", hardness: 0.8, mohs: 1.5, color: "#734b2d", drop: DIRT, req_tier: 0, req_tool: "Shovel", desc: "Soft, cohesive organic topsoil." },
+  [CHEST]: { name: "Loot Cache", hardness: 1.2, mohs: 2.5, color: "#a56e2d", drop: CHEST, req_tier: 0, req_tool: "Axe", desc: "Subterranean cache with survival gear." },
+  [DIRT]: { name: "Dirt", hardness: 0.8, mohs: 1.5, color: "#734b2d", drop: DIRT, req_tier: 0, req_tool: "Shovel", desc: "Soft organic topsoil." },
   [GRASS]: { name: "Grass Block", hardness: 0.8, mohs: 1.5, color: "#4b9128", drop: DIRT, req_tier: 0, req_tool: "Shovel", desc: "Root-bound surface humus layer." },
-  [STONE]: { name: "Crust Stone", hardness: 2.2, mohs: 5.5, color: "#787880", drop: STONE, req_tier: 1, req_tool: "Pickaxe", desc: "Brittle continental granitic bedrock." },
-  [COAL_ORE]: { name: "Coal Ore", hardness: 2.6, mohs: 3.0, color: "#28282d", drop: "Coal", req_tier: 1, req_tool: "Pickaxe", desc: "Compressed carbon fuel matrix.", xp: 12 },
-  [IRON_ORE]: { name: "Iron Ore", hardness: 3.2, mohs: 5.5, color: "#b98769", drop: "Iron Ore", req_tier: 2, req_tool: "Pickaxe", desc: "Dense banded iron formation (hematite).", xp: 20 },
-  [GOLD_ORE]: { name: "Gold Ore", hardness: 3.8, mohs: 4.5, color: "#e6c328", drop: "Gold Ore", req_tier: 3, req_tool: "Pickaxe", desc: "Heavy auriferous quartz vein.", xp: 35 },
-  [DIAMOND_ORE]: { name: "Diamond Ore", hardness: 5.5, mohs: 10.0, color: "#50e1ff", drop: "Diamond", req_tier: 3, req_tool: "Pickaxe", desc: "Kimberlite diamond crystallization.", xp: 80 },
-  [WOOD]: { name: "Wood Log", hardness: 1.4, mohs: 2.5, color: "#825532", drop: WOOD, req_tier: 0, req_tool: "Axe", desc: "Combustible timber. Burns near lava!" },
+  [STONE]: { name: "Crust Stone", hardness: 2.0, mohs: 5.5, color: "#787880", drop: STONE, req_tier: 1, req_tool: "Pickaxe", desc: "Brittle continental granitic bedrock." },
+  [COAL_ORE]: { name: "Coal Ore", hardness: 2.2, mohs: 3.0, color: "#28282d", drop: "Coal", req_tier: 1, req_tool: "Pickaxe", desc: "Compressed carbon fuel matrix.", xp: 12 },
+  [IRON_ORE]: { name: "Iron Ore", hardness: 2.8, mohs: 5.5, color: "#b98769", drop: "Iron Ore", req_tier: 2, req_tool: "Pickaxe", desc: "Dense banded iron formation.", xp: 20 },
+  [GOLD_ORE]: { name: "Gold Ore", hardness: 3.4, mohs: 4.5, color: "#e6c328", drop: "Gold Ore", req_tier: 3, req_tool: "Pickaxe", desc: "Heavy auriferous quartz vein.", xp: 35 },
+  [DIAMOND_ORE]: { name: "Diamond Ore", hardness: 4.8, mohs: 10.0, color: "#50e1ff", drop: "Diamond", req_tier: 3, req_tool: "Pickaxe", desc: "Kimberlite diamond crystallization.", xp: 80 },
+  [WOOD]: { name: "Wood Log", hardness: 1.3, mohs: 2.5, color: "#825532", drop: WOOD, req_tier: 0, req_tool: "Axe", desc: "Combustible timber. Burns near lava!" },
   [LEAVES]: { name: "Leaves", hardness: 0.3, mohs: 1.0, color: "#289632", drop: null, req_tier: 0, req_tool: "Any", desc: "Soft solar-capture canopy." },
-  [PLANKS]: { name: "Wood Planks", hardness: 1.2, mohs: 2.5, color: "#af7d46", drop: PLANKS, req_tier: 0, req_tool: "Axe", desc: "Processed lumber." },
+  [PLANKS]: { name: "Wood Planks", hardness: 1.0, mohs: 2.5, color: "#af7d46", drop: PLANKS, req_tier: 0, req_tool: "Axe", desc: "Processed lumber." },
   [TORCH]: { name: "Torch", hardness: 0.1, mohs: 1.0, color: "#ffb428", drop: TORCH, req_tier: 0, req_tool: "Any", desc: "Illuminates dark subterranean caverns.", light: 140 },
-  [WORKBENCH]: { name: "Workbench", hardness: 1.6, mohs: 2.5, color: "#966437", drop: WORKBENCH, req_tier: 0, req_tool: "Axe", desc: "Workshop station for tools & gear." },
-  [FURNACE]: { name: "Stone Furnace", hardness: 2.4, mohs: 5.5, color: "#64646e", drop: FURNACE, req_tier: 2, req_tool: "Pickaxe", desc: "Thermal forge station for smelting ingots.", light: 110 },
-  [STONE_BRICKS]: { name: "Stone Bricks", hardness: 2.5, mohs: 5.5, color: "#828287", drop: STONE_BRICKS, req_tier: 1, req_tool: "Pickaxe", desc: "Chiseled load-bearing granite masonry." },
-  [BASALT_BRICKS]: { name: "Basalt Bricks", hardness: 4.6, mohs: 6.5, color: "#32323c", drop: BASALT_BRICKS, req_tier: 3, req_tool: "Pickaxe", desc: "Sintered volcanic paving stones." },
+  [WORKBENCH]: { name: "Workbench", hardness: 1.5, mohs: 2.5, color: "#966437", drop: WORKBENCH, req_tier: 0, req_tool: "Axe", desc: "Workshop station for tools & gear." },
+  [FURNACE]: { name: "Stone Furnace", hardness: 2.2, mohs: 5.5, color: "#64646e", drop: FURNACE, req_tier: 2, req_tool: "Pickaxe", desc: "Thermal forge station for smelting.", light: 110 },
+  [STONE_BRICKS]: { name: "Stone Bricks", hardness: 2.2, mohs: 5.5, color: "#828287", drop: STONE_BRICKS, req_tier: 1, req_tool: "Pickaxe", desc: "Chiseled load-bearing masonry." },
+  [BASALT_BRICKS]: { name: "Basalt Bricks", hardness: 3.8, mohs: 6.5, color: "#32323c", drop: BASALT_BRICKS, req_tier: 3, req_tool: "Pickaxe", desc: "Sintered volcanic paving stones." },
   [GLASS]: { name: "Glass Block", hardness: 0.5, mohs: 5.5, color: "#afe1f0", drop: null, req_tier: 0, req_tool: "Any", desc: "Transparent fused silica window." },
   [LANTERN]: { name: "Hanging Lantern", hardness: 0.6, mohs: 5.0, color: "#ffcd4b", drop: LANTERN, req_tier: 3, req_tool: "Pickaxe", desc: "Forged iron illuminating armature.", light: 160 },
-  [BOOKSHELF]: { name: "Oak Bookshelf", hardness: 1.5, mohs: 2.5, color: "#8c5a37", drop: BOOKSHELF, req_tier: 0, req_tool: "Axe", desc: "Timber casing with research tomes." },
-  [IRON_BARS]: { name: "Iron Bars", hardness: 3.0, mohs: 5.5, color: "#aaafbe", drop: IRON_BARS, req_tier: 2, req_tool: "Pickaxe", desc: "Ductile forged security lattice." },
-  [PERIDOTITE]: { name: "Peridotite", hardness: 4.2, mohs: 6.5, color: "#415f3c", drop: PERIDOTITE, req_tier: 3, req_tool: "Pickaxe", desc: "Dense coarse-grained Upper Mantle rock.", xp: 25 },
-  [BASALT]: { name: "Dense Basalt", hardness: 4.8, mohs: 6.0, color: "#2d2d37", drop: BASALT, req_tier: 3, req_tool: "Pickaxe", desc: "Aphanitic mafic volcanic rock.", xp: 30 },
-  [OBSIDIAN]: { name: "Mantle Obsidian", hardness: 6.5, mohs: 6.0, color: "#1c1428", drop: "Obsidian", req_tier: 4, req_tool: "Pickaxe", desc: "Conchoidal volcanic silicate glass.", xp: 60 },
-  [MAGMA_STONE]: { name: "Magma Stone", hardness: 5.2, mohs: 7.0, color: "#9b3719", drop: MAGMA_STONE, req_tier: 4, req_tool: "Pickaxe", desc: "Superheated Lower Mantle thermal block.", xp: 45, light: 70 },
-  [MOLTEN_CORE]: { name: "Molten Iron Slag", hardness: 6.8, mohs: 7.5, color: "#eb6914", drop: "Liquid Iron", req_tier: 5, req_tool: "Drill", desc: "Superpressured molten iron-nickel.", xp: 80, light: 120 },
-  [INNER_CORE_METAL]: { name: "Solid Core Alloy", hardness: 8.5, mohs: 8.5, color: "#e1e1f5", drop: "Core Metal", req_tier: 5, req_tool: "Drill", desc: "Crystalline iron-nickel under 330 GPa.", xp: 140, light: 80 },
-  [CORE_CRYSTAL]: { name: "Inner Core Shard", hardness: 10.0, mohs: 9.5, color: "#fff096", drop: "Core Shard", req_tier: 5, req_tool: "Drill", desc: "Harmonic energy crystal from Earth's core.", xp: 250, light: 150 },
+  [BOOKSHELF]: { name: "Oak Bookshelf", hardness: 1.4, mohs: 2.5, color: "#8c5a37", drop: BOOKSHELF, req_tier: 0, req_tool: "Axe", desc: "Timber casing with research tomes." },
+  [IRON_BARS]: { name: "Iron Bars", hardness: 2.6, mohs: 5.5, color: "#aaafbe", drop: IRON_BARS, req_tier: 2, req_tool: "Pickaxe", desc: "Ductile forged security lattice." },
+  [PERIDOTITE]: { name: "Peridotite", hardness: 3.5, mohs: 6.5, color: "#415f3c", drop: PERIDOTITE, req_tier: 3, req_tool: "Pickaxe", desc: "Dense coarse Upper Mantle rock.", xp: 25 },
+  [BASALT]: { name: "Dense Basalt", hardness: 4.0, mohs: 6.0, color: "#2d2d37", drop: BASALT, req_tier: 3, req_tool: "Pickaxe", desc: "Aphanitic mafic volcanic rock.", xp: 30 },
+  [OBSIDIAN]: { name: "Mantle Obsidian", hardness: 5.5, mohs: 6.0, color: "#1c1428", drop: "Obsidian", req_tier: 4, req_tool: "Pickaxe", desc: "Conchoidal volcanic glass.", xp: 60 },
+  [MAGMA_STONE]: { name: "Magma Stone", hardness: 4.5, mohs: 7.0, color: "#9b3719", drop: MAGMA_STONE, req_tier: 4, req_tool: "Pickaxe", desc: "Superheated Lower Mantle block.", xp: 45, light: 70 },
+  [MOLTEN_CORE]: { name: "Molten Iron Slag", hardness: 5.8, mohs: 7.5, color: "#eb6914", drop: "Liquid Iron", req_tier: 5, req_tool: "Drill", desc: "Superpressured molten iron-nickel.", xp: 80, light: 120 },
+  [INNER_CORE_METAL]: { name: "Solid Core Alloy", hardness: 7.0, mohs: 8.5, color: "#e1e1f5", drop: "Core Metal", req_tier: 5, req_tool: "Drill", desc: "Crystalline iron-nickel under 330 GPa.", xp: 140, light: 80 },
+  [CORE_CRYSTAL]: { name: "Inner Core Shard", hardness: 8.5, mohs: 9.5, color: "#fff096", drop: "Core Shard", req_tier: 5, req_tool: "Drill", desc: "Harmonic energy crystal from Earth's core.", xp: 250, light: 150 },
   [LAVA]: { name: "Liquid Lava", hardness: 999, mohs: 0.0, color: "#ff550a", drop: null, req_tier: 0, req_tool: "Bucket", desc: "Viscous molten silicate melt.", light: 145, liquid: true },
 
-  [LAUNCHPAD]: { name: "Aerospace Launchpad", hardness: 4.0, mohs: 6.5, color: "#4b5064", drop: LAUNCHPAD, req_tier: 3, req_tool: "Pickaxe", desc: "Station for assembling & launching Rockets Tier 1-15.", light: 100 },
-  [ASSEMBLER]: { name: "Circuit Assembler", hardness: 3.0, mohs: 5.5, color: "#237387", drop: ASSEMBLER, req_tier: 2, req_tool: "Pickaxe", desc: "Precision fabricator for advanced electronics." },
-  [PARTICLE_COLLIDER]: { name: "Particle Collider", hardness: 6.0, mohs: 7.5, color: "#9632d2", drop: PARTICLE_COLLIDER, req_tier: 4, req_tool: "Pickaxe", desc: "Synchrotron for cosmic antimatter synthesis.", light: 130 },
+  [LAUNCHPAD]: { name: "Aerospace Launchpad", hardness: 3.5, mohs: 6.5, color: "#4b5064", drop: LAUNCHPAD, req_tier: 3, req_tool: "Pickaxe", desc: "Station for assembling & launching Rockets.", light: 100 },
+  [ASSEMBLER]: { name: "Circuit Assembler", hardness: 2.8, mohs: 5.5, color: "#237387", drop: ASSEMBLER, req_tier: 2, req_tool: "Pickaxe", desc: "Precision fabricator for electronics." },
+  [PARTICLE_COLLIDER]: { name: "Particle Collider", hardness: 5.0, mohs: 7.5, color: "#9632d2", drop: PARTICLE_COLLIDER, req_tier: 4, req_tool: "Pickaxe", desc: "Synchrotron for antimatter synthesis.", light: 130 },
 
-  [STONE_PILLAR]: { name: "Stone Pillar", hardness: 2.2, mohs: 5.5, color: "#a0a0a8", drop: STONE_PILLAR, req_tier: 1, req_tool: "Pickaxe", desc: "Classical carved architectural pillar." },
-  [MARBLE_BLOCK]: { name: "Marble Block", hardness: 2.0, mohs: 4.5, color: "#ebf0f5", drop: MARBLE_BLOCK, req_tier: 1, req_tool: "Pickaxe", desc: "Pristine calcitic metamorphic rock." },
+  [STONE_PILLAR]: { name: "Stone Pillar", hardness: 2.0, mohs: 5.5, color: "#a0a0a8", drop: STONE_PILLAR, req_tier: 1, req_tool: "Pickaxe", desc: "Classical carved architectural pillar." },
+  [MARBLE_BLOCK]: { name: "Marble Block", hardness: 1.8, mohs: 4.5, color: "#ebf0f5", drop: MARBLE_BLOCK, req_tier: 1, req_tool: "Pickaxe", desc: "Pristine calcitic metamorphic rock." },
   [NEON_LAMP]: { name: "Neon Cyber-Lamp", hardness: 0.8, mohs: 3.0, color: "#50ffdc", drop: NEON_LAMP, req_tier: 1, req_tool: "Any", desc: "High-efficiency argon gas luminary.", light: 180 },
-  [TECH_PLATING]: { name: "Hull Plating", hardness: 4.5, mohs: 6.5, color: "#373c4b", drop: TECH_PLATING, req_tier: 3, req_tool: "Pickaxe", desc: "Corrosion-resistant titanium alloy plate." },
-  [WOOD_TABLE]: { name: "Oak Dining Table", hardness: 1.2, mohs: 2.5, color: "#9b6941", drop: WOOD_TABLE, req_tier: 0, req_tool: "Axe", desc: "Rustic domestic timber table." },
-  [WOOD_CHAIR]: { name: "Oak Chair", hardness: 0.9, mohs: 2.5, color: "#915f37", drop: WOOD_CHAIR, req_tier: 0, req_tool: "Axe", desc: "Sturdy carved wooden chair." },
-  [CRYSTAL_GLASS]: { name: "Crystal Glass", hardness: 1.2, mohs: 6.5, color: "#bef0ff", drop: CRYSTAL_GLASS, req_tier: 1, req_tool: "Pickaxe", desc: "Diamond-reinforced blast glass." }
+  [TECH_PLATING]: { name: "Hull Plating", hardness: 4.0, mohs: 6.5, color: "#373c4b", drop: TECH_PLATING, req_tier: 3, req_tool: "Pickaxe", desc: "Titanium alloy plate." },
+  [WOOD_TABLE]: { name: "Oak Table", hardness: 1.1, mohs: 2.5, color: "#9b6941", drop: WOOD_TABLE, req_tier: 0, req_tool: "Axe", desc: "Rustic domestic timber table." },
+  [WOOD_CHAIR]: { name: "Oak Chair", hardness: 0.8, mohs: 2.5, color: "#915f37", drop: WOOD_CHAIR, req_tier: 0, req_tool: "Axe", desc: "Sturdy carved wooden chair." },
+  [CRYSTAL_GLASS]: { name: "Crystal Glass", hardness: 1.1, mohs: 6.5, color: "#bef0ff", drop: CRYSTAL_GLASS, req_tier: 1, req_tool: "Pickaxe", desc: "Diamond-reinforced blast glass." }
 };
 
 const PLANET_DATA = {
@@ -196,27 +196,27 @@ const CLASSES = {
 const ITEM_DEFINITIONS = {
   "Wood Sword": { type: "weapon", dmg: 8, desc: "Carved wooden blade. 8 damage." },
   "Stone Sword": { type: "weapon", dmg: 12, desc: "Granite broadsword. 12 damage." },
-  "Iron Dagger": { type: "weapon", dmg: 14, speed: 12, desc: "Swift stabbing blade. High attack speed." },
+  "Iron Dagger": { type: "weapon", dmg: 14, speed: 12, desc: "Swift stabbing blade. High speed." },
   "Iron Sword": { type: "weapon", dmg: 18, desc: "Tempered steel blade. 18 damage." },
   "Iron Halberd": { type: "weapon", dmg: 22, reach: 58, desc: "Long thrust polearm. Great reach." },
   "Gold Sword": { type: "weapon", dmg: 24, desc: "Gilded royal longsword. 24 damage." },
   "Obsidian Blade": { type: "weapon", dmg: 28, desc: "Vitreous obsidian cleaver. 28 damage." },
   "Diamond Blade": { type: "weapon", dmg: 34, desc: "Flawless diamond broadsword. 34 damage." },
-  "Core Blade": { type: "weapon", dmg: 42, desc: "Crystalline Inner Core Greatsword. 42 damage." },
-  "Core Hammer": { type: "weapon", dmg: 48, tool_type: "hammer", tier: 5, mult: 2.2, desc: "Tier 5: Crushing seismic hammer. 48 dmg." },
+  "Core Blade": { type: "weapon", dmg: 42, desc: "Crystalline Inner Core Greatsword. 42 dmg." },
+  "Core Hammer": { type: "weapon", dmg: 48, tool_type: "hammer", tier: 5, mult: 2.2, desc: "Tier 5: Crushing seismic hammer." },
   "Titanium Battleaxe": { type: "weapon", dmg: 50, desc: "Heavy Martian dual-bladed war axe." },
-  "Magma Claymore": { type: "weapon", dmg: 58, desc: "Infused with Ionian pyroclastic heat. Blasts targets." },
-  "Dark Matter Blade": { type: "weapon", dmg: 85, desc: "Plutonian blade that tears molecular bonds." },
-  "Infinity Singularity Blade": { type: "weapon", dmg: 220, desc: "The apex weapon of Omega Prime. Reality rending." },
+  "Magma Claymore": { type: "weapon", dmg: 58, desc: "Infused with Ionian heat. Blasts targets." },
+  "Dark Matter Blade": { type: "weapon", dmg: 85, desc: "Plutonian blade tearing molecular bonds." },
+  "Infinity Singularity Blade": { type: "weapon", dmg: 220, desc: "The apex weapon of Omega Prime." },
 
   "Wood Shortbow": { type: "ranged", dmg: 10, desc: "Handcrafted bow. Fires arrows." },
   "Iron Crossbow": { type: "ranged", dmg: 20, desc: "Mechanical iron crossbow. High velocity." },
   "Titanium Repeater": { type: "ranged", dmg: 45, desc: "Rapid-fire aerospace alloy repeater." },
-  "Thermal Pulse Rifle": { type: "ranged", dmg: 65, desc: "Ionian geothermal thermal-beam launcher." },
-  "Tachyon Bow": { type: "ranged", dmg: 110, desc: "Sednan bow firing faster-than-light beams." },
-  "Antimatter Annihilator": { type: "ranged", dmg: 150, desc: "Proximan cataclysmic anti-proton blaster." },
-  "Arcane Flame Wand": { type: "magic", dmg: 16, desc: "Fires fiery seeking magic sparks." },
-  "Frost Scepter": { type: "magic", dmg: 30, desc: "Europan cryo-energy bolt projector." },
+  "Thermal Pulse Rifle": { type: "ranged", dmg: 65, desc: "Ionian geothermal beam launcher." },
+  "Tachyon Bow": { type: "ranged", dmg: 110, desc: "Bow firing faster-than-light beams." },
+  "Antimatter Annihilator": { type: "ranged", dmg: 150, desc: "Proximan cataclysmic blaster." },
+  "Arcane Flame Wand": { type: "magic", dmg: 16, desc: "Fires fiery magic sparks." },
+  "Frost Scepter": { type: "magic", dmg: 30, desc: "Europan cryo bolt projector." },
   "Helium Plasma Wand": { type: "magic", dmg: 52, desc: "Lunar fusion-charged arcane caster." },
 
   "Wood Pickaxe": { type: "tool", tool_type: "pickaxe", tier: 1, mult: 1.3, desc: "Tier 1: 1.3x speed on Stone & Coal." },
@@ -227,64 +227,64 @@ const ITEM_DEFINITIONS = {
   "Stone Axe": { type: "tool", tool_type: "axe", tier: 0, mult: 2.1, desc: "Tier 0: 2.1x wood speed." },
   "Stone Shovel": { type: "tool", tool_type: "shovel", tier: 0, mult: 2.4, desc: "Tier 0: 2.4x dirt speed." },
 
-  "Iron Pickaxe": { type: "tool", tool_type: "pickaxe", tier: 3, mult: 2.6, desc: "Tier 3: 2.6x speed. Gold, Diamond & Basalt." },
+  "Iron Pickaxe": { type: "tool", tool_type: "pickaxe", tier: 3, mult: 2.6, desc: "Tier 3: 2.6x speed. Gold & Basalt." },
   "Iron Axe": { type: "tool", tool_type: "axe", tier: 0, mult: 3.0, desc: "Tier 0: 3.0x wood speed." },
   "Iron Shovel": { type: "tool", tool_type: "shovel", tier: 0, mult: 3.4, desc: "Tier 0: 3.4x dirt speed." },
 
   "Gold Pickaxe": { type: "tool", tool_type: "pickaxe", tier: 3, mult: 3.6, desc: "Tier 3: 3.6x speed. Fast but soft." },
-  "Obsidian Pickaxe": { type: "tool", tool_type: "pickaxe", tier: 4, mult: 3.0, desc: "Tier 4: 3.0x speed. Obsidian & Magma Stone." },
-  "Diamond Pickaxe": { type: "tool", tool_type: "pickaxe", tier: 4, mult: 4.4, desc: "Tier 4: 4.4x speed. Heavy kimberlite pick." },
+  "Obsidian Pickaxe": { type: "tool", tool_type: "pickaxe", tier: 4, mult: 3.0, desc: "Tier 4: 3.0x speed. Magma Stone." },
+  "Diamond Pickaxe": { type: "tool", tool_type: "pickaxe", tier: 4, mult: 4.4, desc: "Tier 4: 4.4x speed. Heavy pick." },
   "Titanium Pickaxe": { type: "tool", tool_type: "pickaxe", tier: 4, mult: 5.2, desc: "Tier 4: 5.2x speed. Aerospace alloy." },
-  "Cryo Breaker": { type: "tool", tool_type: "pickaxe", tier: 5, mult: 6.0, desc: "Tier 5: 6.0x speed. Europan ultrasonic pick." },
-  "Core Drill": { type: "tool", tool_type: "drill", tier: 5, mult: 7.5, desc: "Tier 5: 7.5x speed. Ultra-pressure rotary drill." },
+  "Cryo Breaker": { type: "tool", tool_type: "pickaxe", tier: 5, mult: 6.0, desc: "Tier 5: 6.0x speed. Ultrasonic pick." },
+  "Core Drill": { type: "tool", tool_type: "drill", tier: 5, mult: 7.5, desc: "Tier 5: 7.5x speed. Ultra-pressure drill." },
 
   "Dynamite": { type: "explosive", desc: "High explosive stick. Blasts 3x3 tiles on click." },
-  "Prospecting Scanner": { type: "scanner", desc: "Geological pulse detector. Pings ore veins within 14 tiles." },
+  "Prospecting Scanner": { type: "scanner", desc: "Geological pulse detector. Pings ore veins." },
 
-  "Oxygen Tank": { type: "accessory", desc: "Provides life support. Negates planetary vacuum asphyxiation." },
-  "Gravity Stabilizer": { type: "accessory", desc: "Gravimetric gyro. Normalizes planetary gravity to 1.0g." },
-  "Mining Charm": { type: "accessory", desc: "Ancient tectonic talisman. Grants +35% mining speed." },
+  "Oxygen Tank": { type: "accessory", desc: "Provides life support in planetary vacuum." },
+  "Gravity Stabilizer": { type: "accessory", desc: "Normalizes planetary gravity to 1.0g." },
+  "Mining Charm": { type: "accessory", desc: "Grants +35% mining speed bonus." },
 
-  "Iron Helmet": { type: "armor", slot: "helmet", defense: 4, desc: "Hardened iron headgear. +4 Defense." },
-  "Thermal Suit": { type: "armor", slot: "chest", defense: 8, desc: "Nullifies Lower Mantle thermal radiation. +8 Defense." },
-  "Acid-Resistant Suit": { type: "armor", slot: "chest", defense: 14, desc: "Venusian fluoropolymer suit. Immune to acid & heat." },
-  "Core Exosuit": { type: "armor", slot: "chest", defense: 24, desc: "Withstands 330+ GPa pressure & Outer Core molten slag." },
-  "Core Striders": { type: "armor", slot: "boots", defense: 6, desc: "Reinforced geothermic boots. +6 Defense & Lava Mobility." },
+  "Iron Helmet": { type: "armor", slot: "helmet", defense: 4, desc: "Hardened headgear. +4 Defense." },
+  "Thermal Suit": { type: "armor", slot: "chest", defense: 8, desc: "Nullifies Mantle thermal radiation." },
+  "Acid-Resistant Suit": { type: "armor", slot: "chest", defense: 14, desc: "Venusian suit. Immune to acid & heat." },
+  "Core Exosuit": { type: "armor", slot: "chest", defense: 24, desc: "Withstands 330+ GPa pressure." },
+  "Core Striders": { type: "armor", slot: "boots", defense: 6, desc: "Reinforced boots. +6 Defense & Lava Mobility." },
 
   "Health Potion": { type: "consumable", heal: 50, desc: "Restores 50 HP immediately." },
   "Swiftness Elixir": { type: "consumable", buff: "speed", desc: "Increases sprint velocity by 50% for 30s." },
   "Hyper-Shield Flask": { type: "consumable", heal: 120, desc: "Nanotech emergency repair. Heals 120 HP." },
 
-  "Planetary Dynamo": { type: "victory", desc: "THE REIGNITION CORE! Restores Earth's magnetic dynamo and saves humanity!" },
-  "Micro Circuit": { type: "material", desc: "Printed semiconductor board for avionics and computers." },
+  "Planetary Dynamo": { type: "victory", desc: "THE REIGNITION CORE! Restores Earth's magnetic dynamo!" },
+  "Micro Circuit": { type: "material", desc: "Printed semiconductor board for electronics." },
   "Quantum Processor": { type: "material", desc: "Superconducting quantum computing matrix." },
-  "Warp Drive Coil": { type: "material", desc: "Spacetime-distorting magnetic confinement coil." },
+  "Warp Drive Coil": { type: "material", desc: "Spacetime magnetic confinement coil." },
   "Iron Ingot": { type: "material", desc: "Refined ferric bar smelted from iron ore." },
   "Gold Ingot": { type: "material", desc: "Gleaming pure gold bullion." },
   "Titanium Ingot": { type: "material", desc: "High-tensile rocket hull plating ingot." },
-  "Coal": { type: "material", desc: "Fossilized combustible fuel for torches & furnaces." },
+  "Coal": { type: "material", desc: "Fossil fuel for torches & furnaces." },
   "Iron Ore": { type: "material", desc: "Raw unrefined ferric mineral." },
   "Gold Ore": { type: "material", desc: "Valuable conductive metallic element." },
   "Diamond": { type: "material", desc: "Ultra-hard tetrahedral diamond crystal." },
   "Obsidian": { type: "material", desc: "Extremely hard vitrified silicate." },
-  "Core Metal": { type: "material", desc: "Inner core crystalline iron-nickel alloy." },
+  "Core Metal": { type: "material", desc: "Inner core iron-nickel alloy." },
   "Core Shard": { type: "material", desc: "Harmonic energy crystal from Earth's center." },
 
   "Helium-3": { type: "material", desc: "Lunar fusion propellant isotope." },
-  "Titanium Ore": { type: "material", desc: "Martian aerospace refractory metal ore." },
-  "Sulfur": { type: "material", desc: "Venusian hyper-reactive chemical reagent." },
-  "Cinnabar": { type: "material", desc: "Hermian thermal superconductor crystal." },
-  "Lithium Brine": { type: "material", desc: "Europan high-capacity battery electrolyte." },
-  "Hydrocarbon": { type: "material", desc: "Titanian high-efficiency polymer fluid." },
-  "Pyroclastic Ore": { type: "material", desc: "Ionian super-dense volcanic geothermal core." },
-  "Deuterium": { type: "material", desc: "Enceladan heavy fusion propellant." },
+  "Titanium Ore": { type: "material", desc: "Martian aerospace metal ore." },
+  "Sulfur": { type: "material", desc: "Venusian reactive chemical reagent." },
+  "Cinnabar": { type: "material", desc: "Hermian thermal crystal." },
+  "Lithium Brine": { type: "material", desc: "Europan battery electrolyte." },
+  "Hydrocarbon": { type: "material", desc: "Titanian polymer fluid." },
+  "Pyroclastic Ore": { type: "material", desc: "Ionian volcanic geothermal core." },
+  "Deuterium": { type: "material", desc: "Enceladan fusion propellant." },
   "Palladium": { type: "material", desc: "Cerean catalytic shielding metal." },
-  "Neodymium": { type: "material", desc: "Tritonian hyper-flux magnetic mineral." },
-  "Dark Matter": { type: "material", desc: "Plutonian gravitational anomaly essence." },
-  "Tachyon Shard": { type: "material", desc: "Sednan superluminal faster-than-light crystal." },
-  "Antimatter": { type: "material", desc: "Proximan relativistic matter-annihilation cluster." },
-  "Chronos Crystal": { type: "material", desc: "Gliesian entropy-reversing temporal shard." },
-  "Singularity Core": { type: "material", desc: "Omega Prime micro-blackhole engine core." }
+  "Neodymium": { type: "material", desc: "Tritonian magnetic mineral." },
+  "Dark Matter": { type: "material", desc: "Plutonian gravitational essence." },
+  "Tachyon Shard": { type: "material", desc: "Sednan superluminal crystal." },
+  "Antimatter": { type: "material", desc: "Proximan annihilation cluster." },
+  "Chronos Crystal": { type: "material", desc: "Gliesian temporal shard." },
+  "Singularity Core": { type: "material", desc: "Omega Prime micro-engine core." }
 };
 
 for (let t = 1; t <= 15; t++) {
@@ -470,23 +470,21 @@ function evaluateMiningInteraction(player, tileId) {
   else if (reqTool === "Axe" && cap.type === "axe") isProperTool = true;
 
   if (!isProperTool) {
-    return { canDamage: true, canDrop: false, effMult: 0.15, msg: "Inefficient Tool (No Drop)" };
+    return { canDamage: true, canDrop: false, effMult: 0.25, msg: "Inefficient Tool (No Drop)" };
   }
   if (cap.tier < reqTier) {
-    return { canDamage: true, canDrop: false, effMult: 0.35, msg: "Chipping (Tier Low: No Drop)" };
+    return { canDamage: true, canDrop: false, effMult: 0.40, msg: "Chipping (Tier Low: No Drop)" };
   }
   return { canDamage: true, canDrop: true, effMult: cap.mult, msg: "Harvestable" };
 }
 
-// ==========================================
-// MOBILE VIRTUAL CONTROLS MAPPING
-// ==========================================
+// Touch Control Definitions
 const TOUCH_CONTROLS = {
-  btnLeft:  { id: "left",  x: 25,  y: SCREEN_HEIGHT - 115, w: 65, h: 65, label: "◀" },
-  btnRight: { id: "right", x: 100, y: SCREEN_HEIGHT - 115, w: 65, h: 65, label: "▶" },
-  btnJump:  { id: "jump",  x: 62,  y: SCREEN_HEIGHT - 190, w: 65, h: 65, label: "▲" },
-  btnMine:  { id: "mine",  x: SCREEN_WIDTH - 165, y: SCREEN_HEIGHT - 115, w: 65, h: 65, label: "DIG" },
-  btnPlace: { id: "place", x: SCREEN_WIDTH - 85,  y: SCREEN_HEIGHT - 115, w: 65, h: 65, label: "USE" },
+  btnLeft:  { id: "left",  x: 25,  y: SCREEN_HEIGHT - 120, w: 70, h: 70, label: "◀" },
+  btnRight: { id: "right", x: 105, y: SCREEN_HEIGHT - 120, w: 70, h: 70, label: "▶" },
+  btnJump:  { id: "jump",  x: 65,  y: SCREEN_HEIGHT - 200, w: 70, h: 70, label: "▲" },
+  btnMine:  { id: "mine",  x: SCREEN_WIDTH - 180, y: SCREEN_HEIGHT - 120, w: 70, h: 70, label: "DIG" },
+  btnPlace: { id: "place", x: SCREEN_WIDTH - 95,  y: SCREEN_HEIGHT - 120, w: 70, h: 70, label: "USE" },
   btnInv:   { id: "inv",   x: SCREEN_WIDTH - 85,  y: 18, w: 68, h: 36, label: "INV" },
   btnHeal:  { id: "heal",  x: SCREEN_WIDTH - 165, y: 18, w: 68, h: 36, label: "HEAL" }
 };
@@ -630,7 +628,6 @@ class PixelArtGenerator {
       this.icons[bid] = cvs;
     }
 
-    // Material & Rocket Icons
     for (const [name, idata] of Object.entries(ITEM_DEFINITIONS)) {
       if (this.icons[name]) continue;
       const cvs = document.createElement("canvas");
@@ -665,19 +662,25 @@ class PixelArtGenerator {
       this.icons[name] = cvs;
     }
 
-    // Crack overlays
+    // 10 Crack Overlays
     for (let stage = 0; stage < 10; stage++) {
       const cvs = document.createElement("canvas");
       cvs.width = TILE_SIZE;
       cvs.height = TILE_SIZE;
       const ctx = cvs.getContext("2d");
-      ctx.strokeStyle = `rgba(0, 0, 0, ${0.3 + stage * 0.07})`;
+      ctx.strokeStyle = `rgba(0, 0, 0, ${0.4 + stage * 0.06})`;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(16, 16);
-      ctx.lineTo(16 - stage, 16 + stage);
+      ctx.lineTo(16 - stage * 1.5, 16 + stage * 1.4);
       ctx.moveTo(16, 16);
-      ctx.lineTo(16 + stage, 16 - stage);
+      ctx.lineTo(16 + stage * 1.5, 16 - stage * 1.3);
+      if (stage > 4) {
+        ctx.moveTo(16, 16);
+        ctx.lineTo(16 - stage, 16 - stage * 1.4);
+        ctx.moveTo(16, 16);
+        ctx.lineTo(16 + stage * 1.4, 16 + stage);
+      }
       ctx.stroke();
       this.crack_overlays.push(cvs);
     }
@@ -793,7 +796,7 @@ class InventoryManager {
 }
 
 // ==========================================
-// WORLD GENERATOR & LIQUID PHYSICS
+// WORLD GENERATOR & LIQUIDS
 // ==========================================
 class World {
   constructor(width, height) {
@@ -928,7 +931,6 @@ class World {
     this._spawnVein(LAVA, 85, 140, 15, 11, [MAGMA_STONE, MOLTEN_CORE, AIR]);
     this._spawnStructures(9, 38, 115);
 
-    // Canopy Trees
     for (let x = 2; x < this.width - 3; x++) {
       const g = heights[x];
       if (x % 6 === 3 && g > 10 && this.tiles[x][g] === GRASS) {
@@ -1043,7 +1045,7 @@ class World {
 }
 
 // ==========================================
-// DYNAMIC LIGHTING ENGINE (OFFSCREEN CANVAS)
+// DYNAMIC LIGHTING
 // ==========================================
 class OptimizedLighting {
   constructor() {
@@ -1071,7 +1073,6 @@ class OptimizedLighting {
     this.ctx.fillRect(0, 0, LIGHT_W, LIGHT_H);
     this.ctx.globalCompositeOperation = "lighter";
 
-    // Player personal glow
     const px = Math.floor((player.x + player.w / 2 - camX) / LIGHT_SCALE);
     const py = Math.floor((player.y + player.h / 2 - camY) / LIGHT_SCALE);
     const grad = this.ctx.createRadialGradient(px, py, 4, px, py, 35);
@@ -1082,7 +1083,6 @@ class OptimizedLighting {
     this.ctx.arc(px, py, 35, 0, Math.PI * 2);
     this.ctx.fill();
 
-    // Tile light emitters
     const minTx = Math.max(0, Math.floor(camX / TILE_SIZE));
     const maxTx = Math.min(world.width, Math.ceil((camX + SCREEN_WIDTH) / TILE_SIZE));
     const minTy = Math.max(0, Math.floor(camY / TILE_SIZE));
@@ -1107,7 +1107,6 @@ class OptimizedLighting {
     }
 
     this.ctx.globalCompositeOperation = "source-over";
-
     mainCtx.save();
     mainCtx.globalCompositeOperation = "multiply";
     mainCtx.drawImage(this.canvas, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -1363,25 +1362,21 @@ class Player {
     const leg1Off = this.onGround ? Math.sin(this.walkPhase) * 6 : 2;
     const leg2Off = this.onGround ? -Math.sin(this.walkPhase) * 6 : -3;
 
-    // Oxygen Tank on Back
     if (this.inv.countItem("Oxygen Tank") > 0) {
       const oxX = dx + (this.facingRight ? 1 : 13);
       ctx.fillStyle = "#d2e1f5";
       ctx.fillRect(oxX, dy + 12 + Math.floor(bob), 6, 14);
     }
 
-    // Legs
     ctx.fillStyle = this.color;
     ctx.fillRect(dx + (this.facingRight ? 4 : 10), dy + 24 + bob, 5, 14 + Math.floor(leg2Off));
     ctx.fillRect(dx + (this.facingRight ? 10 : 4), dy + 24 + bob, 5, 14 + Math.floor(leg1Off));
 
-    // Torso & Environmental Suits
     const torsoY = dy + 10 + Math.floor(bob + breath);
     const chest = this.inv.armor.chest;
     ctx.fillStyle = (chest === "Thermal Suit") ? "#ff6e19" : (chest === "Core Exosuit") ? "#282d3c" : (chest === "Acid-Resistant Suit") ? "#8cd246" : this.color;
     ctx.fillRect(dx + 2, torsoY, 16, 16);
 
-    // Head
     const headY = dy + Math.floor(bob + breath);
     ctx.fillStyle = "#ebd2b4";
     ctx.fillRect(dx + 3, headY, 14, 11);
@@ -1389,13 +1384,11 @@ class Player {
     const eyeX = dx + (this.facingRight ? 12 : 4);
     ctx.fillRect(eyeX, headY + 4, 3, 3);
 
-    // Helmet
     if (this.inv.armor.helmet === "Iron Helmet") {
       ctx.fillStyle = "#b9bece";
       ctx.fillRect(dx + 2, headY - 2, 16, 8);
     }
 
-    // Arm and Tool/Weapon Swing
     const armX = dx + (this.facingRight ? 14 : 2);
     const armY = torsoY + 4;
     ctx.strokeStyle = "#ebd2b4";
@@ -1463,8 +1456,8 @@ class AstroStrataEngine {
 
     this.keys = {};
     this.mouse = { x: 0, y: 0, down: false, rightDown: false };
+    this.soundTimer = 0;
 
-    // Mobile / Touch handling
     this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     this.activeTouches = new Map();
 
@@ -1675,7 +1668,6 @@ class AstroStrataEngine {
       return px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
     };
 
-    // Mouse Listeners
     this.canvas.addEventListener("mousemove", (e) => {
       const pos = getCanvasPos(e);
       this.mouse.x = pos.x;
@@ -1754,10 +1746,8 @@ class AstroStrataEngine {
             }
             if (btn.id === "mine") {
               this.mouse.down = true;
-              this.handleLeftClick();
             }
             if (btn.id === "place") {
-              this.mouse.rightDown = true;
               this.handleRightClick();
             }
             break;
@@ -1767,7 +1757,6 @@ class AstroStrataEngine {
         if (!handled) {
           this.activeTouches.set(t.identifier, { type: "world", ...pos });
           this.mouse.down = true;
-          this.handleLeftClick();
         }
       }
     }, { passive: false });
@@ -1796,7 +1785,6 @@ class AstroStrataEngine {
         if (existing.type === "right") this.keys["KeyD"] = false;
         if (existing.type === "jump")  this.keys["KeyW"] = false;
         if (existing.type === "mine")  this.mouse.down = false;
-        if (existing.type === "place") this.mouse.rightDown = false;
         if (existing.type === "world") this.mouse.down = false;
 
         this.activeTouches.delete(t.identifier);
@@ -1851,8 +1839,6 @@ class AstroStrataEngine {
       const sel = this.player.inv.getSelected();
       const worldMx = mx + this.camX;
       const worldMy = my + this.camY;
-      const tgx = Math.floor(worldMx / TILE_SIZE);
-      const tgy = Math.floor(worldMy / TILE_SIZE);
 
       if (sel && sel.item === "Dynamite") {
         if (this.player.attackCooldown <= 0) {
@@ -1860,22 +1846,6 @@ class AstroStrataEngine {
           this.player.inv.removeItem("Dynamite", 1);
           this.projectiles.push(new Projectile(this.player.x, this.player.y, worldMx, worldMy, 150, "dynamite"));
           this.sound.play("jump");
-        }
-        return;
-      }
-
-      const t = this.world.getTile(tgx, tgy);
-      if (t !== AIR && t !== LAVA) {
-        const evalMine = evaluateMiningInteraction(this.player, t);
-        if (evalMine.canDamage) {
-          const mat = getBlockMaterial(t);
-          this.sound.play(`mine_${mat}`);
-          const drop = BLOCK_DATA[t].drop;
-          if (evalMine.canDrop && drop) {
-            this.player.inv.addItem(drop, 1);
-            this.player.addXp(BLOCK_DATA[t].xp || 4, this.floatTexts, this.sound);
-          }
-          this.world.setTile(tgx, tgy, AIR);
         }
       }
     } else if (this.state === "INVENTORY") {
@@ -1898,6 +1868,9 @@ class AstroStrataEngine {
       const tgx = Math.floor(worldMx / TILE_SIZE);
       const tgy = Math.floor(worldMy / TILE_SIZE);
 
+      const pDist = Math.hypot(worldMx - (this.player.x + this.player.w / 2), worldMy - (this.player.y + this.player.h / 2));
+      if (pDist > 180) return;
+
       const sel = this.player.inv.getSelected();
       if (sel && sel.item === "Prospecting Scanner") {
         this.triggerRadarScanner();
@@ -1907,16 +1880,29 @@ class AstroStrataEngine {
       const clickedBlock = this.world.getTile(tgx, tgy);
       if (clickedBlock === CHEST) {
         this.lootChest(tgx, tgy);
+        return;
       } else if (clickedBlock === LAUNCHPAD) {
         this.state = "STAR_MAP";
         this.sound.play("click");
+        return;
       } else if ([WORKBENCH, FURNACE, ASSEMBLER, PARTICLE_COLLIDER].includes(clickedBlock)) {
         this.state = "INVENTORY";
         this.sound.play("click");
-      } else if (sel && BLOCK_DATA[sel.item] && clickedBlock === AIR) {
-        this.world.setTile(tgx, tgy, sel.item);
-        this.player.inv.removeItem(sel.item, 1);
-        this.sound.play("place");
+        return;
+      }
+
+      // Block Placement Logic
+      if (sel && BLOCK_DATA[sel.item] && clickedBlock === AIR) {
+        const placeRect = { x: tgx * TILE_SIZE, y: tgy * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE };
+        const pRect = { x: this.player.x, y: this.player.y, w: this.player.w, h: this.player.h };
+
+        // Do not place inside the player
+        if (!(placeRect.x < pRect.x + pRect.w && placeRect.x + placeRect.w > pRect.x &&
+              placeRect.y < pRect.y + pRect.h && placeRect.y + placeRect.h > pRect.y)) {
+          this.world.setTile(tgx, tgy, sel.item);
+          this.player.inv.removeItem(sel.item, 1);
+          this.sound.play("place");
+        }
       }
     } else if (this.state === "INVENTORY") {
       this.handleInventoryClick(mx, my, 3);
@@ -1926,6 +1912,14 @@ class AstroStrataEngine {
   handleInventoryClick(mx, my, btn) {
     const rx = INV_UI_X + 24;
 
+    // Explicit Close Button [X]
+    if (mx >= INV_UI_X + 735 && mx <= INV_UI_X + 765 && my >= INV_UI_Y + 12 && my <= INV_UI_Y + 42) {
+      this.state = "PLAYING";
+      this.sound.play("click");
+      return;
+    }
+
+    // Search Box Focus
     if (mx >= rx && mx <= rx + 200 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 249) {
       this.searchActive = true;
       this.sound.play("click");
@@ -1934,6 +1928,7 @@ class AstroStrataEngine {
       this.searchActive = false;
     }
 
+    // Category Tabs
     const categories = ["ALL", "TOOLS", "WEAPONS", "ARMOR", "ROCKETS", "BLOCKS"];
     let catX = rx + 240;
     for (const cat of categories) {
@@ -1946,6 +1941,7 @@ class AstroStrataEngine {
       catX += 68;
     }
 
+    // Slots Clicks
     for (let i = 0; i < 30; i++) {
       const srec = getSlotRect(i);
       if (mx >= srec.x && mx <= srec.x + srec.w && my >= srec.y && my <= srec.y + srec.h) {
@@ -1975,12 +1971,15 @@ class AstroStrataEngine {
       }
     }
 
+    // Recipes Click
     const displayedRecipes = this.getFilteredRecipes();
     const visibleSlice = displayedRecipes.slice(this.recipeScrollOffset, this.recipeScrollOffset + 9);
     for (let idx = 0; idx < visibleSlice.length; idx++) {
       const rec = visibleSlice[idx];
       const recY = INV_UI_Y + 258 + idx * 29;
-      if (mx >= rx && mx <= rx + 720 && my >= recY && my <= recY + 26) {
+      const craftBtn = { x: INV_UI_X + 675, y: recY + 2, w: 65, h: 22 };
+
+      if (mx >= craftBtn.x && mx <= craftBtn.x + craftBtn.w && my >= craftBtn.y && my <= craftBtn.y + craftBtn.h) {
         const reqStation = rec.station || "hand";
         const stationOk = (reqStation === "hand" || this.isNearStation(reqStation === "workbench" ? WORKBENCH : reqStation === "furnace" ? FURNACE : reqStation === "assembler" ? ASSEMBLER : LAUNCHPAD));
 
@@ -2042,6 +2041,62 @@ class AstroStrataEngine {
     });
   }
 
+  processContinuousDigging() {
+    if (!this.mouse.down || this.state !== "PLAYING" || !this.player) return;
+
+    const worldMx = this.mouse.x + this.camX;
+    const worldMy = this.mouse.y + this.camY;
+    const tgx = Math.floor(worldMx / TILE_SIZE);
+    const tgy = Math.floor(worldMy / TILE_SIZE);
+
+    const pDist = Math.hypot(worldMx - (this.player.x + this.player.w / 2), worldMy - (this.player.y + this.player.h / 2));
+    if (pDist > 180) return;
+
+    const t = this.world.getTile(tgx, tgy);
+    if (t === AIR || t === LAVA) return;
+
+    const evalMine = evaluateMiningInteraction(this.player, t);
+    const key = `${tgx},${tgy}`;
+
+    if (!evalMine.canDamage) {
+      this.soundTimer++;
+      if (this.soundTimer % 18 === 0) {
+        this.sound.play("mine_metal");
+        this.floatTexts.push(new FloatingText(tgx * TILE_SIZE, tgy * TILE_SIZE, evalMine.msg, COLOR_HP, 30));
+      }
+      return;
+    }
+
+    const hardness = BLOCK_DATA[t].hardness || 1.0;
+    const dt = 1.0 / 60.0;
+    const progressInc = dt * this.player.mine_mult * evalMine.effMult;
+
+    let cur = this.world.damage_map.get(key) || 0.0;
+    cur += progressInc;
+    this.world.damage_map.set(key, cur);
+
+    this.player.swingAnim = 6;
+    this.soundTimer++;
+
+    if (this.soundTimer % 12 === 0) {
+      const mat = getBlockMaterial(t);
+      this.sound.play(`mine_${mat}`);
+      this.particles.push(new Particle(tgx * TILE_SIZE + 16, tgy * TILE_SIZE + 16, (Math.random() - 0.5) * 3, -1 - Math.random() * 2, BLOCK_DATA[t].color, 4, 18));
+    }
+
+    if (cur >= hardness) {
+      const mat = getBlockMaterial(t);
+      this.sound.play(`break_${mat}`);
+      const drop = BLOCK_DATA[t].drop;
+      if (evalMine.canDrop && drop) {
+        this.player.inv.addItem(drop, 1);
+        this.player.addXp(BLOCK_DATA[t].xp || 4, this.floatTexts, this.sound);
+      }
+      this.world.setTile(tgx, tgy, AIR);
+      this.world.damage_map.delete(key);
+    }
+  }
+
   processEnvironmentalHazards() {
     const pTy = Math.floor(this.player.y / TILE_SIZE);
     const hasExosuit = this.player.inv.armor.chest === "Core Exosuit";
@@ -2082,6 +2137,7 @@ class AstroStrataEngine {
   update() {
     if (this.state === "PLAYING" && this.player) {
       this.player.update(this.world, this.keys, this.sound);
+      this.processContinuousDigging();
       this.world.updateLiquids(this.particles, this.sound);
       this.processEnvironmentalHazards();
 
@@ -2239,7 +2295,15 @@ class AstroStrataEngine {
       for (let y = minTy; y < maxTy; y++) {
         const t = this.world.getTile(x, y);
         if (t !== AIR && this.art.tiles[t]) {
-          this.ctx.drawImage(this.art.tiles[t], Math.floor(x * TILE_SIZE - this.camX), Math.floor(y * TILE_SIZE - this.camY));
+          const dx = Math.floor(x * TILE_SIZE - this.camX);
+          const dy = Math.floor(y * TILE_SIZE - this.camY);
+          this.ctx.drawImage(this.art.tiles[t], dx, dy);
+
+          const dmg = this.world.damage_map.get(`${x},${y}`);
+          if (dmg && BLOCK_DATA[t]) {
+            const stage = Math.min(9, Math.floor((dmg / BLOCK_DATA[t].hardness) * 10));
+            this.ctx.drawImage(this.art.crack_overlays[stage], dx, dy);
+          }
         }
       }
     }
@@ -2252,33 +2316,42 @@ class AstroStrataEngine {
 
     if (this.player) this.lighting.render(this.ctx, this.player, this.world, this.camX, this.camY);
 
-    // Geological Target Inspector
+    // Aiming Reticle
     const worldMx = this.mouse.x + this.camX;
     const worldMy = this.mouse.y + this.camY;
     const hoverTx = Math.floor(worldMx / TILE_SIZE);
     const hoverTy = Math.floor(worldMy / TILE_SIZE);
-    const hoverTile = this.world.getTile(hoverTx, hoverTy);
+    const pDist = Math.hypot(worldMx - (this.player.x + this.player.w / 2), worldMy - (this.player.y + this.player.h / 2));
+    const inReach = pDist <= 180;
 
+    const rDx = Math.floor(hoverTx * TILE_SIZE - this.camX);
+    const rDy = Math.floor(hoverTy * TILE_SIZE - this.camY);
+    this.ctx.strokeStyle = inReach ? COLOR_GOLD : "rgba(235, 60, 60, 0.6)";
+    this.ctx.lineWidth = 1.5;
+    this.ctx.strokeRect(rDx, rDy, TILE_SIZE, TILE_SIZE);
+
+    // Inspector HUD
+    const hoverTile = this.world.getTile(hoverTx, hoverTy);
     if (hoverTile !== AIR && BLOCK_DATA[hoverTile]) {
       const bdata = BLOCK_DATA[hoverTile];
-      const hx = SCREEN_WIDTH - 300;
+      const hx = SCREEN_WIDTH - 290;
       const hy = 16;
       this.ctx.fillStyle = "rgba(18, 22, 32, 0.9)";
-      this.ctx.fillRect(hx, hy, 280, 85);
+      this.ctx.fillRect(hx, hy, 270, 78);
       this.ctx.strokeStyle = COLOR_GOLD;
-      this.ctx.strokeRect(hx, hy, 280, 85);
+      this.ctx.strokeRect(hx, hy, 270, 78);
 
       this.ctx.fillStyle = COLOR_GOLD;
       this.ctx.textAlign = "left";
-      this.ctx.font = "bold 14px 'Courier New', monospace";
-      this.ctx.fillText(bdata.name, hx + 12, hy + 22);
+      this.ctx.font = "bold 13px 'Courier New', monospace";
+      this.ctx.fillText(bdata.name, hx + 12, hy + 20);
 
       const evalInfo = evaluateMiningInteraction(this.player, hoverTile);
       this.ctx.fillStyle = evalInfo.canDrop ? COLOR_EXP : COLOR_HP;
       this.ctx.font = "11px monospace";
-      this.ctx.fillText(`Mohs: ${bdata.mohs} | [${evalInfo.msg}]`, hx + 12, hy + 42);
+      this.ctx.fillText(`Mohs: ${bdata.mohs} | [${evalInfo.msg}]`, hx + 12, hy + 38);
       this.ctx.fillStyle = COLOR_CYAN;
-      this.ctx.fillText(`Req: ${bdata.req_tool} (${TIER_NAMES[bdata.req_tier]})`, hx + 12, hy + 62);
+      this.ctx.fillText(`Req: ${bdata.req_tool} (${TIER_NAMES[bdata.req_tier]})`, hx + 12, hy + 56);
     }
 
     // Geomechanics Layer HUD
@@ -2359,7 +2432,7 @@ class AstroStrataEngine {
 
     // Inventory & Crafting Matrix
     if (this.state === "INVENTORY") {
-      this.ctx.fillStyle = "rgba(10, 12, 18, 0.92)";
+      this.ctx.fillStyle = "rgba(10, 12, 18, 0.95)";
       this.ctx.fillRect(INV_UI_X, INV_UI_Y, 780, 540);
       this.ctx.strokeStyle = COLOR_GOLD;
       this.ctx.strokeRect(INV_UI_X, INV_UI_Y, 780, 540);
@@ -2368,6 +2441,17 @@ class AstroStrataEngine {
       this.ctx.font = "bold 20px 'Courier New', monospace";
       this.ctx.fillText("WORKSHOP & FABRICATION MATRIX", INV_UI_X + 24, INV_UI_Y + 36);
 
+      // Close [X] Button
+      this.ctx.fillStyle = "#e63c3c";
+      this.ctx.fillRect(INV_UI_X + 735, INV_UI_Y + 12, 30, 30);
+      this.ctx.strokeStyle = COLOR_WHITE;
+      this.ctx.strokeRect(INV_UI_X + 735, INV_UI_Y + 12, 30, 30);
+      this.ctx.fillStyle = COLOR_WHITE;
+      this.ctx.font = "bold 18px monospace";
+      this.ctx.textAlign = "center";
+      this.ctx.fillText("X", INV_UI_X + 750, INV_UI_Y + 33);
+      this.ctx.textAlign = "left";
+
       // Search Box
       this.ctx.fillStyle = "#141824";
       this.ctx.fillRect(INV_UI_X + 24, INV_UI_Y + 225, 200, 24);
@@ -2375,7 +2459,22 @@ class AstroStrataEngine {
       this.ctx.strokeRect(INV_UI_X + 24, INV_UI_Y + 225, 200, 24);
       this.ctx.fillStyle = COLOR_WHITE;
       this.ctx.font = "12px monospace";
-      this.ctx.fillText(this.searchQuery || "Search...", INV_UI_X + 30, INV_UI_Y + 241);
+      this.ctx.fillText(this.searchQuery || "Search items...", INV_UI_X + 30, INV_UI_Y + 241);
+
+      // Category Tabs
+      const categories = ["ALL", "TOOLS", "WEAPONS", "ARMOR", "ROCKETS", "BLOCKS"];
+      let catX = INV_UI_X + 24 + 240;
+      for (const cat of categories) {
+        const isSel = this.craftCategory === cat;
+        this.ctx.fillStyle = isSel ? "#2b3b55" : "#161c28";
+        this.ctx.fillRect(catX, INV_UI_Y + 225, 62, 24);
+        this.ctx.strokeStyle = isSel ? COLOR_GOLD : "#404c64";
+        this.ctx.strokeRect(catX, INV_UI_Y + 225, 62, 24);
+        this.ctx.fillStyle = isSel ? COLOR_GOLD : COLOR_WHITE;
+        this.ctx.font = "10px monospace";
+        this.ctx.fillText(cat, catX + 6, INV_UI_Y + 241);
+        catX += 68;
+      }
 
       // Inventory slots
       for (let i = 0; i < 30; i++) {
@@ -2396,21 +2495,48 @@ class AstroStrataEngine {
         }
       }
 
-      // Recipe List
+      // Recipes List with explicit CRAFT buttons
       const displayedRecipes = this.getFilteredRecipes();
       const visibleSlice = displayedRecipes.slice(this.recipeScrollOffset, this.recipeScrollOffset + 9);
       for (let idx = 0; idx < visibleSlice.length; idx++) {
         const rec = visibleSlice[idx];
         const recY = INV_UI_Y + 258 + idx * 29;
+
+        const reqStation = rec.station || "hand";
+        const stationOk = (reqStation === "hand" || this.isNearStation(reqStation === "workbench" ? WORKBENCH : reqStation === "furnace" ? FURNACE : reqStation === "assembler" ? ASSEMBLER : LAUNCHPAD));
+
+        let canCraft = stationOk;
+        const reqTexts = [];
+        for (const [rk, ramt] of Object.entries(rec.req)) {
+          const have = this.player.inv.countItem(rk);
+          if (have < ramt) canCraft = false;
+          const rName = BLOCK_DATA[rk]?.name || rk;
+          reqTexts.push(`${rName}:${have}/${ramt}`);
+        }
+
         this.ctx.fillStyle = "#161c28";
         this.ctx.fillRect(INV_UI_X + 24, recY, 720, 26);
-        this.ctx.strokeStyle = "#38445a";
+        this.ctx.strokeStyle = canCraft ? "#5adcff" : "#38445a";
         this.ctx.strokeRect(INV_UI_X + 24, recY, 720, 26);
 
         const rName = BLOCK_DATA[rec.result]?.name || String(rec.result);
         this.ctx.fillStyle = COLOR_GOLD;
         this.ctx.font = "12px monospace";
-        this.ctx.fillText(`[${rec.station.toUpperCase()}] ${rName} x${rec.count}`, INV_UI_X + 36, recY + 18);
+        this.ctx.fillText(`[${reqStation.toUpperCase()}] ${rName} x${rec.count}`, INV_UI_X + 32, recY + 18);
+
+        this.ctx.fillStyle = canCraft ? COLOR_EXP : "#9aa0a6";
+        this.ctx.font = "10px monospace";
+        this.ctx.fillText(reqTexts.join(" "), INV_UI_X + 310, recY + 18);
+
+        // Craft button
+        const craftBtn = { x: INV_UI_X + 675, y: recY + 2, w: 65, h: 22 };
+        this.ctx.fillStyle = canCraft ? "#236437" : "#303440";
+        this.ctx.fillRect(craftBtn.x, craftBtn.y, craftBtn.w, craftBtn.h);
+        this.ctx.strokeStyle = canCraft ? COLOR_EXP : "#505460";
+        this.ctx.strokeRect(craftBtn.x, craftBtn.y, craftBtn.w, craftBtn.h);
+        this.ctx.fillStyle = canCraft ? COLOR_WHITE : "#777c88";
+        this.ctx.font = "bold 11px monospace";
+        this.ctx.fillText("CRAFT", craftBtn.x + 14, craftBtn.y + 15);
       }
     }
 

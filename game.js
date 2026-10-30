@@ -1,8 +1,9 @@
 // =============================================================================
-// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 1 / 3)
+// ASTROSTRATA: REIGNITION — ZERO-DEPENDENCY ENGINE (PART 1 / 3)
+// Architecture: Unified Texture Atlas & Pre-Baked Radial Lighting
 // =============================================================================
 
-const VERSION_STRING = "v0.3.7-web";
+const VERSION_STRING = "v0.3.1-retina";
 const SCREEN_WIDTH = 1280;
 const SCREEN_HEIGHT = 720;
 const TILE_SIZE = 32;
@@ -121,10 +122,10 @@ const TIER_NAMES = {
 };
 
 const BLOCK_DATA = {
-  [CHEST]: { name: "Loot Cache", hardness: 1.2, mohs: 2.5, color: "#a56e2d", drop: CHEST, req_tier: 0, req_tool: "Axe", desc: "Subterranean cache with survival gear." },
+  [CHEST]: { name: "Loot Cache", hardness: 1.2, mohs: 2.5, color: "#a56e2d", drop: CHEST, req_tier: 0, req_tool: "Axe", desc: "Subterranean cache with survival supplies." },
   [DIRT]: { name: "Dirt", hardness: 0.7, mohs: 1.5, color: "#734b2d", drop: DIRT, req_tier: 0, req_tool: "Shovel", desc: "Soft organic topsoil." },
   [GRASS]: { name: "Grass Block", hardness: 0.7, mohs: 1.5, color: "#4b9128", drop: DIRT, req_tier: 0, req_tool: "Shovel", desc: "Root-bound surface humus layer." },
-  [STONE]: { name: "Crust Stone", hardness: 1.8, mohs: 5.5, color: "#787880", drop: STONE, req_tier: 1, req_tool: "Pickaxe", desc: "Brittle continental granitic bedrock." },
+  [STONE]: { name: "Crust Stone", hardness: 1.8, mohs: 5.5, color: "#787880", drop: STONE, req_tier: 1, req_tool: "Pickaxe", desc: "Brittle continental bedrock." },
   [COAL_ORE]: { name: "Coal Ore", hardness: 2.0, mohs: 3.0, color: "#28282d", drop: "Coal", req_tier: 1, req_tool: "Pickaxe", desc: "Compressed carbon fuel matrix.", xp: 12 },
   [IRON_ORE]: { name: "Iron Ore", hardness: 2.6, mohs: 5.5, color: "#b98769", drop: "Iron Ore", req_tier: 2, req_tool: "Pickaxe", desc: "Dense banded iron formation.", xp: 20 },
   [GOLD_ORE]: { name: "Gold Ore", hardness: 3.2, mohs: 4.5, color: "#e6c328", drop: "Gold Ore", req_tier: 3, req_tool: "Pickaxe", desc: "Heavy auriferous quartz vein.", xp: 35 },
@@ -490,8 +491,244 @@ const TOUCH_CONTROLS = {
   btnInv:   { id: "inv",   x: SCREEN_WIDTH - 85,  y: 18, w: 68, h: 36, label: "INV" },
   btnHeal:  { id: "heal",  x: SCREEN_WIDTH - 165, y: 18, w: 68, h: 36, label: "HEAL" }
 };
+
+// ==========================================
+// UNIFIED SPRITE & TEXTURE ATLAS (SINGLE CANVAS)
+// Prevents Safari GPU Process Crashes & Memory Leaks
+// ==========================================
+class UnifiedTextureAtlas {
+  constructor() {
+    this.atlas = document.createElement("canvas");
+    this.atlas.width = 512;
+    this.atlas.height = 512;
+    this.ctx = this.atlas.getContext("2d");
+    this.coords = new Map();
+    this.nextIndex = 0;
+    this._bakeAll();
+  }
+
+  _allocSlot(key) {
+    const idx = this.nextIndex++;
+    const col = idx % 16;
+    const row = Math.floor(idx / 16);
+    const pos = { sx: col * 32, sy: row * 32 };
+    this.coords.set(key, pos);
+    return pos;
+  }
+
+  get(key) {
+    return this.coords.get(key) || null;
+  }
+
+  draw(targetCtx, key, dx, dy, dw = 32, dh = 32) {
+    const pos = this.coords.get(key);
+    if (!pos) return;
+    targetCtx.drawImage(this.atlas, pos.sx, pos.sy, 32, 32, dx, dy, dw, dh);
+  }
+
+  _hexToRgb(hex) {
+    const c = (hex || "#787880").replace("#", "");
+    return {
+      r: parseInt(c.substring(0, 2), 16) || 120,
+      g: parseInt(c.substring(2, 4), 16) || 120,
+      b: parseInt(c.substring(4, 6), 16) || 128
+    };
+  }
+
+  _bakeAll() {
+    const ctx = this.ctx;
+
+    // 1. Bake Blocks into Atlas
+    for (const [bidStr, data] of Object.entries(BLOCK_DATA)) {
+      const bid = Number(bidStr);
+      const { sx, sy } = this._allocSlot("b_" + bid);
+      const base = this._hexToRgb(data.color);
+      const hi = `rgb(${Math.min(255, base.r + 45)}, ${Math.min(255, base.g + 45)}, ${Math.min(255, base.b + 45)})`;
+      const mid = `rgb(${Math.floor(base.r * 0.82)}, ${Math.floor(base.g * 0.82)}, ${Math.floor(base.b * 0.82)})`;
+      const dark = `rgb(${Math.floor(base.r * 0.58)}, ${Math.floor(base.g * 0.58)}, ${Math.floor(base.b * 0.58)})`;
+
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.fillStyle = data.color;
+      ctx.fillRect(0, 0, 32, 32);
+
+      if (bid === GRASS) {
+        ctx.fillStyle = "#6e4628";
+        ctx.fillRect(0, 8, 32, 24);
+        for (let x = 0; x < 32; x++) {
+          const rootLen = 7 + (x * 7 % 6);
+          for (let y = 0; y < rootLen; y++) {
+            ctx.fillStyle = (y < 2) ? "#8ae63c" : (y < 5) ? "#4b9128" : "#2d6e14";
+            ctx.fillRect(x, y, 1, 1);
+          }
+        }
+      } else if (bid === CHEST) {
+        ctx.fillStyle = "#8c5a2d";
+        ctx.fillRect(2, 2, 28, 28);
+        ctx.strokeStyle = "#462814";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(2, 2, 28, 28);
+        ctx.beginPath(); ctx.moveTo(2, 13); ctx.lineTo(29, 13); ctx.stroke();
+        ctx.fillStyle = "#ffd700";
+        ctx.fillRect(14, 10, 4, 6);
+      } else if (data.name.includes("Ore") || data.name.includes("Crystal") || data.name.includes("Shard")) {
+        ctx.fillStyle = "#6e6e76";
+        ctx.fillRect(0, 0, 32, 32);
+        const gems = [[8, 8, 5], [22, 10, 4], [11, 22, 6], [23, 23, 5]];
+        for (const [gx, gy, gr] of gems) {
+          ctx.fillStyle = dark;
+          ctx.beginPath(); ctx.arc(gx, gy, gr + 1, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = data.color;
+          ctx.beginPath(); ctx.arc(gx, gy, gr, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = hi; ctx.fillRect(gx - 1, gy - 2, 2, 2);
+          ctx.fillStyle = "#ffffff"; ctx.fillRect(gx, gy - 1, 1, 1);
+        }
+      } else if (bid === WOOD) {
+        ctx.fillStyle = "#784b28";
+        ctx.fillRect(0, 0, 32, 32);
+        for (let x = 0; x < 32; x += 4) {
+          ctx.fillStyle = (x % 8 === 0) ? "#553219" : "#8c5a32";
+          ctx.fillRect(x, 0, 2, 32);
+        }
+      } else if (bid === PLANKS) {
+        ctx.fillStyle = "#af7d46";
+        ctx.fillRect(0, 0, 32, 32);
+        for (const py of [10, 21]) {
+          ctx.fillStyle = "#5a3c1e"; ctx.fillRect(0, py, 32, 2);
+          ctx.fillStyle = "#d7a569"; ctx.fillRect(0, py + 2, 32, 1);
+        }
+      } else if (bid === WORKBENCH) {
+        ctx.fillStyle = "#9b6941"; ctx.fillRect(0, 0, 32, 32);
+        ctx.fillStyle = "#5a371e"; ctx.fillRect(0, 0, 32, 6);
+        ctx.fillStyle = "#e1b478"; ctx.fillRect(0, 6, 32, 2);
+        ctx.fillStyle = "#3c2314"; ctx.fillRect(4, 12, 10, 8); ctx.fillRect(18, 12, 10, 8);
+      } else if (bid === FURNACE) {
+        ctx.fillStyle = "#64646e"; ctx.fillRect(0, 0, 32, 32);
+        ctx.fillStyle = "#323237"; ctx.fillRect(6, 12, 20, 16);
+        ctx.fillStyle = "#ff550a"; ctx.fillRect(9, 16, 14, 10);
+        ctx.fillStyle = "#ffdd4b"; ctx.fillRect(12, 19, 8, 5);
+      } else if (bid === STONE_BRICKS || bid === BASALT_BRICKS) {
+        ctx.fillStyle = (bid === STONE_BRICKS) ? "#828287" : "#32323c";
+        ctx.fillRect(0, 0, 32, 32);
+        ctx.strokeStyle = (bid === STONE_BRICKS) ? "#46464b" : "#191923";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(0, 0, 16, 10); ctx.strokeRect(16, 0, 16, 10);
+        ctx.strokeRect(8, 10, 16, 11);
+        ctx.strokeRect(0, 21, 16, 11); ctx.strokeRect(16, 21, 16, 11);
+      } else if (bid === GLASS || bid === CRYSTAL_GLASS) {
+        ctx.fillStyle = (bid === CRYSTAL_GLASS) ? "rgba(190, 240, 255, 0.45)" : "rgba(175, 225, 240, 0.35)";
+        ctx.fillRect(0, 0, 32, 32);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.85)"; ctx.lineWidth = 2;
+        ctx.strokeRect(1, 1, 30, 30);
+      } else if (bid === TORCH) {
+        ctx.clearRect(0, 0, 32, 32);
+        ctx.fillStyle = "#7d502d"; ctx.fillRect(14, 12, 5, 17);
+        ctx.fillStyle = "#ffb428"; ctx.beginPath(); ctx.arc(16, 9, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#ff4600"; ctx.beginPath(); ctx.arc(16, 9, 3, 0, Math.PI * 2); ctx.fill();
+      } else if (bid === LANTERN) {
+        ctx.clearRect(0, 0, 32, 32);
+        ctx.fillStyle = "#2d323c"; ctx.fillRect(10, 8, 12, 18);
+        ctx.fillStyle = "#ffd24b"; ctx.fillRect(12, 11, 8, 12);
+      } else if (bid === LAVA) {
+        ctx.fillStyle = "#eb460a"; ctx.fillRect(0, 0, 32, 32);
+        ctx.fillStyle = "#ffaf1e"; ctx.fillRect(0, 0, 32, 8);
+      }
+
+      if (![AIR, LAVA, TORCH, LANTERN, GLASS, CRYSTAL_GLASS].includes(bid)) {
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.28)"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, 31); ctx.lineTo(0, 0); ctx.lineTo(31, 0); ctx.stroke();
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.45)";
+        ctx.beginPath(); ctx.moveTo(31, 0); ctx.lineTo(31, 31); ctx.lineTo(0, 31); ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // 2. Bake Items, Weapons, Tools, & Armor into Atlas
+    for (const [name, idata] of Object.entries(ITEM_DEFINITIONS)) {
+      const { sx, sy } = this._allocSlot("i_" + name);
+      const tColor = name.includes("Wood") ? "#966432" :
+                     name.includes("Stone") ? "#9696a0" :
+                     name.includes("Iron") ? "#dce1ec" :
+                     name.includes("Gold") ? "#ffd700" :
+                     name.includes("Diamond") ? "#50e1ff" :
+                     name.includes("Obsidian") ? "#6e37b4" :
+                     name.includes("Titanium") ? "#78a0c8" :
+                     name.includes("Cryo") ? "#a0f0ff" :
+                     name.includes("Core") ? "#ff461e" :
+                     name.includes("Singularity") ? "#b432ff" : "#5adcff";
+
+      ctx.save();
+      ctx.translate(sx, sy);
+
+      if (idata.tool_type === "pickaxe" || name.includes("Pickaxe")) {
+        ctx.strokeStyle = "#643c1e"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(21, 11); ctx.stroke();
+        ctx.strokeStyle = tColor; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.arc(23, 9, 9, Math.PI * 0.75, Math.PI * 1.6); ctx.stroke();
+      } else if (idata.tool_type === "axe" || name.includes("Axe")) {
+        ctx.strokeStyle = "#643c1e"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(22, 10); ctx.stroke();
+        ctx.fillStyle = tColor;
+        ctx.beginPath(); ctx.moveTo(18, 5); ctx.lineTo(27, 8); ctx.lineTo(23, 17); ctx.lineTo(16, 12); ctx.fill();
+      } else if (idata.tool_type === "shovel" || name.includes("Shovel")) {
+        ctx.strokeStyle = "#643c1e"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(21, 11); ctx.stroke();
+        ctx.fillStyle = tColor; ctx.beginPath(); ctx.arc(23, 9, 6, 0, Math.PI * 2); ctx.fill();
+      } else if (idata.type === "weapon" || name.includes("Blade") || name.includes("Sword") || name.includes("Dagger")) {
+        ctx.strokeStyle = "#ffd700"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(8, 18); ctx.lineTo(14, 24); ctx.stroke();
+        ctx.strokeStyle = "#503219"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(6, 26); ctx.lineTo(10, 22); ctx.stroke();
+        ctx.strokeStyle = tColor; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(11, 21); ctx.lineTo(26, 6); ctx.stroke();
+      } else if (idata.type === "armor") {
+        ctx.fillStyle = tColor;
+        if (idata.slot === "helmet") {
+          ctx.fillRect(7, 8, 18, 14); ctx.clearRect(11, 15, 10, 4);
+        } else if (idata.slot === "boots") {
+          ctx.fillRect(6, 14, 8, 12); ctx.fillRect(18, 14, 8, 12);
+        } else {
+          ctx.fillRect(6, 6, 20, 18); ctx.clearRect(12, 6, 8, 5);
+        }
+      } else if (idata.type === "consumable" || name.includes("Potion") || name.includes("Flask")) {
+        ctx.fillStyle = "#b48c50"; ctx.fillRect(14, 5, 4, 3);
+        ctx.fillStyle = name.includes("Health") ? "#e62828" : name.includes("Swift") ? "#ffd700" : "#50dcff";
+        ctx.beginPath(); ctx.arc(16, 20, 8, 0, Math.PI * 2); ctx.fill();
+      } else if (idata.type === "rocket") {
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath(); ctx.moveTo(16, 3); ctx.lineTo(23, 23); ctx.lineTo(9, 23); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = tColor; ctx.fillRect(10, 15, 12, 4);
+      } else if (name.includes("Ingot")) {
+        ctx.fillStyle = tColor;
+        ctx.beginPath(); ctx.moveTo(6, 20); ctx.lineTo(11, 11); ctx.lineTo(25, 11); ctx.lineTo(22, 20); ctx.closePath(); ctx.fill();
+      } else {
+        ctx.fillStyle = tColor; ctx.beginPath(); ctx.arc(16, 16, 7, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // 3. Bake Crack Overlays into Atlas
+    for (let stage = 0; stage < 10; stage++) {
+      const { sx, sy } = this._allocSlot("crack_" + stage);
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.strokeStyle = `rgba(0, 0, 0, ${0.48 + stage * 0.05})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(16, 16); ctx.lineTo(16 - stage * 1.5, 16 + stage * 1.4);
+      ctx.moveTo(16, 16); ctx.lineTo(16 + stage * 1.5, 16 - stage * 1.3);
+      if (stage > 4) {
+        ctx.moveTo(16, 16); ctx.lineTo(16 - stage, 16 - stage * 1.4);
+        ctx.moveTo(16, 16); ctx.lineTo(16 + stage * 1.4, 16 + stage);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+}
 // =============================================================================
-// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 2 / 3)
+// ASTROSTRATA: REIGNITION — ZERO-DEPENDENCY ENGINE (PART 2 / 3)
+// Components: Sound Synthesis, Pre-Baked Lighting, World Gen & Entities
 // =============================================================================
 
 // ==========================================
@@ -587,394 +824,89 @@ class SoundEngine {
 }
 
 // ==========================================
-// HIGH-DETAIL PROCEDURAL PIXEL ART GENERATOR
+// PRE-BAKED RADIAL LIGHTING ENGINE
+// Zero per-frame gradient allocation (Restores 60 FPS on Mobile)
 // ==========================================
-class PixelArtGenerator {
+class OptimizedLighting {
   constructor() {
-    this.tiles = {};
-    this.icons = {};
-    this.crack_overlays = [];
-    this._bakeAll();
+    this.canvas = document.createElement("canvas");
+    this.canvas.width = LIGHT_W;
+    this.canvas.height = LIGHT_H;
+    this.ctx = this.canvas.getContext("2d");
+
+    // Pre-bake light stamps of key radii to eliminate runtime createRadialGradient stalls
+    this.stamps = {};
+    for (const r of [16, 24, 35, 45]) {
+      const cvs = document.createElement("canvas");
+      cvs.width = r * 2;
+      cvs.height = r * 2;
+      const c = cvs.getContext("2d");
+      const g = c.createRadialGradient(r, r, 2, r, r, r);
+      g.addColorStop(0, "rgba(255, 225, 160, 0.95)");
+      g.addColorStop(0.45, "rgba(255, 185, 90, 0.45)");
+      g.addColorStop(1, "rgba(0, 0, 0, 0)");
+      c.fillStyle = g;
+      c.fillRect(0, 0, r * 2, r * 2);
+      this.stamps[r] = cvs;
+    }
   }
 
-  _hexToRgb(hex) {
-    const c = hex.replace("#", "");
-    return {
-      r: parseInt(c.substring(0, 2), 16),
-      g: parseInt(c.substring(2, 4), 16),
-      b: parseInt(c.substring(4, 6), 16)
-    };
+  _getStamp(rad) {
+    if (rad <= 18) return { stamp: this.stamps[16], r: 16 };
+    if (rad <= 28) return { stamp: this.stamps[24], r: 24 };
+    if (rad <= 38) return { stamp: this.stamps[35], r: 35 };
+    return { stamp: this.stamps[45], r: 45 };
   }
 
-  _bakeAll() {
-    // 1. Bake Blocks
-    for (const [bidStr, data] of Object.entries(BLOCK_DATA)) {
-      const bid = Number(bidStr);
-      const cvs = document.createElement("canvas");
-      cvs.width = TILE_SIZE;
-      cvs.height = TILE_SIZE;
-      const ctx = cvs.getContext("2d");
-
-      const base = this._hexToRgb(data.color);
-      const hi = `rgb(${Math.min(255, base.r + 45)}, ${Math.min(255, base.g + 45)}, ${Math.min(255, base.b + 45)})`;
-      const mid = `rgb(${Math.floor(base.r * 0.82)}, ${Math.floor(base.g * 0.82)}, ${Math.floor(base.b * 0.82)})`;
-      const dark = `rgb(${Math.floor(base.r * 0.58)}, ${Math.floor(base.g * 0.58)}, ${Math.floor(base.b * 0.58)})`;
-
-      ctx.fillStyle = data.color;
-      ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-
-      if (bid === GRASS) {
-        ctx.fillStyle = "#6e4628";
-        ctx.fillRect(0, 8, TILE_SIZE, TILE_SIZE - 8);
-        for (let x = 0; x < TILE_SIZE; x++) {
-          for (let y = 8; y < TILE_SIZE; y++) {
-            if ((x * 7 + y * 13) % 9 === 0) { ctx.fillStyle = "#55321e"; ctx.fillRect(x, y, 1, 1); }
-            else if ((x * 11 + y * 5) % 8 === 0) { ctx.fillStyle = "#875a37"; ctx.fillRect(x, y, 1, 1); }
-          }
-        }
-        for (let x = 0; x < TILE_SIZE; x++) {
-          const rootLen = 7 + (x * 7 % 6);
-          for (let y = 0; y < rootLen; y++) {
-            ctx.fillStyle = (y < 2) ? "#8ae63c" : (y < 5) ? "#4b9128" : "#2d6e14";
-            ctx.fillRect(x, y, 1, 1);
-          }
-        }
-      } else if (bid === CHEST) {
-        ctx.fillStyle = "#8c5a2d";
-        ctx.fillRect(2, 2, 28, 28);
-        ctx.strokeStyle = "#462814";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(2, 2, 28, 28);
-        ctx.beginPath();
-        ctx.moveTo(2, 13);
-        ctx.lineTo(29, 13);
-        ctx.stroke();
-        ctx.fillStyle = "#2d2014";
-        ctx.fillRect(4, 4, 3, 3); ctx.fillRect(25, 4, 3, 3);
-        ctx.fillRect(4, 25, 3, 3); ctx.fillRect(25, 25, 3, 3);
-        ctx.fillStyle = "#ffd700";
-        ctx.fillRect(14, 10, 4, 6);
-        ctx.fillStyle = "#322300";
-        ctx.fillRect(15, 12, 2, 3);
-      } else if (data.name.includes("Ore") || data.name.includes("Crystal") || data.name.includes("Shard")) {
-        ctx.fillStyle = "#6e6e76";
-        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        for (let x = 0; x < TILE_SIZE; x++) {
-          for (let y = 0; y < TILE_SIZE; y++) {
-            if ((x ^ y) % 5 === 0) { ctx.fillStyle = "#56565c"; ctx.fillRect(x, y, 1, 1); }
-          }
-        }
-        const gems = [[8, 8, 5], [22, 10, 4], [11, 22, 6], [23, 23, 5]];
-        for (const [gx, gy, gr] of gems) {
-          ctx.fillStyle = dark;
-          ctx.beginPath(); ctx.arc(gx, gy, gr + 1, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = data.color;
-          ctx.beginPath(); ctx.arc(gx, gy, gr, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = hi;
-          ctx.fillRect(gx - 1, gy - 2, 2, 2);
-          ctx.fillStyle = "#ffffff";
-          ctx.fillRect(gx, gy - 1, 1, 1);
-        }
-      } else if (bid === WOOD) {
-        ctx.fillStyle = "#784b28";
-        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        for (let x = 0; x < TILE_SIZE; x += 4) {
-          ctx.fillStyle = (x % 8 === 0) ? "#553219" : "#8c5a32";
-          ctx.fillRect(x, 0, 2, TILE_SIZE);
-        }
-        ctx.fillStyle = "#462814";
-        ctx.fillRect(12, 10, 4, 6);
-      } else if (bid === PLANKS) {
-        ctx.fillStyle = "#af7d46";
-        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        for (const py of [10, 21]) {
-          ctx.fillStyle = "#5a3c1e";
-          ctx.fillRect(0, py, TILE_SIZE, 2);
-          ctx.fillStyle = "#d7a569";
-          ctx.fillRect(0, py + 2, TILE_SIZE, 1);
-        }
-        ctx.fillStyle = "#28190a";
-        ctx.fillRect(5, 5, 2, 2); ctx.fillRect(25, 5, 2, 2);
-        ctx.fillRect(15, 15, 2, 2);
-        ctx.fillRect(5, 26, 2, 2); ctx.fillRect(25, 26, 2, 2);
-      } else if (bid === WORKBENCH) {
-        ctx.fillStyle = "#9b6941";
-        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        ctx.fillStyle = "#5a371e";
-        ctx.fillRect(0, 0, TILE_SIZE, 6);
-        ctx.fillStyle = "#e1b478";
-        ctx.fillRect(0, 6, TILE_SIZE, 2);
-        ctx.fillStyle = "#3c2314";
-        ctx.fillRect(4, 12, 10, 8); ctx.fillRect(18, 12, 10, 8);
-        ctx.fillStyle = "#ffd700";
-        ctx.fillRect(8, 15, 2, 2); ctx.fillRect(22, 15, 2, 2);
-      } else if (bid === FURNACE) {
-        ctx.fillStyle = "#64646e";
-        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        ctx.fillStyle = "#323237";
-        ctx.fillRect(6, 12, 20, 16);
-        ctx.fillStyle = "#ff550a";
-        ctx.fillRect(9, 16, 14, 10);
-        ctx.fillStyle = "#ffdd4b";
-        ctx.fillRect(12, 19, 8, 5);
-      } else if (bid === STONE_BRICKS || bid === BASALT_BRICKS) {
-        ctx.fillStyle = (bid === STONE_BRICKS) ? "#828287" : "#32323c";
-        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        ctx.strokeStyle = (bid === STONE_BRICKS) ? "#46464b" : "#191923";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(0, 0, 16, 10);
-        ctx.strokeRect(16, 0, 16, 10);
-        ctx.strokeRect(8, 10, 16, 11);
-        ctx.strokeRect(0, 21, 16, 11);
-        ctx.strokeRect(16, 21, 16, 11);
-      } else if (bid === GLASS || bid === CRYSTAL_GLASS) {
-        ctx.fillStyle = (bid === CRYSTAL_GLASS) ? "rgba(190, 240, 255, 0.45)" : "rgba(175, 225, 240, 0.35)";
-        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(1, 1, 30, 30);
-        ctx.beginPath();
-        ctx.moveTo(5, 5); ctx.lineTo(14, 14);
-        ctx.moveTo(18, 18); ctx.lineTo(26, 26);
-        ctx.stroke();
-      } else if (bid === TORCH) {
-        ctx.clearRect(0, 0, TILE_SIZE, TILE_SIZE);
-        ctx.fillStyle = "#7d502d";
-        ctx.fillRect(14, 12, 5, 17);
-        ctx.fillStyle = "#ffb428";
-        ctx.beginPath(); ctx.arc(16, 9, 6, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#ff4600";
-        ctx.beginPath(); ctx.arc(16, 9, 3, 0, Math.PI * 2); ctx.fill();
-      } else if (bid === LANTERN) {
-        ctx.clearRect(0, 0, TILE_SIZE, TILE_SIZE);
-        ctx.fillStyle = "#2d323c";
-        ctx.fillRect(12, 4, 8, 4);
-        ctx.fillRect(10, 8, 12, 18);
-        ctx.fillStyle = "#ffd24b";
-        ctx.fillRect(12, 11, 8, 12);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(15, 14, 2, 4);
-      } else if (bid === BOOKSHELF) {
-        ctx.fillStyle = "#7d4b28";
-        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        ctx.fillStyle = "#4b2814";
-        ctx.fillRect(3, 4, 26, 10);
-        ctx.fillRect(3, 17, 26, 11);
-        const bookColors = ["#c33232", "#3264c3", "#32a046", "#dcb428", "#9632c8"];
-        for (let bx = 5; bx < 27; bx += 4) {
-          ctx.fillStyle = bookColors[(bx * 3) % bookColors.length];
-          ctx.fillRect(bx, 5, 3, 8);
-          ctx.fillStyle = bookColors[(bx * 7) % bookColors.length];
-          ctx.fillRect(bx, 18, 3, 9);
-        }
-      } else if (bid === LAVA) {
-        ctx.fillStyle = "#eb460a";
-        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        ctx.fillStyle = "#ffaf1e";
-        ctx.fillRect(0, 0, TILE_SIZE, 8);
-        ctx.fillStyle = "#ffeb78";
-        ctx.fillRect(4, 3, 9, 3);
-        ctx.fillRect(18, 3, 8, 3);
-      } else {
-        for (let x = 0; x < TILE_SIZE; x++) {
-          for (let y = 0; y < TILE_SIZE; y++) {
-            if ((x ^ y) % 5 === 0) { ctx.fillStyle = mid; ctx.fillRect(x, y, 1, 1); }
-            else if ((x * 3 + y * 7) % 11 === 0) { ctx.fillStyle = dark; ctx.fillRect(x, y, 1, 1); }
-          }
-        }
-      }
-
-      // Universal 3D Edge Bevel
-      if (![AIR, LAVA, TORCH, LANTERN, GLASS, CRYSTAL_GLASS].includes(bid)) {
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, TILE_SIZE - 1); ctx.lineTo(0, 0); ctx.lineTo(TILE_SIZE - 1, 0);
-        ctx.stroke();
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.45)";
-        ctx.beginPath();
-        ctx.moveTo(TILE_SIZE - 1, 0); ctx.lineTo(TILE_SIZE - 1, TILE_SIZE - 1); ctx.lineTo(0, TILE_SIZE - 1);
-        ctx.stroke();
-      }
-
-      this.tiles[bid] = cvs;
-      this.icons[bid] = cvs;
+  render(mainCtx, player, world, camX, camY) {
+    const pTy = Math.floor(player.y / TILE_SIZE);
+    let amb = "#28262a";
+    if (world.current_planet === "Earth") {
+      if (pTy < CRUST_SURFACE) amb = "#b0b0ba";
+      else if (pTy < CRUST_BOTTOM) amb = "#28262a";
+      else if (pTy < UPPER_MANTLE_BOTTOM) amb = "#231c1e";
+      else if (pTy < LOWER_MANTLE_BOTTOM) amb = "#502819";
+      else if (pTy < OUTER_CORE_BOTTOM) amb = "#964b14";
+      else amb = "#b4aa82";
+    } else {
+      amb = (pTy < CRUST_SURFACE) ? "#2d2d37" : "#191920";
     }
 
-    // 2. Bake Detailed Individual Item & Tool Icons
-    for (const [name, idata] of Object.entries(ITEM_DEFINITIONS)) {
-      if (this.icons[name]) continue;
-      const cvs = document.createElement("canvas");
-      cvs.width = 32;
-      cvs.height = 32;
-      const ctx = cvs.getContext("2d");
+    this.ctx.fillStyle = amb;
+    this.ctx.fillRect(0, 0, LIGHT_W, LIGHT_H);
+    this.ctx.globalCompositeOperation = "lighter";
 
-      const tColor = name.includes("Wood") ? "#966432" :
-                     name.includes("Stone") ? "#9696a0" :
-                     name.includes("Iron") ? "#dce1ec" :
-                     name.includes("Gold") ? "#ffd700" :
-                     name.includes("Diamond") ? "#50e1ff" :
-                     name.includes("Obsidian") ? "#6e37b4" :
-                     name.includes("Titanium") ? "#78a0c8" :
-                     name.includes("Cryo") ? "#a0f0ff" :
-                     name.includes("Core") ? "#ff461e" :
-                     name.includes("Singularity") ? "#b432ff" : "#5adcff";
+    // Player Headlamp
+    const px = Math.floor((player.x + player.w / 2 - camX) / LIGHT_SCALE);
+    const py = Math.floor((player.y + player.h / 2 - camY) / LIGHT_SCALE);
+    const pStamp = this.stamps[35];
+    if (pStamp) {
+      this.ctx.drawImage(pStamp, px - 35, py - 35);
+    }
 
-      if (idata.tool_type === "pickaxe" || name.includes("Pickaxe")) {
-        // Diagonal stick handle
-        ctx.strokeStyle = "#643c1e";
-        ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(21, 11); ctx.stroke();
-        // Curved pick head
-        ctx.strokeStyle = tColor;
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.arc(23, 9, 9, Math.PI * 0.75, Math.PI * 1.6);
-        ctx.stroke();
-        // Pick tips
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(25, 2, 2, 2);
-      } else if (idata.tool_type === "axe" || name.includes("Axe")) {
-        ctx.strokeStyle = "#643c1e";
-        ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(22, 10); ctx.stroke();
-        ctx.fillStyle = tColor;
-        ctx.beginPath();
-        ctx.moveTo(18, 5); ctx.lineTo(27, 8); ctx.lineTo(23, 17); ctx.lineTo(16, 12);
-        ctx.closePath(); ctx.fill();
-      } else if (idata.tool_type === "shovel" || name.includes("Shovel")) {
-        ctx.strokeStyle = "#643c1e";
-        ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(21, 11); ctx.stroke();
-        ctx.fillStyle = tColor;
-        ctx.beginPath();
-        ctx.arc(23, 9, 6, 0, Math.PI * 2);
-        ctx.fill();
-      } else if (idata.type === "weapon" || name.includes("Blade") || name.includes("Sword") || name.includes("Dagger")) {
-        // Crossguard
-        ctx.strokeStyle = "#ffd700";
-        ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(8, 18); ctx.lineTo(14, 24); ctx.stroke();
-        // Hilt
-        ctx.strokeStyle = "#503219";
-        ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(6, 26); ctx.lineTo(10, 22); ctx.stroke();
-        // Blade
-        ctx.strokeStyle = tColor;
-        ctx.lineWidth = 4;
-        ctx.beginPath(); ctx.moveTo(11, 21); ctx.lineTo(26, 6); ctx.stroke();
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(12, 20); ctx.lineTo(25, 7); ctx.stroke();
-      } else if (idata.type === "ranged" || name.includes("Bow") || name.includes("Rifle")) {
-        ctx.strokeStyle = tColor;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(16, 16, 11, Math.PI * 0.25, Math.PI * 1.25);
-        ctx.stroke();
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(24, 8); ctx.lineTo(8, 24); ctx.stroke();
-      } else if (idata.type === "magic" || name.includes("Wand") || name.includes("Scepter")) {
-        ctx.strokeStyle = "#784b28";
-        ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(22, 10); ctx.stroke();
-        ctx.fillStyle = tColor;
-        ctx.beginPath(); ctx.arc(24, 8, 5, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#ffffff";
-        ctx.beginPath(); ctx.arc(24, 8, 2, 0, Math.PI * 2); ctx.fill();
-      } else if (idata.type === "armor") {
-        ctx.fillStyle = tColor;
-        if (idata.slot === "helmet") {
-          ctx.fillRect(7, 8, 18, 14);
-          ctx.clearRect(11, 15, 10, 4);
-        } else if (idata.slot === "boots") {
-          ctx.fillRect(6, 14, 8, 12); ctx.fillRect(18, 14, 8, 12);
-        } else {
-          ctx.fillRect(6, 6, 20, 18);
-          ctx.clearRect(12, 6, 8, 5);
+    const minTx = Math.max(0, Math.floor(camX / TILE_SIZE));
+    const maxTx = Math.min(world.width, Math.ceil((camX + SCREEN_WIDTH) / TILE_SIZE));
+    const minTy = Math.max(0, Math.floor(camY / TILE_SIZE));
+    const maxTy = Math.min(world.height, Math.ceil((camY + SCREEN_HEIGHT) / TILE_SIZE));
+
+    for (let tx = minTx; tx < maxTx; tx++) {
+      for (let ty = minTy; ty < maxTy; ty++) {
+        const t = world.getTile(tx, ty);
+        if (BLOCK_DATA[t] && BLOCK_DATA[t].light) {
+          const lx = Math.floor((tx * TILE_SIZE + TILE_SIZE / 2 - camX) / LIGHT_SCALE);
+          const ly = Math.floor((ty * TILE_SIZE + TILE_SIZE / 2 - camY) / LIGHT_SCALE);
+          const targetRad = Math.floor(BLOCK_DATA[t].light / LIGHT_SCALE);
+          const { stamp, r } = this._getStamp(targetRad);
+          this.ctx.drawImage(stamp, lx - r, ly - r);
         }
-      } else if (idata.type === "consumable" || name.includes("Potion") || name.includes("Flask") || name.includes("Elixir")) {
-        ctx.fillStyle = "#b48c50";
-        ctx.fillRect(14, 5, 4, 3);
-        ctx.fillStyle = "rgba(255,255,255,0.7)";
-        ctx.fillRect(11, 8, 10, 4);
-        ctx.fillStyle = name.includes("Health") ? "#e62828" : name.includes("Swift") ? "#ffd700" : "#50dcff";
-        ctx.beginPath();
-        ctx.arc(16, 20, 8, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(13, 16, 2, 3);
-      } else if (idata.type === "rocket") {
-        ctx.fillStyle = "#ffffff";
-        ctx.beginPath();
-        ctx.moveTo(16, 3); ctx.lineTo(23, 23); ctx.lineTo(9, 23); ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = tColor;
-        ctx.fillRect(10, 15, 12, 4);
-        ctx.fillStyle = "#50e1ff";
-        ctx.beginPath(); ctx.arc(16, 11, 3, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#ff5000";
-        ctx.beginPath(); ctx.moveTo(12, 23); ctx.lineTo(16, 29); ctx.lineTo(20, 23); ctx.fill();
-      } else if (name.includes("Ingot")) {
-        ctx.fillStyle = tColor;
-        ctx.beginPath();
-        ctx.moveTo(6, 20); ctx.lineTo(11, 11); ctx.lineTo(25, 11); ctx.lineTo(22, 20); ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      } else if (name === "Dynamite") {
-        ctx.fillStyle = "#c82828";
-        ctx.fillRect(9, 10, 14, 16);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(9, 16, 14, 4);
-        ctx.strokeStyle = "#ffd700";
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(16, 10); ctx.lineTo(19, 5); ctx.stroke();
-        ctx.fillStyle = "#ff4600";
-        ctx.fillRect(18, 4, 3, 3);
-      } else if (name === "Planetary Dynamo") {
-        ctx.strokeStyle = "#ffd700";
-        ctx.lineWidth = 2.5;
-        ctx.beginPath(); ctx.arc(16, 16, 12, 0, Math.PI * 2); ctx.stroke();
-        ctx.beginPath(); ctx.ellipse(16, 16, 12, 4, Math.PI * 0.25, 0, Math.PI * 2); ctx.stroke();
-        ctx.fillStyle = "#5adcff";
-        ctx.beginPath(); ctx.arc(16, 16, 5, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(15, 15, 2, 2);
-      } else {
-        ctx.fillStyle = tColor;
-        ctx.beginPath(); ctx.arc(16, 16, 7, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(14, 13, 2, 2);
       }
-
-      this.icons[name] = cvs;
     }
 
-    // 3. Bake Crack Overlays
-    for (let stage = 0; stage < 10; stage++) {
-      const cvs = document.createElement("canvas");
-      cvs.width = TILE_SIZE;
-      cvs.height = TILE_SIZE;
-      const ctx = cvs.getContext("2d");
-      ctx.strokeStyle = `rgba(0, 0, 0, ${0.48 + stage * 0.05})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(16, 16);
-      ctx.lineTo(16 - stage * 1.5, 16 + stage * 1.4);
-      ctx.moveTo(16, 16);
-      ctx.lineTo(16 + stage * 1.5, 16 - stage * 1.3);
-      if (stage > 4) {
-        ctx.moveTo(16, 16);
-        ctx.lineTo(16 - stage, 16 - stage * 1.4);
-        ctx.moveTo(16, 16);
-        ctx.lineTo(16 + stage * 1.4, 16 + stage);
-      }
-      ctx.stroke();
-      this.crack_overlays.push(cvs);
-    }
+    this.ctx.globalCompositeOperation = "source-over";
+    mainCtx.save();
+    mainCtx.globalCompositeOperation = "multiply";
+    mainCtx.drawImage(this.canvas, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    mainCtx.restore();
   }
 }
 
@@ -1028,7 +960,7 @@ class FloatingText {
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.fillStyle = this.color;
-    ctx.font = "bold 13px system-ui, sans-serif";
+    ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
     ctx.fillText(this.text, Math.floor(this.x - camX), Math.floor(this.y - camY));
     ctx.restore();
   }
@@ -1334,127 +1266,6 @@ class World {
     return { name: "Inner Core (Solid)", depth: d, temp: `${5400 + Math.floor((d - 1550) * 1.2)} C`, pressure: `${(330 + (d - 1550) * 0.6).toFixed(1)} GPa` };
   }
 }
-// =============================================================================
-// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 3 / 3)
-// =============================================================================
-
-// ==========================================
-// DYNAMIC LIGHTING ENGINE
-// ==========================================
-class OptimizedLighting {
-  constructor() {
-    this.canvas = document.getElementById("gameCanvas");
-    this.ctx = this.canvas.getContext("2d");
-
-    // High-DPI / Retina Crisp Rendering Setup (removes text blur)
-    this.dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    this.canvas.width = Math.floor(SCREEN_WIDTH * this.dpr);
-    this.canvas.height = Math.floor(SCREEN_HEIGHT * this.dpr);
-
-    this.sound = new SoundEngine();
-    this.art = new PixelArtGenerator();
-    this.lighting = new OptimizedLighting();
-    this.world = new World(WORLD_WIDTH, WORLD_HEIGHT);
-
-    this.state = "MENU";
-    this.worldsList = [];
-    this.selectedWorldIdx = 0;
-    this.activeWorldKey = null;
-
-    this.inputWorldName = "New Sector";
-    this.selectedCreateClass = "Warrior";
-    this.nameInputActive = false;
-
-    this.player = null;
-    this.enemies = [];
-    this.projectiles = [];
-    this.particles = [];
-    this.floatTexts = [];
-
-    this.cursorItem = null;
-    this.selectedInvSlot = null; // Tracks inspected item (prevents items from vanishing)
-    this.camX = 0;
-    this.camY = 0;
-
-    this.craftCategory = "ALL";
-    this.searchQuery = "";
-    this.searchActive = false;
-    this.recipeScrollOffset = 0;
-    this.planetScrollOffset = 0;
-    this.gameWon = false;
-
-    this.keys = {};
-    this.mouse = { x: 0, y: 0, down: false, rightDown: false };
-    this.soundTimer = 0;
-    this.autoSaveTimer = 0;
-
-    this.lockedTargetTile = null;
-
-    this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-    this.activeTouches = new Map();
-
-    this.loadSectorIndex();
-    this.setupListeners();
-  }
-
-  render(mainCtx, player, world, camX, camY) {
-    const pTy = Math.floor(player.y / TILE_SIZE);
-    let amb = "#28262a";
-    if (world.current_planet === "Earth") {
-      if (pTy < CRUST_SURFACE) amb = "#b0b0ba";
-      else if (pTy < CRUST_BOTTOM) amb = "#28262a";
-      else if (pTy < UPPER_MANTLE_BOTTOM) amb = "#231c1e";
-      else if (pTy < LOWER_MANTLE_BOTTOM) amb = "#502819";
-      else if (pTy < OUTER_CORE_BOTTOM) amb = "#964b14";
-      else amb = "#b4aa82";
-    } else {
-      amb = (pTy < CRUST_SURFACE) ? "#2d2d37" : "#191920";
-    }
-
-    this.ctx.fillStyle = amb;
-    this.ctx.fillRect(0, 0, LIGHT_W, LIGHT_H);
-    this.ctx.globalCompositeOperation = "lighter";
-
-    const px = Math.floor((player.x + player.w / 2 - camX) / LIGHT_SCALE);
-    const py = Math.floor((player.y + player.h / 2 - camY) / LIGHT_SCALE);
-    const grad = this.ctx.createRadialGradient(px, py, 4, px, py, 35);
-    grad.addColorStop(0, "rgba(255, 230, 180, 1)");
-    grad.addColorStop(1, "rgba(0, 0, 0, 0)");
-    this.ctx.fillStyle = grad;
-    this.ctx.beginPath();
-    this.ctx.arc(px, py, 35, 0, Math.PI * 2);
-    this.ctx.fill();
-
-    const minTx = Math.max(0, Math.floor(camX / TILE_SIZE));
-    const maxTx = Math.min(world.width, Math.ceil((camX + SCREEN_WIDTH) / TILE_SIZE));
-    const minTy = Math.max(0, Math.floor(camY / TILE_SIZE));
-    const maxTy = Math.min(world.height, Math.ceil((camY + SCREEN_HEIGHT) / TILE_SIZE));
-
-    for (let tx = minTx; tx < maxTx; tx++) {
-      for (let ty = minTy; ty < maxTy; ty++) {
-        const t = world.getTile(tx, ty);
-        if (BLOCK_DATA[t] && BLOCK_DATA[t].light) {
-          const lx = Math.floor((tx * TILE_SIZE + TILE_SIZE / 2 - camX) / LIGHT_SCALE);
-          const ly = Math.floor((ty * TILE_SIZE + TILE_SIZE / 2 - camY) / LIGHT_SCALE);
-          const rad = Math.floor(BLOCK_DATA[t].light / LIGHT_SCALE);
-          const g = this.ctx.createRadialGradient(lx, ly, 2, lx, ly, rad);
-          g.addColorStop(0, "rgba(255, 210, 120, 0.9)");
-          g.addColorStop(1, "rgba(0, 0, 0, 0)");
-          this.ctx.fillStyle = g;
-          this.ctx.beginPath();
-          this.ctx.arc(lx, ly, rad, 0, Math.PI * 2);
-          this.ctx.fill();
-        }
-      }
-    }
-
-    this.ctx.globalCompositeOperation = "source-over";
-    mainCtx.save();
-    mainCtx.globalCompositeOperation = "multiply";
-    mainCtx.drawImage(this.canvas, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    mainCtx.restore();
-  }
-}
 
 // ==========================================
 // ENTITIES: SLIME, PROJECTILE, PLAYER
@@ -1695,7 +1506,7 @@ class Player {
     }
   }
 
-  draw(ctx, camX, camY, art) {
+  draw(ctx, camX, camY, atlas) {
     const dx = Math.floor(this.x - camX);
     const dy = Math.floor(this.y - camY);
 
@@ -1746,8 +1557,8 @@ class Player {
       ctx.stroke();
 
       const sel = this.inv.getSelected();
-      if (sel && art.icons[sel.item]) {
-        ctx.drawImage(art.icons[sel.item], armX + ox - 12, armY + oy - 12, 24, 24);
+      if (sel) {
+        atlas.draw(ctx, "i_" + sel.item, armX + ox - 12, armY + oy - 12, 24, 24);
       }
     } else {
       ctx.lineTo(armX + (this.facingRight ? 3 : -3), armY + 12);
@@ -1755,22 +1566,23 @@ class Player {
     }
   }
 }
+// =============================================================================
+// ASTROSTRATA: REIGNITION — ZERO-DEPENDENCY ENGINE (PART 3 / 3)
+// Components: Engine Controller, High-DPI Draw, Inspector & Bootstrap
+// =============================================================================
 
-// ==========================================
-// ASTROSTRATA MAIN ENGINE CONTROLLER
-// ==========================================
 class AstroStrataEngine {
   constructor() {
     this.canvas = document.getElementById("gameCanvas");
     this.ctx = this.canvas.getContext("2d");
 
-    // High-DPI / Retina Crisp Rendering Setup
+    // High-DPI / Retina 平滑清晰渲染配置
     this.dpr = Math.min(window.devicePixelRatio || 1, 2.5);
     this.canvas.width = Math.floor(SCREEN_WIDTH * this.dpr);
     this.canvas.height = Math.floor(SCREEN_HEIGHT * this.dpr);
 
     this.sound = new SoundEngine();
-    this.art = new PixelArtGenerator();
+    this.atlas = new UnifiedTextureAtlas();
     this.lighting = new OptimizedLighting();
     this.world = new World(WORLD_WIDTH, WORLD_HEIGHT);
 
@@ -1790,6 +1602,7 @@ class AstroStrataEngine {
     this.floatTexts = [];
 
     this.cursorItem = null;
+    this.selectedInvSlot = null; // 檢視與移動鎖定槽位
     this.camX = 0;
     this.camY = 0;
 
@@ -1804,7 +1617,7 @@ class AstroStrataEngine {
     this.mouse = { x: 0, y: 0, down: false, rightDown: false };
     this.soundTimer = 0;
     this.autoSaveTimer = 0;
-    this.selectedInvSlot = null;
+
     this.lockedTargetTile = null;
 
     this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
@@ -1812,6 +1625,15 @@ class AstroStrataEngine {
 
     this.loadSectorIndex();
     this.setupListeners();
+  }
+
+  // 統一圖標繪製助手（同時支持方塊 ID 與物品名稱）
+  drawItemIcon(ctx, key, x, y, w = 32, h = 32) {
+    if (typeof key === "number" || this.atlas.get("b_" + key)) {
+      this.atlas.draw(ctx, "b_" + key, x, y, w, h);
+    } else {
+      this.atlas.draw(ctx, "i_" + key, x, y, w, h);
+    }
   }
 
   loadSectorIndex() {
@@ -1924,6 +1746,7 @@ class AstroStrataEngine {
     this.particles = [];
     this.floatTexts = [];
     this.activeWorldKey = sectorId;
+    this.selectedInvSlot = null;
     this.lockedTargetTile = null;
     this.state = "PLAYING";
     this.sound.play("craft");
@@ -1983,6 +1806,7 @@ class AstroStrataEngine {
       this.worldsList.push(newSector);
       this.selectedWorldIdx = this.worldsList.length - 1;
       this.activeWorldKey = newSector.id;
+      this.selectedInvSlot = null;
       this.saveSectorIndex();
       this.saveCurrentSector();
 
@@ -2072,11 +1896,9 @@ class AstroStrataEngine {
   }
 
   setupListeners() {
-    // Keydown Window Listener
     window.addEventListener("keydown", (e) => {
       this.keys[e.code] = true;
 
-      // 1. Textbox Input for Sector Creation
       if (this.state === "CREATE_WORLD" && this.nameInputActive) {
         if (e.key === "Enter") this.nameInputActive = false;
         else if (e.key === "Backspace") this.inputWorldName = this.inputWorldName.slice(0, -1);
@@ -2084,7 +1906,6 @@ class AstroStrataEngine {
         return;
       }
 
-      // 2. Textbox Input for Inventory Search
       if (this.state === "INVENTORY" && this.searchActive) {
         if (e.key === "Enter" || e.key === "Escape") this.searchActive = false;
         else if (e.key === "Backspace") {
@@ -2097,32 +1918,20 @@ class AstroStrataEngine {
         return;
       }
 
-      // 3. Inventory Toggle (E, I, Tab)
       if (e.code === "KeyE" || e.code === "KeyI" || e.code === "Tab") {
-        if (e.code === "Tab") e.preventDefault(); // Stop browser address bar focus
-
+        if (e.code === "Tab") e.preventDefault();
         if (this.state === "PLAYING") {
           this.state = "INVENTORY";
           this.sound.play("click");
         } else if (this.state === "INVENTORY") {
-          // Return any floating cursor item safely to inventory
-          if (this.cursorItem) {
-            this.player.inv.addItem(this.cursorItem.item, this.cursorItem.count);
-            this.cursorItem = null;
-          }
           this.selectedInvSlot = null;
           this.state = "PLAYING";
           this.sound.play("click");
         }
       }
 
-      // 4. Escape Handling
       if (e.code === "Escape") {
         if (this.state === "INVENTORY" || this.state === "STAR_MAP") {
-          if (this.cursorItem) {
-            this.player.inv.addItem(this.cursorItem.item, this.cursorItem.count);
-            this.cursorItem = null;
-          }
           this.selectedInvSlot = null;
           this.state = "PLAYING";
           this.sound.play("click");
@@ -2135,7 +1944,6 @@ class AstroStrataEngine {
         }
       }
 
-      // 5. Quick Heal Hotkey (H)
       if (e.code === "KeyH" && this.state === "PLAYING") {
         if (this.player.inv.countItem("Health Potion") > 0) {
           this.player.inv.removeItem("Health Potion", 1);
@@ -2145,7 +1953,6 @@ class AstroStrataEngine {
         }
       }
 
-      // 6. Hotbar Quick Number Select (1 - 0)
       if (this.state === "PLAYING" && (e.code.startsWith("Digit") || e.code.startsWith("Numpad"))) {
         const d = parseInt(e.key, 10);
         if (!isNaN(d)) {
@@ -2221,7 +2028,7 @@ class AstroStrataEngine {
       }
     });
 
-    // Touch Listeners (Mobile Multi-Touch)
+    // 多點觸控監聽（包含移動端滑動滾動）
     this.canvas.addEventListener("touchstart", (e) => {
       e.preventDefault();
       this.sound.init();
@@ -2507,19 +2314,15 @@ class AstroStrataEngine {
   handleInventoryClick(mx, my, btn) {
     const rx = INV_UI_X + 24;
 
-    // Close Button [X]
+    // 關閉按鈕 [X]
     if (mx >= INV_UI_X + 735 && mx <= INV_UI_X + 765 && my >= INV_UI_Y + 12 && my <= INV_UI_Y + 42) {
-      if (this.cursorItem) {
-        this.player.inv.addItem(this.cursorItem.item, this.cursorItem.count);
-        this.cursorItem = null;
-      }
       this.selectedInvSlot = null;
       this.state = "PLAYING";
       this.sound.play("click");
       return;
     }
 
-    // Scroll Buttons
+    // 滾動翻頁按鈕
     const maxScroll = Math.max(0, this.getFilteredRecipes().length - 9);
     if (mx >= INV_UI_X + 680 && mx <= INV_UI_X + 710 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 250) {
       this.recipeScrollOffset = Math.max(0, this.recipeScrollOffset - 1);
@@ -2532,7 +2335,7 @@ class AstroStrataEngine {
       return;
     }
 
-    // Search Box Focus
+    // 搜尋欄點擊
     if (mx >= rx && mx <= rx + 140 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 251) {
       this.searchActive = true;
       this.sound.play("click");
@@ -2541,7 +2344,7 @@ class AstroStrataEngine {
       this.searchActive = false;
     }
 
-    // Category Tabs
+    // 分類過濾分頁
     const categories = ["ALL", "TOOLS", "WEAPONS", "ARMOR", "ROCKETS", "BLOCKS"];
     let catX = INV_UI_X + 172;
     for (const cat of categories) {
@@ -2554,7 +2357,7 @@ class AstroStrataEngine {
       catX += 58;
     }
 
-    // Item Action Button ([ USE ] or [ EQUIP ]) inside Details Card
+    // 物品資訊卡功能鍵 ([ USE ] 或 [ EQUIP ])
     if (this.selectedInvSlot !== null && this.player.inv.slots[this.selectedInvSlot]) {
       const curItem = this.player.inv.slots[this.selectedInvSlot].item;
       const idata = ITEM_DEFINITIONS[curItem] || {};
@@ -2585,7 +2388,7 @@ class AstroStrataEngine {
       }
     }
 
-    // Armor Slots Click Interaction
+    // 裝備欄點擊互動
     const armorSlots = ["helmet", "chest", "boots"];
     for (const aslot of armorSlots) {
       const arec = getArmorRect(aslot);
@@ -2611,7 +2414,7 @@ class AstroStrataEngine {
       }
     }
 
-    // 30 Bag Slots (Tap to Select -> Tap Destination to Move/Swap)
+    // 30 個背包槽位互動：點擊查看 -> 再次點擊其他槽位移動/合併（安全不消失）
     for (let i = 0; i < 30; i++) {
       const srec = getSlotRect(i);
       if (mx >= srec.x && mx <= srec.x + srec.w && my >= srec.y && my <= srec.y + srec.h) {
@@ -2626,7 +2429,6 @@ class AstroStrataEngine {
           this.selectedInvSlot = null;
           this.sound.play("click");
         } else {
-          // Move or swap items
           const source = this.player.inv.slots[this.selectedInvSlot];
           if (source) {
             if (!clickedSlot) {
@@ -2652,7 +2454,7 @@ class AstroStrataEngine {
       }
     }
 
-    // Recipes Click
+    // 配方製作
     const displayedRecipes = this.getFilteredRecipes();
     const visibleSlice = displayedRecipes.slice(this.recipeScrollOffset, this.recipeScrollOffset + 9);
     for (let idx = 0; idx < visibleSlice.length; idx++) {
@@ -2882,7 +2684,7 @@ class AstroStrataEngine {
   }
 
   draw() {
-    // Reset transform and apply Retina high-definition scale
+    // 套用高解析度向量平滑縮放變換
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 
     this.ctx.fillStyle = COLOR_BG_DARK;
@@ -2890,12 +2692,12 @@ class AstroStrataEngine {
 
     if (this.state === "MENU") {
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 34px system-ui, sans-serif";
+      this.ctx.font = "bold 34px system-ui, -apple-system, sans-serif";
       this.ctx.textAlign = "center";
       this.ctx.fillText("ASTROSTRATA: REIGNITION", SCREEN_WIDTH / 2, 220);
 
       this.ctx.fillStyle = COLOR_CYAN;
-      this.ctx.font = "14px system-ui, sans-serif";
+      this.ctx.font = "14px system-ui, -apple-system, sans-serif";
       this.ctx.fillText("Stratum Geology | Planetary Dynamos | Interplanetary Aerospace", SCREEN_WIDTH / 2, 255);
 
       const b1 = { x: SCREEN_WIDTH / 2 - 160, y: 310, w: 320, h: 48 };
@@ -2906,11 +2708,11 @@ class AstroStrataEngine {
       this.ctx.strokeRect(b1.x, b1.y, b1.w, b1.h);
 
       this.ctx.fillStyle = COLOR_WHITE;
-      this.ctx.font = "bold 15px system-ui, sans-serif";
+      this.ctx.font = "bold 15px system-ui, -apple-system, sans-serif";
       this.ctx.fillText("ENTER EXPEDITION / SECTORS", SCREEN_WIDTH / 2, 340);
 
       this.ctx.fillStyle = "#606880";
-      this.ctx.font = "bold 13px system-ui, sans-serif";
+      this.ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
       this.ctx.textAlign = "left";
       this.ctx.fillText(VERSION_STRING, 24, SCREEN_HEIGHT - 24);
       return;
@@ -2918,13 +2720,13 @@ class AstroStrataEngine {
 
     if (this.state === "WORLD_SELECT") {
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 28px system-ui, sans-serif";
+      this.ctx.font = "bold 28px system-ui, -apple-system, sans-serif";
       this.ctx.textAlign = "center";
       this.ctx.fillText("EXPEDITION SECTOR ARCHIVE", SCREEN_WIDTH / 2, 60);
 
       if (this.worldsList.length === 0) {
         this.ctx.fillStyle = "#8892b0";
-        this.ctx.font = "16px system-ui, sans-serif";
+        this.ctx.font = "16px system-ui, -apple-system, sans-serif";
         this.ctx.fillText("No sectors established. Click 'CREATE SECTOR' below.", SCREEN_WIDTH / 2, 240);
       } else {
         for (let i = 0; i < Math.min(5, this.worldsList.length); i++) {
@@ -2939,11 +2741,11 @@ class AstroStrataEngine {
           this.ctx.strokeRect(SCREEN_WIDTH / 2 - 320, cardY, 640, 62);
 
           this.ctx.fillStyle = COLOR_WHITE;
-          this.ctx.font = "bold 16px system-ui, sans-serif";
+          this.ctx.font = "bold 16px system-ui, -apple-system, sans-serif";
           this.ctx.textAlign = "left";
           this.ctx.fillText(w.name, SCREEN_WIDTH / 2 - 300, cardY + 26);
           this.ctx.fillStyle = COLOR_CYAN;
-          this.ctx.font = "12px system-ui, sans-serif";
+          this.ctx.font = "12px system-ui, -apple-system, sans-serif";
           this.ctx.fillText(`Class: ${w.pClass} | Location: ${w.planet} | Date: ${w.savedAt}`, SCREEN_WIDTH / 2 - 300, cardY + 46);
         }
       }
@@ -2963,7 +2765,7 @@ class AstroStrataEngine {
         this.ctx.strokeRect(btn.x, SCREEN_HEIGHT - 80, btn.w, 44);
         this.ctx.fillStyle = btn.active ? btn.color : "#606880";
         this.ctx.textAlign = "center";
-        this.ctx.font = "bold 13px system-ui, sans-serif";
+        this.ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
         this.ctx.fillText(btn.label, btn.x + btn.w / 2, SCREEN_HEIGHT - 53);
       }
       return;
@@ -2971,7 +2773,7 @@ class AstroStrataEngine {
 
     if (this.state === "CREATE_WORLD") {
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 28px system-ui, sans-serif";
+      this.ctx.font = "bold 28px system-ui, -apple-system, sans-serif";
       this.ctx.textAlign = "center";
       this.ctx.fillText("INITIALIZE SECTOR PROFILE", SCREEN_WIDTH / 2, 60);
 
@@ -2981,7 +2783,7 @@ class AstroStrataEngine {
       this.ctx.strokeRect(SCREEN_WIDTH / 2 - 200, 175, 400, 44);
 
       this.ctx.fillStyle = COLOR_WHITE;
-      this.ctx.font = "bold 16px system-ui, sans-serif";
+      this.ctx.font = "bold 16px system-ui, -apple-system, sans-serif";
       this.ctx.fillText(this.inputWorldName + (this.nameInputActive ? "_" : ""), SCREEN_WIDTH / 2, 203);
 
       const clist = Object.keys(CLASSES);
@@ -3002,7 +2804,7 @@ class AstroStrataEngine {
       this.ctx.strokeStyle = COLOR_GOLD;
       this.ctx.strokeRect(SCREEN_WIDTH / 2 - 220, 515, 220, 54);
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 16px system-ui, sans-serif";
+      this.ctx.font = "bold 16px system-ui, -apple-system, sans-serif";
       this.ctx.fillText("LAUNCH SECTOR", SCREEN_WIDTH / 2 - 110, 547);
 
       this.ctx.fillStyle = "#1e2436";
@@ -3014,7 +2816,7 @@ class AstroStrataEngine {
       return;
     }
 
-    // World & Entities Rendering
+    // 世界與實體渲染
     const pTy = Math.floor(this.player.y / TILE_SIZE);
     this.ctx.fillStyle = (pTy < CRUST_SURFACE) ? (PLANET_DATA[this.world.current_planet]?.sky_color || "#87c3f5") : "#141620";
     this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -3027,29 +2829,29 @@ class AstroStrataEngine {
     for (let x = minTx; x < maxTx; x++) {
       for (let y = minTy; y < maxTy; y++) {
         const t = this.world.getTile(x, y);
-        if (t !== AIR && this.art.tiles[t]) {
+        if (t !== AIR) {
           const dx = Math.floor(x * TILE_SIZE - this.camX);
           const dy = Math.floor(y * TILE_SIZE - this.camY);
-          this.ctx.drawImage(this.art.tiles[t], dx, dy);
+          this.atlas.draw(this.ctx, "b_" + t, dx, dy, TILE_SIZE, TILE_SIZE);
 
           const dmg = this.world.damage_map.get(`${x},${y}`);
           if (dmg && BLOCK_DATA[t]) {
             const stage = Math.min(9, Math.floor((dmg / BLOCK_DATA[t].hardness) * 10));
-            this.ctx.drawImage(this.art.crack_overlays[stage], dx, dy);
+            this.atlas.draw(this.ctx, "crack_" + stage, dx, dy, TILE_SIZE, TILE_SIZE);
           }
         }
       }
     }
 
     for (const e of this.enemies) e.draw(this.ctx, this.camX, this.camY);
-    if (this.player) this.player.draw(this.ctx, this.camX, this.camY, this.art);
+    if (this.player) this.player.draw(this.ctx, this.camX, this.camY, this.atlas);
     for (const p of this.projectiles) p.draw(this.ctx, this.camX, this.camY);
     for (const pt of this.particles) pt.draw(this.ctx, this.camX, this.camY);
     for (const ft of this.floatTexts) ft.draw(this.ctx, this.camX, this.camY);
 
     if (this.player) this.lighting.render(this.ctx, this.player, this.world, this.camX, this.camY);
 
-    // Aiming Reticle & Progress
+    // 挖掘目標鎖定準星與進度條
     const aim = this.getAimTarget();
     if (aim) {
       const pDist = Math.hypot((aim.tx * TILE_SIZE + 16) - (this.player.x + this.player.w / 2), (aim.ty * TILE_SIZE + 16) - (this.player.y + this.player.h / 2));
@@ -3064,6 +2866,7 @@ class AstroStrataEngine {
       const targetTile = this.world.getTile(aim.tx, aim.ty);
       const dmg = this.world.damage_map.get(`${aim.tx},${aim.ty}`);
 
+      // 頭頂實體挖掘進度條
       if (dmg && BLOCK_DATA[targetTile]) {
         const pct = Math.min(1.0, dmg / BLOCK_DATA[targetTile].hardness);
         const barW = 32;
@@ -3077,6 +2880,7 @@ class AstroStrataEngine {
         this.ctx.strokeRect(rDx, rDy - 8, barW, barH);
       }
 
+      // 右上角目標觀察資訊
       if (targetTile !== AIR && BLOCK_DATA[targetTile]) {
         const bdata = BLOCK_DATA[targetTile];
         const hx = SCREEN_WIDTH - 290;
@@ -3088,12 +2892,12 @@ class AstroStrataEngine {
 
         this.ctx.fillStyle = COLOR_GOLD;
         this.ctx.textAlign = "left";
-        this.ctx.font = "bold 13px system-ui, sans-serif";
+        this.ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
         this.ctx.fillText(bdata.name, hx + 12, hy + 20);
 
         const evalInfo = evaluateMiningInteraction(this.player, targetTile);
         this.ctx.fillStyle = evalInfo.canDrop ? COLOR_EXP : COLOR_HP;
-        this.ctx.font = "11px system-ui, sans-serif";
+        this.ctx.font = "11px system-ui, -apple-system, sans-serif";
         this.ctx.fillText(`Mohs: ${bdata.mohs} | [${evalInfo.msg}]`, hx + 12, hy + 38);
         this.ctx.fillStyle = COLOR_CYAN;
         this.ctx.fillText(`Req: ${bdata.req_tool} (${TIER_NAMES[bdata.req_tier]})`, hx + 12, hy + 54);
@@ -3105,12 +2909,12 @@ class AstroStrataEngine {
         this.ctx.fillStyle = COLOR_GOLD;
         this.ctx.fillRect(hx + 12, hy + 64, Math.floor(246 * pct), 12);
         this.ctx.fillStyle = COLOR_WHITE;
-        this.ctx.font = "bold 9px system-ui, sans-serif";
+        this.ctx.font = "bold 9px system-ui, -apple-system, sans-serif";
         this.ctx.fillText(`${Math.floor(pct * 100)}% (${curDmg.toFixed(1)}s / ${bdata.hardness}s)`, hx + 85, hy + 73);
       }
     }
 
-    // Geomechanics Layer HUD
+    // 地質層資訊 HUD
     const layer = World.getLayerInfo(pTy, this.world.current_planet);
     this.ctx.fillStyle = "rgba(18, 22, 32, 0.85)";
     this.ctx.fillRect(SCREEN_WIDTH / 2 - 140, 14, 280, 64);
@@ -3119,21 +2923,21 @@ class AstroStrataEngine {
 
     this.ctx.fillStyle = COLOR_GOLD;
     this.ctx.textAlign = "left";
-    this.ctx.font = "bold 13px system-ui, sans-serif";
+    this.ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
     this.ctx.fillText(`${this.world.current_planet}: ${layer.name}`, SCREEN_WIDTH / 2 - 128, 32);
     this.ctx.fillStyle = COLOR_WHITE;
-    this.ctx.font = "11px system-ui, sans-serif";
+    this.ctx.font = "11px system-ui, -apple-system, sans-serif";
     this.ctx.fillText(`Depth: ${layer.depth} m | ${layer.pressure}`, SCREEN_WIDTH / 2 - 128, 50);
     this.ctx.fillStyle = COLOR_CYAN;
     this.ctx.fillText(`Thermal: ${layer.temp}`, SCREEN_WIDTH / 2 - 128, 66);
 
-    // Health and Level HUD
+    // 生命值與等級 HUD
     this.ctx.fillStyle = COLOR_HP;
     this.ctx.fillRect(20, 20, Math.floor((this.player.hp / this.player.max_hp) * 180), 16);
     this.ctx.strokeStyle = COLOR_WHITE;
     this.ctx.strokeRect(20, 20, 180, 16);
     this.ctx.fillStyle = COLOR_WHITE;
-    this.ctx.font = "bold 11px system-ui, sans-serif";
+    this.ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
     this.ctx.fillText(`HP ${Math.floor(this.player.hp)} / ${this.player.max_hp}`, 26, 32);
 
     this.ctx.fillStyle = COLOR_EXP;
@@ -3143,7 +2947,7 @@ class AstroStrataEngine {
     this.ctx.fillStyle = COLOR_GOLD;
     this.ctx.fillText(`LVL ${this.player.level} (${this.player.pClass})`, 210, 32);
 
-    // Hotbar & Virtual Controls (Only drawn when PLAYING to prevent bleeding through dialogs)
+    // 快捷列與虛擬按鈕（僅在遊玩狀態渲染，防止對話框被穿透）
     if (this.state === "PLAYING") {
       for (let i = 0; i < 10; i++) {
         const bx = SCREEN_WIDTH / 2 - 240 + i * 48;
@@ -3154,11 +2958,11 @@ class AstroStrataEngine {
         this.ctx.strokeRect(bx, by, 44, 44);
 
         const slot = this.player.inv.slots[i];
-        if (slot && this.art.icons[slot.item]) {
-          this.ctx.drawImage(this.art.icons[slot.item], bx + 6, by + 6);
+        if (slot) {
+          this.drawItemIcon(this.ctx, slot.item, bx + 6, by + 6, 32, 32);
           if (slot.count > 1) {
             this.ctx.fillStyle = COLOR_GOLD;
-            this.ctx.font = "bold 12px system-ui, sans-serif";
+            this.ctx.font = "bold 12px system-ui, -apple-system, sans-serif";
             this.ctx.fillText(`${slot.count}`, bx + 26, by + 38);
           }
         }
@@ -3179,7 +2983,7 @@ class AstroStrataEngine {
           this.ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
 
           this.ctx.fillStyle = isActive ? COLOR_GOLD : COLOR_WHITE;
-          this.ctx.font = "bold 16px system-ui, sans-serif";
+          this.ctx.font = "bold 16px system-ui, -apple-system, sans-serif";
           this.ctx.textAlign = "center";
           this.ctx.fillText(btn.label, btn.x + btn.w / 2, btn.y + btn.h / 2 + 5);
         }
@@ -3187,9 +2991,7 @@ class AstroStrataEngine {
       }
     }
 
-    // Inventory & Crafting Matrix
-    // Modern Crisp Inventory & Crafting Matrix
-    // Modern Crisp Inventory & Crafting Matrix
+    // 現代平滑背包與合成工作台
     if (this.state === "INVENTORY") {
       this.ctx.fillStyle = "rgba(10, 12, 18, 0.96)";
       this.ctx.fillRect(INV_UI_X, INV_UI_Y, 780, 540);
@@ -3202,19 +3004,19 @@ class AstroStrataEngine {
       this.ctx.textAlign = "left";
       this.ctx.fillText("WORKSHOP & FABRICATION MATRIX", INV_UI_X + 24, INV_UI_Y + 36);
 
-      // Close [X] Button
+      // 關閉按鈕 [X]
       this.ctx.fillStyle = "#e63c3c";
       this.ctx.fillRect(INV_UI_X + 735, INV_UI_Y + 12, 30, 30);
       this.ctx.strokeStyle = COLOR_WHITE;
       this.ctx.lineWidth = 1;
       this.ctx.strokeRect(INV_UI_X + 735, INV_UI_Y + 12, 30, 30);
       this.ctx.fillStyle = COLOR_WHITE;
-      this.ctx.font = "bold 16px system-ui, sans-serif";
+      this.ctx.font = "bold 16px system-ui, -apple-system, sans-serif";
       this.ctx.textAlign = "center";
       this.ctx.fillText("✕", INV_UI_X + 750, INV_UI_Y + 33);
       this.ctx.textAlign = "left";
 
-      // 3 Armor Slots on Left
+      // 左側 3 個裝備欄
       const armorSlots = ["helmet", "chest", "boots"];
       for (const aslot of armorSlots) {
         const arec = getArmorRect(aslot);
@@ -3225,18 +3027,18 @@ class AstroStrataEngine {
         this.ctx.strokeRect(arec.x, arec.y, arec.w, arec.h);
 
         const aItem = this.player.inv.armor[aslot];
-        if (aItem && this.art.icons[aItem]) {
-          this.ctx.drawImage(this.art.icons[aItem], arec.x + 7, arec.y + 7);
+        if (aItem) {
+          this.drawItemIcon(this.ctx, aItem, arec.x + 7, arec.y + 7, 32, 32);
         } else {
           this.ctx.fillStyle = "#4a5266";
-          this.ctx.font = "bold 9px system-ui, sans-serif";
+          this.ctx.font = "bold 9px system-ui, -apple-system, sans-serif";
           this.ctx.textAlign = "center";
           this.ctx.fillText(aslot.toUpperCase(), arec.x + arec.w / 2, arec.y + arec.h / 2 + 3);
           this.ctx.textAlign = "left";
         }
       }
 
-      // 30 Bag Slots
+      // 30 個背包槽位（包含高亮選擇輪廓）
       for (let i = 0; i < 30; i++) {
         const srec = getSlotRect(i);
         const isSelected = (this.selectedInvSlot === i);
@@ -3248,17 +3050,17 @@ class AstroStrataEngine {
         this.ctx.strokeRect(srec.x, srec.y, srec.w, srec.h);
 
         const slot = this.player.inv.slots[i];
-        if (slot && this.art.icons[slot.item]) {
-          this.ctx.drawImage(this.art.icons[slot.item], srec.x + 6, srec.y + 6);
+        if (slot) {
+          this.drawItemIcon(this.ctx, slot.item, srec.x + 6, srec.y + 6, 32, 32);
           if (slot.count > 1) {
             this.ctx.fillStyle = COLOR_GOLD;
-            this.ctx.font = "bold 11px system-ui, sans-serif";
+            this.ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
             this.ctx.fillText(`${slot.count}`, srec.x + 24, srec.y + 38);
           }
         }
       }
 
-      // Dedicated Item Details Inspector Card
+      // 專屬物品觀察卡片（點擊即顯現詳細數值，永不丟失物品）
       const cardX = INV_UI_X + 648;
       const cardY = INV_UI_Y + 75;
       const cardW = 108;
@@ -3275,23 +3077,21 @@ class AstroStrataEngine {
         const idata = ITEM_DEFINITIONS[activeItem] || {};
         const bdata = BLOCK_DATA[activeItem] || {};
 
-        if (this.art.icons[activeItem]) {
-          this.ctx.drawImage(this.art.icons[activeItem], cardX + cardW / 2 - 16, cardY + 8);
-        }
+        this.drawItemIcon(this.ctx, activeItem, cardX + cardW / 2 - 16, cardY + 8, 32, 32);
 
         const displayName = bdata.name || activeItem;
         this.ctx.fillStyle = COLOR_GOLD;
-        this.ctx.font = "bold 11px system-ui, sans-serif";
+        this.ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
         this.ctx.textAlign = "center";
         this.ctx.fillText(displayName.length > 13 ? displayName.substring(0, 12) + "…" : displayName, cardX + cardW / 2, cardY + 52);
 
         const typeStr = idata.type ? idata.type.toUpperCase() : "BLOCK";
         this.ctx.fillStyle = COLOR_CYAN;
-        this.ctx.font = "bold 9px system-ui, sans-serif";
+        this.ctx.font = "bold 9px system-ui, -apple-system, sans-serif";
         this.ctx.fillText(typeStr, cardX + cardW / 2, cardY + 66);
 
         this.ctx.fillStyle = COLOR_WHITE;
-        this.ctx.font = "10px system-ui, sans-serif";
+        this.ctx.font = "10px system-ui, -apple-system, sans-serif";
         let statStr = "";
         if (idata.dmg) statStr = `DMG: ${idata.dmg}`;
         else if (idata.defense) statStr = `DEF: +${idata.defense}`;
@@ -3308,34 +3108,34 @@ class AstroStrataEngine {
           this.ctx.lineWidth = 1;
           this.ctx.strokeRect(cardX + 6, cardY + 111, cardW - 12, 24);
           this.ctx.fillStyle = COLOR_WHITE;
-          this.ctx.font = "bold 11px system-ui, sans-serif";
+          this.ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
           this.ctx.fillText(btnLabel, cardX + cardW / 2, cardY + 127);
         } else {
           this.ctx.fillStyle = "#66728a";
-          this.ctx.font = "9px system-ui, sans-serif";
+          this.ctx.font = "9px system-ui, -apple-system, sans-serif";
           this.ctx.fillText("Tap slot to move", cardX + cardW / 2, cardY + 126);
         }
         this.ctx.textAlign = "left";
       } else {
         this.ctx.fillStyle = "#4a5266";
-        this.ctx.font = "11px system-ui, sans-serif";
+        this.ctx.font = "11px system-ui, -apple-system, sans-serif";
         this.ctx.textAlign = "center";
         this.ctx.fillText("Tap item", cardX + cardW / 2, cardY + 65);
         this.ctx.fillText("to inspect", cardX + cardW / 2, cardY + 80);
         this.ctx.textAlign = "left";
       }
 
-      // Compact Search Box
+      // 緊湊搜尋欄
       this.ctx.fillStyle = "#141824";
       this.ctx.fillRect(INV_UI_X + 24, INV_UI_Y + 225, 140, 26);
       this.ctx.strokeStyle = this.searchActive ? COLOR_CYAN : "#404c64";
       this.ctx.lineWidth = 1;
       this.ctx.strokeRect(INV_UI_X + 24, INV_UI_Y + 225, 140, 26);
       this.ctx.fillStyle = this.searchQuery ? COLOR_WHITE : "#7c8599";
-      this.ctx.font = "12px system-ui, sans-serif";
+      this.ctx.font = "12px system-ui, -apple-system, sans-serif";
       this.ctx.fillText(this.searchQuery || "Search...", INV_UI_X + 32, INV_UI_Y + 242);
 
-      // Clean Non-Overlapping Category Tabs
+      // 無重疊分類選單
       const categories = ["ALL", "TOOLS", "WEAPONS", "ARMOR", "ROCKETS", "BLOCKS"];
       let catX = INV_UI_X + 172;
       for (const cat of categories) {
@@ -3346,19 +3146,19 @@ class AstroStrataEngine {
         this.ctx.lineWidth = 1;
         this.ctx.strokeRect(catX, INV_UI_Y + 225, 54, 26);
         this.ctx.fillStyle = isSel ? COLOR_GOLD : COLOR_WHITE;
-        this.ctx.font = "bold 10px system-ui, sans-serif";
+        this.ctx.font = "bold 10px system-ui, -apple-system, sans-serif";
         this.ctx.textAlign = "center";
         this.ctx.fillText(cat, catX + 27, INV_UI_Y + 242);
         catX += 58;
       }
       this.ctx.textAlign = "left";
 
-      // Clear Page Counter & Scroll Buttons
+      // 頁碼計數與專屬滾動按鈕
       const displayedRecipes = this.getFilteredRecipes();
       const maxScroll = Math.max(0, displayedRecipes.length - 9);
 
       this.ctx.fillStyle = COLOR_CYAN;
-      this.ctx.font = "11px system-ui, sans-serif";
+      this.ctx.font = "11px system-ui, -apple-system, sans-serif";
       const startIdx = displayedRecipes.length > 0 ? this.recipeScrollOffset + 1 : 0;
       const endIdx = Math.min(displayedRecipes.length, this.recipeScrollOffset + 9);
       this.ctx.fillText(`${startIdx}-${endIdx} / ${displayedRecipes.length}`, INV_UI_X + 530, INV_UI_Y + 242);
@@ -3368,7 +3168,7 @@ class AstroStrataEngine {
       this.ctx.strokeStyle = (this.recipeScrollOffset > 0) ? COLOR_GOLD : "#3a4254";
       this.ctx.strokeRect(INV_UI_X + 680, INV_UI_Y + 225, 28, 26);
       this.ctx.fillStyle = (this.recipeScrollOffset > 0) ? COLOR_WHITE : "#555d70";
-      this.ctx.font = "bold 12px system-ui, sans-serif";
+      this.ctx.font = "bold 12px system-ui, -apple-system, sans-serif";
       this.ctx.textAlign = "center";
       this.ctx.fillText("▲", INV_UI_X + 694, INV_UI_Y + 242);
 
@@ -3380,7 +3180,7 @@ class AstroStrataEngine {
       this.ctx.fillText("▼", INV_UI_X + 728, INV_UI_Y + 242);
       this.ctx.textAlign = "left";
 
-      // Recipe List
+      // 配方列表
       const visibleSlice = displayedRecipes.slice(this.recipeScrollOffset, this.recipeScrollOffset + 9);
       for (let idx = 0; idx < visibleSlice.length; idx++) {
         const rec = visibleSlice[idx];
@@ -3406,11 +3206,11 @@ class AstroStrataEngine {
 
         const rName = BLOCK_DATA[rec.result]?.name || String(rec.result);
         this.ctx.fillStyle = COLOR_GOLD;
-        this.ctx.font = "bold 12px system-ui, sans-serif";
+        this.ctx.font = "bold 12px system-ui, -apple-system, sans-serif";
         this.ctx.fillText(`[${reqStation.toUpperCase()}] ${rName} x${rec.count}`, INV_UI_X + 32, recY + 17);
 
         this.ctx.fillStyle = canCraft ? COLOR_EXP : "#8890a0";
-        this.ctx.font = "11px system-ui, sans-serif";
+        this.ctx.font = "11px system-ui, -apple-system, sans-serif";
         this.ctx.fillText(reqTexts.join("  "), INV_UI_X + 270, recY + 17);
 
         const craftBtn = { x: INV_UI_X + 675, y: recY + 2, w: 65, h: 22 };
@@ -3419,14 +3219,14 @@ class AstroStrataEngine {
         this.ctx.strokeStyle = canCraft ? COLOR_EXP : "#424856";
         this.ctx.strokeRect(craftBtn.x, craftBtn.y, craftBtn.w, craftBtn.h);
         this.ctx.fillStyle = canCraft ? COLOR_WHITE : "#666e80";
-        this.ctx.font = "bold 11px system-ui, sans-serif";
+        this.ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
         this.ctx.textAlign = "center";
         this.ctx.fillText("CRAFT", craftBtn.x + 32, craftBtn.y + 15);
         this.ctx.textAlign = "left";
       }
     }
 
-    // Star Map UI
+    // 星圖介面
     if (this.state === "STAR_MAP") {
       this.ctx.fillStyle = "rgba(8, 12, 22, 0.95)";
       this.ctx.fillRect(INV_UI_X, INV_UI_Y, 820, 540);
@@ -3434,7 +3234,7 @@ class AstroStrataEngine {
       this.ctx.strokeRect(INV_UI_X, INV_UI_Y, 820, 540);
 
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 20px system-ui, sans-serif";
+      this.ctx.font = "bold 20px system-ui, -apple-system, sans-serif";
       this.ctx.fillText("AEROSPACE STAR MAP (TIER 1 - 15)", INV_UI_X + 24, INV_UI_Y + 36);
 
       const visiblePlanets = PLANET_ORDER.slice(this.planetScrollOffset, this.planetScrollOffset + 4);
@@ -3449,10 +3249,10 @@ class AstroStrataEngine {
         this.ctx.strokeRect(INV_UI_X + 24, cardY, 760, 95);
 
         this.ctx.fillStyle = COLOR_WHITE;
-        this.ctx.font = "bold 15px system-ui, sans-serif";
+        this.ctx.font = "bold 15px system-ui, -apple-system, sans-serif";
         this.ctx.fillText(`${pdata.name} (Tier ${pdata.tier})`, INV_UI_X + 40, cardY + 28);
         this.ctx.fillStyle = COLOR_CYAN;
-        this.ctx.font = "12px system-ui, sans-serif";
+        this.ctx.font = "12px system-ui, -apple-system, sans-serif";
         this.ctx.fillText(`Gravity: ${pdata.gravity}g | Hazard: ${pdata.hazard}`, INV_UI_X + 40, cardY + 50);
 
         this.ctx.fillStyle = "#1e2e44";
@@ -3464,13 +3264,13 @@ class AstroStrataEngine {
       }
     }
 
-    // Pause Menu Overlay
+    // 暫停選單
     if (this.state === "PAUSE") {
       this.ctx.fillStyle = "rgba(5, 5, 10, 0.85)";
       this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 28px system-ui, sans-serif";
+      this.ctx.font = "bold 28px system-ui, -apple-system, sans-serif";
       this.ctx.textAlign = "center";
       this.ctx.fillText("EXPEDITION PAUSED", SCREEN_WIDTH / 2, 230);
 
@@ -3486,7 +3286,7 @@ class AstroStrataEngine {
         this.ctx.strokeStyle = COLOR_GOLD;
         this.ctx.strokeRect(SCREEN_WIDTH / 2 - 160, opt.y, 320, 42);
         this.ctx.fillStyle = COLOR_WHITE;
-        this.ctx.font = "bold 14px system-ui, sans-serif";
+        this.ctx.font = "bold 14px system-ui, -apple-system, sans-serif";
         this.ctx.fillText(opt.label, SCREEN_WIDTH / 2, opt.y + 26);
       }
     }
@@ -3502,7 +3302,7 @@ class AstroStrataEngine {
   }
 }
 
-// Global Bootstrap that executes whether DOM is loading or already interactive
+// 啟動器
 function startAstroStrataApp() {
   const overlay = document.getElementById("loading-overlay");
   const startBtn = document.getElementById("start-btn");

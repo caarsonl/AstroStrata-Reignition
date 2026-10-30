@@ -1,5 +1,5 @@
 // =============================================================================
-// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 1 / 2)
+// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 1 / 3)
 // =============================================================================
 
 const VERSION_STRING = "v0.3.0-web";
@@ -491,7 +491,7 @@ const TOUCH_CONTROLS = {
   btnHeal:  { id: "heal",  x: SCREEN_WIDTH - 165, y: 18, w: 68, h: 36, label: "HEAL" }
 };
 // =============================================================================
-// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 2 / 2)
+// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 2 / 3)
 // =============================================================================
 
 // ==========================================
@@ -874,6 +874,58 @@ class FloatingText {
 }
 
 // ==========================================
+// INVENTORY MANAGER (CRITICAL CLASS RESTORATION)
+// ==========================================
+class InventoryManager {
+  constructor() {
+    this.slots = new Array(30).fill(null);
+    this.armor = { helmet: null, chest: null, boots: null };
+    this.selectedHotbar = 0;
+  }
+
+  addItem(item, count = 1) {
+    for (let i = 0; i < 30; i++) {
+      if (this.slots[i] && this.slots[i].item === item) {
+        this.slots[i].count += count;
+        return true;
+      }
+    }
+    for (let i = 0; i < 30; i++) {
+      if (this.slots[i] === null) {
+        this.slots[i] = { item, count };
+        return true;
+      }
+    }
+    return false;
+  }
+
+  removeItem(item, count = 1) {
+    for (let i = 0; i < 30; i++) {
+      if (this.slots[i] && this.slots[i].item === item) {
+        if (this.slots[i].count >= count) {
+          this.slots[i].count -= count;
+          if (this.slots[i].count <= 0) this.slots[i] = null;
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  countItem(item) {
+    let sum = 0;
+    for (const s of this.slots) {
+      if (s && s.item === item) sum += s.count;
+    }
+    return sum;
+  }
+
+  getSelected() {
+    return this.slots[this.selectedHotbar];
+  }
+}
+
+// ==========================================
 // WORLD GENERATOR & LIQUIDS
 // ==========================================
 class World {
@@ -1121,9 +1173,12 @@ class World {
     return { name: "Inner Core (Solid)", depth: d, temp: `${5400 + Math.floor((d - 1550) * 1.2)} C`, pressure: `${(330 + (d - 1550) * 0.6).toFixed(1)} GPa` };
   }
 }
+// =============================================================================
+// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 3 / 3)
+// =============================================================================
 
 // ==========================================
-// DYNAMIC LIGHTING
+// DYNAMIC LIGHTING ENGINE
 // ==========================================
 class OptimizedLighting {
   constructor() {
@@ -1189,6 +1244,306 @@ class OptimizedLighting {
     mainCtx.globalCompositeOperation = "multiply";
     mainCtx.drawImage(this.canvas, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     mainCtx.restore();
+  }
+}
+
+// ==========================================
+// ENTITIES: SLIME, PROJECTILE, PLAYER
+// ==========================================
+class SlimeEnemy {
+  constructor(x, y, etype = "Crust") {
+    this.x = x;
+    this.y = y;
+    this.w = 28;
+    this.h = 22;
+    this.vx = 0;
+    this.vy = 0;
+    this.type = etype;
+    this.max_hp = (etype === "Crust") ? 35 : (etype === "Mantle") ? 90 : 220;
+    this.hp = this.max_hp;
+    this.damage = (etype === "Crust") ? 12 : (etype === "Mantle") ? 24 : 45;
+    this.color = (etype === "Crust") ? "#50c864" : (etype === "Mantle") ? "#dc5a28" : "#fff078";
+    this.jumpTimer = Math.floor(Math.random() * 60) + 30;
+    this.onGround = false;
+  }
+
+  update(world, player) {
+    this.vy = Math.min(9, this.vy + 0.35);
+    this.jumpTimer--;
+    if (this.jumpTimer <= 0 && this.onGround) {
+      this.jumpTimer = Math.floor(Math.random() * 60) + 40;
+      this.vy = -7.2;
+      this.vx = (player.x > this.x ? 1 : -1) * (2 + Math.random());
+    }
+
+    if (this.onGround) this.vx *= 0.82;
+    this.x += this.vx;
+    this.y += this.vy;
+
+    const tx = Math.floor((this.x + this.w / 2) / TILE_SIZE);
+    const ty = Math.floor((this.y + this.h) / TILE_SIZE);
+    if (![AIR, TORCH, LAVA, LANTERN, NEON_LAMP].includes(world.getTile(tx, ty))) {
+      this.y = ty * TILE_SIZE - this.h;
+      this.vy = 0;
+      this.onGround = true;
+    } else {
+      this.onGround = false;
+    }
+  }
+
+  draw(ctx, camX, camY) {
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.ellipse(this.x - camX + this.w / 2, this.y - camY + this.h / 2, this.w / 2, this.h / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(this.x - camX + 8, this.y - camY + 6, 3, 3);
+    ctx.fillRect(this.x - camX + 16, this.y - camY + 6, 3, 3);
+  }
+}
+
+class Projectile {
+  constructor(x, y, tx, ty, damage, ptype = "magic") {
+    this.x = x;
+    this.y = y;
+    this.damage = damage;
+    this.type = ptype;
+    this.life = 75;
+    const ang = Math.atan2(ty - y, tx - x);
+    const speed = (ptype === "dynamite") ? 8.0 : (ptype === "pulse") ? 11.5 : 9.5;
+    this.vx = Math.cos(ang) * speed;
+    this.vy = Math.sin(ang) * speed - ((ptype === "dynamite") ? 2.5 : 0);
+  }
+
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    if (this.type === "dynamite") this.vy += 0.22;
+    this.life--;
+  }
+
+  draw(ctx, camX, camY) {
+    const px = Math.floor(this.x - camX);
+    const py = Math.floor(this.y - camY);
+    if (this.type === "dynamite") {
+      ctx.fillStyle = "#dc3232";
+      ctx.fillRect(px - 4, py - 4, 8, 8);
+    } else if (this.type === "arrow") {
+      ctx.strokeStyle = "#e6c88c";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(px - this.vx, py - this.vy);
+      ctx.lineTo(px, py);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = (this.type === "ice") ? "#82e1ff" : COLOR_CYAN;
+      ctx.beginPath();
+      ctx.arc(px, py, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+class Player {
+  constructor(x, y, chosenClass = "Warrior") {
+    this.x = x;
+    this.y = y;
+    this.w = 20;
+    this.h = 42;
+    this.vx = 0.0;
+    this.vy = 0.0;
+    this.onGround = false;
+    this.facingRight = true;
+    this.inLava = false;
+
+    this.pClass = chosenClass;
+    const stats = CLASSES[chosenClass];
+    this.max_hp = stats.hp;
+    this.hp = this.max_hp;
+    this.base_damage = stats.dmg;
+    this.move_speed = stats.speed;
+    this.mine_mult = stats.mine_speed;
+    this.color = stats.color;
+
+    this.level = 1;
+    this.xp = 0;
+    this.xp_next = 100;
+    this.inv = new InventoryManager();
+
+    this.animTick = 0;
+    this.walkPhase = 0.0;
+    this.isMoving = false;
+    this.attackCooldown = 0;
+    this.swingAnim = 0;
+    this.speedBuffTimer = 0;
+  }
+
+  addXp(amt, floatTexts, sound) {
+    this.xp += amt;
+    floatTexts.push(new FloatingText(this.x + 10, this.y - 10, `+${amt} XP`, COLOR_EXP));
+    while (this.xp >= this.xp_next) {
+      this.xp -= this.xp_next;
+      this.level++;
+      this.xp_next = Math.floor(this.xp_next * 1.45);
+      this.max_hp += 18;
+      this.hp = this.max_hp;
+      this.base_damage += 4;
+      this.mine_mult += 0.15;
+      sound.play("level_up");
+      floatTexts.push(new FloatingText(this.x + 10, this.y - 28, "LEVEL UP!", COLOR_GOLD, 70));
+    }
+  }
+
+  update(world, keys, sound) {
+    this.animTick++;
+    this.inLava = false;
+    const tx = Math.floor((this.x + this.w / 2) / TILE_SIZE);
+    const ty = Math.floor((this.y + this.h / 2) / TILE_SIZE);
+    if (world.getTile(tx, ty) === LAVA) this.inLava = true;
+
+    let speedFactor = this.inLava ? 0.45 : 1.0;
+    if (this.speedBuffTimer > 0) {
+      this.speedBuffTimer--;
+      speedFactor *= 1.45;
+    }
+
+    let targetVx = 0;
+    this.isMoving = false;
+    if (keys["KeyA"] || keys["ArrowLeft"]) {
+      targetVx = -this.move_speed * speedFactor;
+      this.facingRight = false;
+      this.isMoving = true;
+    }
+    if (keys["KeyD"] || keys["ArrowRight"]) {
+      targetVx = this.move_speed * speedFactor;
+      this.facingRight = true;
+      this.isMoving = true;
+    }
+    this.vx += (targetVx - this.vx) * 0.25;
+
+    if (this.isMoving && this.onGround) this.walkPhase += 0.25;
+    else this.walkPhase *= 0.8;
+
+    const pGrav = (this.inv.countItem("Gravity Stabilizer") > 0) ? 0.42 : (PLANET_DATA[world.current_planet]?.gravity || 0.42);
+
+    if (keys["KeyW"] || keys["Space"] || keys["ArrowUp"]) {
+      if (this.onGround) {
+        this.vy = -8.2 * Math.sqrt(pGrav / 0.42);
+        sound.play("jump");
+      } else if (this.inLava) {
+        this.vy = -3.2;
+      }
+    }
+
+    this.vy += this.inLava ? 0.16 : pGrav;
+    this.vy = Math.min(this.inLava ? 4.2 : 13.0, this.vy);
+
+    this.x += this.vx;
+    this._colX(world);
+    this.y += this.vy;
+    this._colY(world);
+
+    if (this.attackCooldown > 0) this.attackCooldown--;
+    if (this.swingAnim > 0) this.swingAnim--;
+  }
+
+  _colX(world) {
+    const left = Math.floor(this.x / TILE_SIZE);
+    const right = Math.floor((this.x + this.w) / TILE_SIZE);
+    const top = Math.floor(this.y / TILE_SIZE);
+    const bottom = Math.floor((this.y + this.h - 1) / TILE_SIZE);
+
+    for (let ty = top; ty <= bottom; ty++) {
+      for (let tx = left; tx <= right; tx++) {
+        if (![AIR, TORCH, LAVA, LANTERN, NEON_LAMP, WOOD_TABLE, WOOD_CHAIR].includes(world.getTile(tx, ty))) {
+          if (this.vx > 0) this.x = tx * TILE_SIZE - this.w;
+          else if (this.vx < 0) this.x = (tx + 1) * TILE_SIZE;
+          this.vx = 0;
+        }
+      }
+    }
+  }
+
+  _colY(world) {
+    this.onGround = false;
+    const left = Math.floor(this.x / TILE_SIZE);
+    const right = Math.floor((this.x + this.w - 1) / TILE_SIZE);
+    const top = Math.floor(this.y / TILE_SIZE);
+    const bottom = Math.floor((this.y + this.h) / TILE_SIZE);
+
+    for (let ty = top; ty <= bottom; ty++) {
+      for (let tx = left; tx <= right; tx++) {
+        if (![AIR, TORCH, LAVA, LANTERN, NEON_LAMP, WOOD_TABLE, WOOD_CHAIR].includes(world.getTile(tx, ty))) {
+          if (this.vy > 0) {
+            this.y = ty * TILE_SIZE - this.h;
+            this.onGround = true;
+          } else if (this.vy < 0) {
+            this.y = (ty + 1) * TILE_SIZE;
+          }
+          this.vy = 0;
+        }
+      }
+    }
+  }
+
+  draw(ctx, camX, camY, art) {
+    const dx = Math.floor(this.x - camX);
+    const dy = Math.floor(this.y - camY);
+
+    const breath = (!this.isMoving) ? Math.sin(this.animTick * 0.08) * 1.2 : 0;
+    const bob = (this.isMoving && this.onGround) ? Math.sin(this.walkPhase * 2) * 1.5 : 0;
+    const leg1Off = this.onGround ? Math.sin(this.walkPhase) * 6 : 2;
+    const leg2Off = this.onGround ? -Math.sin(this.walkPhase) * 6 : -3;
+
+    if (this.inv.countItem("Oxygen Tank") > 0) {
+      const oxX = dx + (this.facingRight ? 1 : 13);
+      ctx.fillStyle = "#d2e1f5";
+      ctx.fillRect(oxX, dy + 12 + Math.floor(bob), 6, 14);
+    }
+
+    ctx.fillStyle = this.color;
+    ctx.fillRect(dx + (this.facingRight ? 4 : 10), dy + 24 + bob, 5, 14 + Math.floor(leg2Off));
+    ctx.fillRect(dx + (this.facingRight ? 10 : 4), dy + 24 + bob, 5, 14 + Math.floor(leg1Off));
+
+    const torsoY = dy + 10 + Math.floor(bob + breath);
+    const chest = this.inv.armor.chest;
+    ctx.fillStyle = (chest === "Thermal Suit") ? "#ff6e19" : (chest === "Core Exosuit") ? "#282d3c" : (chest === "Acid-Resistant Suit") ? "#8cd246" : this.color;
+    ctx.fillRect(dx + 2, torsoY, 16, 16);
+
+    const headY = dy + Math.floor(bob + breath);
+    ctx.fillStyle = "#ebd2b4";
+    ctx.fillRect(dx + 3, headY, 14, 11);
+    ctx.fillStyle = "#141419";
+    const eyeX = dx + (this.facingRight ? 12 : 4);
+    ctx.fillRect(eyeX, headY + 4, 3, 3);
+
+    if (this.inv.armor.helmet === "Iron Helmet") {
+      ctx.fillStyle = "#b9bece";
+      ctx.fillRect(dx + 2, headY - 2, 16, 8);
+    }
+
+    const armX = dx + (this.facingRight ? 14 : 2);
+    const armY = torsoY + 4;
+    ctx.strokeStyle = "#ebd2b4";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(armX, armY);
+
+    if (this.swingAnim > 0) {
+      const ang = (this.swingAnim / 10.0) * Math.PI * 0.8;
+      const ox = Math.cos(ang) * 22 * (this.facingRight ? 1 : -1);
+      const oy = -Math.sin(ang) * 20;
+      ctx.lineTo(armX + ox, armY + oy);
+      ctx.stroke();
+
+      const sel = this.inv.getSelected();
+      if (sel && art.icons[sel.item]) {
+        ctx.drawImage(art.icons[sel.item], armX + ox - 12, armY + oy - 12, 24, 24);
+      }
+    } else {
+      ctx.lineTo(armX + (this.facingRight ? 3 : -3), armY + 12);
+      ctx.stroke();
+    }
   }
 }
 
@@ -1300,17 +1655,29 @@ class AstroStrataEngine {
   }
 
   loadSectorGame(sectorId) {
+    let data = null;
     const raw = localStorage.getItem(SECTOR_DATA_PREFIX + sectorId);
-    if (!raw) return false;
+    if (raw) {
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        console.warn("Sector parse error, re-generating sector:", e);
+      }
+    }
 
-    try {
-      const data = JSON.parse(raw);
+    const sectorMeta = this.worldsList.find(w => w.id === sectorId) || {
+      name: "Fallback Sector",
+      pClass: "Warrior",
+      planet: "Earth"
+    };
+
+    if (data && data.world && data.world.tiles && data.player) {
       this.world = new World(WORLD_WIDTH, WORLD_HEIGHT);
       this.world.tiles = data.world.tiles;
-      this.world.current_planet = data.world.planet || "Earth";
+      this.world.current_planet = data.world.planet || sectorMeta.planet || "Earth";
 
       const pData = data.player;
-      this.player = new Player(pData.x, pData.y, pData.pClass || "Warrior");
+      this.player = new Player(pData.x, pData.y, pData.pClass || sectorMeta.pClass || "Warrior");
       this.player.hp = pData.hp;
       this.player.max_hp = pData.max_hp;
       this.player.level = pData.level;
@@ -1318,20 +1685,36 @@ class AstroStrataEngine {
       this.player.xp_next = pData.xp_next;
       this.player.inv.slots = pData.slots;
       this.player.inv.armor = pData.armor;
+    } else {
+      // Robust fallback if data was cleared or corrupted
+      this.world = new World(WORLD_WIDTH, WORLD_HEIGHT);
+      this.world.generate(sectorMeta.planet || "Earth");
 
-      this.enemies = [new SlimeEnemy(this.player.x + 180, this.player.y - 20, "Crust")];
-      this.projectiles = [];
-      this.particles = [];
-      this.floatTexts = [];
-      this.activeWorldKey = sectorId;
-      this.lockedTargetTile = null;
-      this.state = "PLAYING";
-      this.sound.play("craft");
-      return true;
-    } catch (e) {
-      console.error("Failed to load sector:", e);
-      return false;
+      const spawnX = Math.floor(WORLD_WIDTH / 2) * TILE_SIZE;
+      let spawnY = 50 * TILE_SIZE;
+      for (let y = 0; y < WORLD_HEIGHT; y++) {
+        if (this.world.getTile(Math.floor(WORLD_WIDTH / 2), y) !== AIR) {
+          spawnY = (y - 2) * TILE_SIZE;
+          break;
+        }
+      }
+
+      this.player = new Player(spawnX, spawnY, sectorMeta.pClass || "Warrior");
+      this.player.inv.addItem("Wood Pickaxe", 1);
+      this.player.inv.addItem("Wood Axe", 1);
+      this.player.inv.addItem("Wood Sword", 1);
+      this.player.inv.addItem(TORCH, 16);
     }
+
+    this.enemies = [new SlimeEnemy(this.player.x + 180, this.player.y - 20, "Crust")];
+    this.projectiles = [];
+    this.particles = [];
+    this.floatTexts = [];
+    this.activeWorldKey = sectorId;
+    this.lockedTargetTile = null;
+    this.state = "PLAYING";
+    this.sound.play("craft");
+    return true;
   }
 
   isNearStation(targetBlock) {
@@ -1467,1195 +1850,3 @@ class AstroStrataEngine {
     }
     this.floatTexts.push(new FloatingText(this.player.x, this.player.y - 25, `Sonar: ${count} Ores Found`, COLOR_CYAN, 60));
   }
-
-  setupListeners() {
-    window.addEventListener("keydown", (e) => {
-      this.keys[e.code] = true;
-
-      if (this.state === "CREATE_WORLD" && this.nameInputActive) {
-        if (e.key === "Enter") this.nameInputActive = false;
-        else if (e.key === "Backspace") this.inputWorldName = this.inputWorldName.slice(0, -1);
-        else if (this.inputWorldName.length < 18 && e.key.length === 1) this.inputWorldName += e.key;
-        return;
-      }
-
-      if (this.state === "INVENTORY" && this.searchActive) {
-        if (e.key === "Enter" || e.key === "Escape") this.searchActive = false;
-        else if (e.key === "Backspace") {
-          this.searchQuery = this.searchQuery.slice(0, -1);
-          this.recipeScrollOffset = 0;
-        } else if (this.searchQuery.length < 20 && e.key.length === 1) {
-          this.searchQuery += e.key;
-          this.recipeScrollOffset = 0;
-        }
-        return;
-      }
-
-      if (e.code === "KeyE" || e.code === "KeyI" || e.code === "Tab") {
-        if (this.state === "PLAYING") this.state = "INVENTORY";
-        else if (this.state === "INVENTORY") this.state = "PLAYING";
-        this.sound.play("click");
-      }
-      if (e.code === "Escape") {
-        if (this.state === "INVENTORY" || this.state === "STAR_MAP") this.state = "PLAYING";
-        else if (this.state === "PLAYING") this.state = "PAUSE";
-        else if (this.state === "PAUSE") this.state = "PLAYING";
-        this.sound.play("click");
-      }
-      if (e.code === "KeyH" && this.state === "PLAYING") {
-        if (this.player.inv.countItem("Health Potion") > 0) {
-          this.player.inv.removeItem("Health Potion", 1);
-          this.player.hp = Math.min(this.player.max_hp, this.player.hp + 50);
-          this.sound.play("potion");
-          this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "+50 HP", COLOR_EXP));
-        }
-      }
-
-      if (e.code.startsWith("Digit") || e.code.startsWith("Numpad")) {
-        const d = parseInt(e.key, 10);
-        if (!isNaN(d)) {
-          this.player.inv.selectedHotbar = (d === 0) ? 9 : d - 1;
-          this.sound.play("click");
-        }
-      }
-    });
-
-    window.addEventListener("keyup", (e) => {
-      this.keys[e.code] = false;
-    });
-
-    const getCanvasPos = (e) => {
-      const rect = this.canvas.getBoundingClientRect();
-      const sx = SCREEN_WIDTH / rect.width;
-      const sy = SCREEN_HEIGHT / rect.height;
-      return { x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sy };
-    };
-
-    const getTouchPos = (touch) => {
-      const rect = this.canvas.getBoundingClientRect();
-      const sx = SCREEN_WIDTH / rect.width;
-      const sy = SCREEN_HEIGHT / rect.height;
-      return { x: (touch.clientX - rect.left) * sx, y: (touch.clientY - rect.top) * sy };
-    };
-
-    const pointInRect = (px, py, r) => {
-      return px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
-    };
-
-    this.canvas.addEventListener("mousemove", (e) => {
-      const pos = getCanvasPos(e);
-      this.mouse.x = pos.x;
-      this.mouse.y = pos.y;
-      if (this.state === "PLAYING" && !this.isTouchDevice) {
-        this.lockedTargetTile = {
-          tx: Math.floor((pos.x + this.camX) / TILE_SIZE),
-          ty: Math.floor((pos.y + this.camY) / TILE_SIZE)
-        };
-      }
-    });
-
-    this.canvas.addEventListener("mousedown", (e) => {
-      this.sound.init();
-      const pos = getCanvasPos(e);
-      this.mouse.x = pos.x;
-      this.mouse.y = pos.y;
-      if (e.button === 0) {
-        this.mouse.down = true;
-        this.handleLeftClick();
-      } else if (e.button === 2) {
-        this.mouse.rightDown = true;
-        this.handleRightClick();
-      }
-    });
-
-    this.canvas.addEventListener("mouseup", (e) => {
-      if (e.button === 0) this.mouse.down = false;
-      if (e.button === 2) this.mouse.rightDown = false;
-    });
-
-    this.canvas.addEventListener("contextmenu", (e) => e.preventDefault());
-
-    this.canvas.addEventListener("wheel", (e) => {
-      if (this.state === "PLAYING" && this.player) {
-        this.player.inv.selectedHotbar = (this.player.inv.selectedHotbar + (e.deltaY > 0 ? 1 : -1) + 10) % 10;
-      } else if (this.state === "INVENTORY") {
-        this.recipeScrollOffset = Math.max(0, this.recipeScrollOffset + (e.deltaY > 0 ? 1 : -1));
-      } else if (this.state === "STAR_MAP") {
-        this.planetScrollOffset = Math.max(0, Math.min(PLANET_ORDER.length - 4, this.planetScrollOffset + (e.deltaY > 0 ? 1 : -1)));
-      }
-    });
-
-    // Multi-Touch Listeners
-    this.canvas.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-      this.sound.init();
-      this.isTouchDevice = true;
-
-      for (let i = 0; i < e.changedTouches.length; i++) {
-        const t = e.changedTouches[i];
-        const pos = getTouchPos(t);
-
-        if (this.state !== "PLAYING") {
-          this.mouse.x = pos.x;
-          this.mouse.y = pos.y;
-          this.activeTouches.set(t.identifier, { type: "menu", ...pos });
-          this.handleLeftClick();
-          continue;
-        }
-
-        let handled = false;
-        for (const [key, btn] of Object.entries(TOUCH_CONTROLS)) {
-          if (pointInRect(pos.x, pos.y, btn)) {
-            this.activeTouches.set(t.identifier, { type: btn.id, ...pos });
-            handled = true;
-
-            if (btn.id === "left")  this.keys["KeyA"] = true;
-            if (btn.id === "right") this.keys["KeyD"] = true;
-            if (btn.id === "jump")  this.keys["KeyW"] = true;
-            if (btn.id === "inv") {
-              this.state = (this.state === "PLAYING") ? "INVENTORY" : "PLAYING";
-              this.sound.play("click");
-            }
-            if (btn.id === "heal") {
-              if (this.player.inv.countItem("Health Potion") > 0) {
-                this.player.inv.removeItem("Health Potion", 1);
-                this.player.hp = Math.min(this.player.max_hp, this.player.hp + 50);
-                this.sound.play("potion");
-                this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "+50 HP", COLOR_EXP));
-              }
-            }
-            if (btn.id === "mine") {
-              this.mouse.down = true;
-              if (!this.lockedTargetTile) {
-                const aheadX = this.player.x + (this.player.facingRight ? this.player.w + 12 : -12);
-                this.lockedTargetTile = {
-                  tx: Math.floor(aheadX / TILE_SIZE),
-                  ty: Math.floor((this.player.y + this.player.h / 2) / TILE_SIZE)
-                };
-              }
-            }
-            if (btn.id === "place") {
-              this.handleRightClick();
-            }
-            break;
-          }
-        }
-
-        if (!handled) {
-          this.activeTouches.set(t.identifier, { type: "world", ...pos });
-          this.lockedTargetTile = {
-            tx: Math.floor((pos.x + this.camX) / TILE_SIZE),
-            ty: Math.floor((pos.y + this.camY) / TILE_SIZE)
-          };
-          this.mouse.down = true;
-        }
-      }
-    }, { passive: false });
-
-    this.canvas.addEventListener("touchmove", (e) => {
-      e.preventDefault();
-      for (let i = 0; i < e.changedTouches.length; i++) {
-        const t = e.changedTouches[i];
-        const pos = getTouchPos(t);
-        const existing = this.activeTouches.get(t.identifier);
-        if (existing && existing.type === "world") {
-          this.lockedTargetTile = {
-            tx: Math.floor((pos.x + this.camX) / TILE_SIZE),
-            ty: Math.floor((pos.y + this.camY) / TILE_SIZE)
-          };
-        }
-      }
-    }, { passive: false });
-
-    const handleTouchEnd = (e) => {
-      e.preventDefault();
-      for (let i = 0; i < e.changedTouches.length; i++) {
-        const t = e.changedTouches[i];
-        const existing = this.activeTouches.get(t.identifier);
-        if (!existing) continue;
-
-        if (existing.type === "left")  this.keys["KeyA"] = false;
-        if (existing.type === "right") this.keys["KeyD"] = false;
-        if (existing.type === "jump")  this.keys["KeyW"] = false;
-        if (existing.type === "mine")  this.mouse.down = false;
-        if (existing.type === "world") this.mouse.down = false;
-
-        this.activeTouches.delete(t.identifier);
-      }
-    };
-
-    this.canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
-    this.canvas.addEventListener("touchcancel", handleTouchEnd, { passive: false });
-  }
-
-  handleLeftClick() {
-    const mx = this.mouse.x;
-    const my = this.mouse.y;
-
-    if (this.state === "MENU") {
-      if (mx >= SCREEN_WIDTH / 2 - 160 && mx <= SCREEN_WIDTH / 2 + 160 && my >= 310 && my <= 358) {
-        this.loadSectorIndex();
-        this.state = "WORLD_SELECT";
-        this.sound.play("click");
-      }
-    } else if (this.state === "WORLD_SELECT") {
-      for (let i = 0; i < Math.min(5, this.worldsList.length); i++) {
-        const cardY = 110 + i * 72;
-        if (mx >= SCREEN_WIDTH / 2 - 320 && mx <= SCREEN_WIDTH / 2 + 320 && my >= cardY && my <= cardY + 62) {
-          if (this.selectedWorldIdx === i) {
-            this.loadSectorGame(this.worldsList[i].id);
-          } else {
-            this.selectedWorldIdx = i;
-            this.sound.play("click");
-          }
-          return;
-        }
-      }
-
-      const bPlay = { x: SCREEN_WIDTH / 2 - 330, y: SCREEN_HEIGHT - 80, w: 155, h: 44 };
-      const bCreate = { x: SCREEN_WIDTH / 2 - 165, y: SCREEN_HEIGHT - 80, w: 155, h: 44 };
-      const bDelete = { x: SCREEN_WIDTH / 2 + 5, y: SCREEN_HEIGHT - 80, w: 150, h: 44 };
-      const bBack = { x: SCREEN_WIDTH / 2 + 165, y: SCREEN_HEIGHT - 80, w: 155, h: 44 };
-
-      if (mx >= bPlay.x && mx <= bPlay.x + bPlay.w && my >= bPlay.y && my <= bPlay.y + bPlay.h && this.worldsList.length > 0) {
-        const targetSector = this.worldsList[this.selectedWorldIdx];
-        this.loadSectorGame(targetSector.id);
-      } else if (mx >= bCreate.x && mx <= bCreate.x + bCreate.w && my >= bCreate.y && my <= bCreate.y + bCreate.h) {
-        this.state = "CREATE_WORLD";
-        this.inputWorldName = `Sector ${this.worldsList.length + 1}`;
-        this.sound.play("click");
-      } else if (mx >= bDelete.x && mx <= bDelete.x + bDelete.w && my >= bDelete.y && my <= bDelete.y + bDelete.h) {
-        this.deleteSelectedSector();
-      } else if (mx >= bBack.x && mx <= bBack.x + bBack.w && my >= bBack.y && my <= bBack.y + bBack.h) {
-        this.state = "MENU";
-        this.sound.play("click");
-      }
-    } else if (this.state === "CREATE_WORLD") {
-      const nameBox = { x: SCREEN_WIDTH / 2 - 200, y: 175, w: 400, h: 44 };
-      this.nameInputActive = (mx >= nameBox.x && mx <= nameBox.x + nameBox.w && my >= nameBox.y && my <= nameBox.y + nameBox.h);
-
-      const clist = Object.keys(CLASSES);
-      for (let i = 0; i < clist.length; i++) {
-        const cx = SCREEN_WIDTH / 2 - 260 + i * 135;
-        if (mx >= cx && mx <= cx + 120 && my >= 275 && my <= 455) {
-          this.selectedCreateClass = clist[i];
-          this.sound.play("click");
-        }
-      }
-
-      const btnConfirm = { x: SCREEN_WIDTH / 2 - 210, y: 520, w: 200, h: 44 };
-      const btnCancel = { x: SCREEN_WIDTH / 2 + 10, y: 520, w: 200, h: 44 };
-
-      if (mx >= btnConfirm.x && mx <= btnConfirm.x + btnConfirm.w && my >= btnConfirm.y && my <= btnConfirm.y + btnConfirm.h) {
-        this.newWorldGame(this.inputWorldName, this.selectedCreateClass);
-        this.sound.play("craft");
-      } else if (mx >= btnCancel.x && mx <= btnCancel.x + btnCancel.w && my >= btnCancel.y && my <= btnCancel.y + btnCancel.h) {
-        this.state = "WORLD_SELECT";
-        this.sound.play("click");
-      }
-    } else if (this.state === "PLAYING") {
-      const hotbarY = SCREEN_HEIGHT - 60;
-      const hotbarStartX = SCREEN_WIDTH / 2 - 240;
-      if (my >= hotbarY && my <= hotbarY + 44 && mx >= hotbarStartX && mx <= hotbarStartX + 480) {
-        const clickedIdx = Math.floor((mx - hotbarStartX) / 48);
-        if (clickedIdx >= 0 && clickedIdx < 10) {
-          this.player.inv.selectedHotbar = clickedIdx;
-          this.sound.play("click");
-          return;
-        }
-      }
-
-      const sel = this.player.inv.getSelected();
-      const worldMx = mx + this.camX;
-      const worldMy = my + this.camY;
-
-      if (sel && sel.item === "Dynamite") {
-        if (this.player.attackCooldown <= 0) {
-          this.player.attackCooldown = 24;
-          this.player.inv.removeItem("Dynamite", 1);
-          this.projectiles.push(new Projectile(this.player.x, this.player.y, worldMx, worldMy, 150, "dynamite"));
-          this.sound.play("jump");
-        }
-      }
-    } else if (this.state === "INVENTORY") {
-      this.handleInventoryClick(mx, my, 1);
-    } else if (this.state === "STAR_MAP") {
-      this.handleStarMapClick(mx, my);
-    } else if (this.state === "PAUSE") {
-      if (my >= 300 && my <= 342) this.state = "PLAYING";
-      else if (my >= 354 && my <= 396) {
-        this.saveCurrentSector();
-        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "SECTOR SAVED!", COLOR_GOLD));
-      } else if (my >= 408 && my <= 450) {
-        this.saveCurrentSector();
-        this.loadSectorIndex();
-        this.state = "WORLD_SELECT";
-      }
-    }
-  }
-
-  handleRightClick() {
-    if (this.state === "PLAYING") {
-      const target = this.getAimTarget();
-      if (!target) return;
-
-      const pDist = Math.hypot((target.tx * TILE_SIZE + 16) - (this.player.x + this.player.w / 2), (target.ty * TILE_SIZE + 16) - (this.player.y + this.player.h / 2));
-      if (pDist > 180) return;
-
-      const sel = this.player.inv.getSelected();
-      if (sel && sel.item === "Prospecting Scanner") {
-        this.triggerRadarScanner();
-        return;
-      }
-
-      const clickedBlock = this.world.getTile(target.tx, target.ty);
-      if (clickedBlock === CHEST) {
-        this.lootChest(target.tx, target.ty);
-        return;
-      } else if (clickedBlock === LAUNCHPAD) {
-        this.state = "STAR_MAP";
-        this.sound.play("click");
-        return;
-      } else if ([WORKBENCH, FURNACE, ASSEMBLER, PARTICLE_COLLIDER].includes(clickedBlock)) {
-        this.state = "INVENTORY";
-        this.sound.play("click");
-        return;
-      }
-
-      if (sel && BLOCK_DATA[sel.item] && clickedBlock === AIR) {
-        const placeRect = { x: target.tx * TILE_SIZE, y: target.ty * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE };
-        const pRect = { x: this.player.x, y: this.player.y, w: this.player.w, h: this.player.h };
-
-        if (!(placeRect.x < pRect.x + pRect.w && placeRect.x + placeRect.w > pRect.x &&
-              placeRect.y < pRect.y + pRect.h && placeRect.y + placeRect.h > pRect.y)) {
-          this.world.setTile(target.tx, target.ty, sel.item);
-          this.player.inv.removeItem(sel.item, 1);
-          this.sound.play("place");
-        }
-      }
-    } else if (this.state === "INVENTORY") {
-      this.handleInventoryClick(this.mouse.x, this.mouse.y, 3);
-    }
-  }
-
-  handleInventoryClick(mx, my, btn) {
-    const rx = INV_UI_X + 24;
-
-    if (mx >= INV_UI_X + 735 && mx <= INV_UI_X + 765 && my >= INV_UI_Y + 12 && my <= INV_UI_Y + 42) {
-      this.state = "PLAYING";
-      this.sound.play("click");
-      return;
-    }
-
-    if (mx >= rx && mx <= rx + 200 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 249) {
-      this.searchActive = true;
-      this.sound.play("click");
-      return;
-    } else {
-      this.searchActive = false;
-    }
-
-    const categories = ["ALL", "TOOLS", "WEAPONS", "ARMOR", "ROCKETS", "BLOCKS"];
-    let catX = rx + 240;
-    for (const cat of categories) {
-      if (mx >= catX && mx <= catX + 62 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 249) {
-        this.craftCategory = cat;
-        this.recipeScrollOffset = 0;
-        this.sound.play("click");
-        return;
-      }
-      catX += 68;
-    }
-
-    for (let i = 0; i < 30; i++) {
-      const srec = getSlotRect(i);
-      if (mx >= srec.x && mx <= srec.x + srec.w && my >= srec.y && my <= srec.y + srec.h) {
-        const slotData = this.player.inv.slots[i];
-        if (btn === 1) {
-          if (!this.cursorItem && slotData) {
-            this.cursorItem = slotData;
-            this.player.inv.slots[i] = null;
-            this.sound.play("click");
-          } else if (this.cursorItem && !slotData) {
-            this.player.inv.slots[i] = this.cursorItem;
-            this.cursorItem = null;
-            this.sound.play("place");
-          } else if (this.cursorItem && slotData) {
-            if (this.cursorItem.item === slotData.item) {
-              slotData.count += this.cursorItem.count;
-              this.cursorItem = null;
-            } else {
-              const temp = this.player.inv.slots[i];
-              this.player.inv.slots[i] = this.cursorItem;
-              this.cursorItem = temp;
-            }
-            this.sound.play("click");
-          }
-        }
-        return;
-      }
-    }
-
-    const displayedRecipes = this.getFilteredRecipes();
-    const visibleSlice = displayedRecipes.slice(this.recipeScrollOffset, this.recipeScrollOffset + 9);
-    for (let idx = 0; idx < visibleSlice.length; idx++) {
-      const rec = visibleSlice[idx];
-      const recY = INV_UI_Y + 258 + idx * 29;
-      const craftBtn = { x: INV_UI_X + 675, y: recY + 2, w: 65, h: 22 };
-
-      if (mx >= craftBtn.x && mx <= craftBtn.x + craftBtn.w && my >= craftBtn.y && my <= craftBtn.y + craftBtn.h) {
-        const reqStation = rec.station || "hand";
-        const stationOk = (reqStation === "hand" || this.isNearStation(reqStation === "workbench" ? WORKBENCH : reqStation === "furnace" ? FURNACE : reqStation === "assembler" ? ASSEMBLER : LAUNCHPAD));
-
-        let canCraft = stationOk;
-        for (const [rk, ramt] of Object.entries(rec.req)) {
-          if (this.player.inv.countItem(rk) < ramt) canCraft = false;
-        }
-
-        if (canCraft) {
-          for (const [rk, ramt] of Object.entries(rec.req)) {
-            this.player.inv.removeItem(rk, ramt);
-          }
-          this.player.inv.addItem(rec.result, rec.count);
-          if (rec.result === "Planetary Dynamo") this.gameWon = true;
-          this.sound.play("craft");
-        } else {
-          this.sound.play("click");
-        }
-        return;
-      }
-    }
-  }
-
-  handleStarMapClick(mx, my) {
-    const boxX = Math.floor((SCREEN_WIDTH - 820) / 2);
-    const boxY = Math.floor((SCREEN_HEIGHT - 540) / 2);
-
-    if (mx >= boxX + 770 && mx <= boxX + 802 && my >= boxY + 16 && my <= boxY + 48) {
-      this.state = "PLAYING";
-      this.sound.play("click");
-      return;
-    }
-
-    const visiblePlanets = PLANET_ORDER.slice(this.planetScrollOffset, this.planetScrollOffset + 4);
-    for (let idx = 0; idx < visiblePlanets.length; idx++) {
-      const pKey = visiblePlanets[idx];
-      const cardY = boxY + 80 + idx * 95;
-      const lBtn = { x: boxX + 620, y: cardY + 24, w: 110, h: 36 };
-      if (mx >= lBtn.x && mx <= lBtn.x + lBtn.w && my >= lBtn.y && my <= lBtn.y + lBtn.h) {
-        this.travelToPlanet(pKey);
-        return;
-      }
-    }
-  }
-
-  getFilteredRecipes() {
-    return RECIPES.filter((r) => {
-      const resName = BLOCK_DATA[r.result]?.name || String(r.result);
-      if (this.searchQuery.trim() && !resName.toLowerCase().includes(this.searchQuery.toLowerCase())) return false;
-      if (this.craftCategory !== "ALL") {
-        const idata = ITEM_DEFINITIONS[r.result] || {};
-        if (this.craftCategory === "TOOLS" && !["tool", "scanner", "explosive", "accessory"].includes(idata.type)) return false;
-        if (this.craftCategory === "WEAPONS" && !["weapon", "ranged", "magic"].includes(idata.type)) return false;
-        if (this.craftCategory === "ARMOR" && idata.type !== "armor") return false;
-        if (this.craftCategory === "ROCKETS" && idata.type !== "rocket") return false;
-        if (this.craftCategory === "BLOCKS" && typeof r.result !== "number") return false;
-      }
-      return true;
-    });
-  }
-
-  getAimTarget() {
-    if (this.lockedTargetTile) return this.lockedTargetTile;
-    if (!this.player) return null;
-    const aheadX = this.player.x + (this.player.facingRight ? this.player.w + 12 : -12);
-    return {
-      tx: Math.floor(aheadX / TILE_SIZE),
-      ty: Math.floor((this.player.y + this.player.h / 2) / TILE_SIZE)
-    };
-  }
-
-  processContinuousDigging() {
-    if (!this.mouse.down || this.state !== "PLAYING" || !this.player) return;
-
-    const target = this.getAimTarget();
-    if (!target) return;
-
-    const tgx = target.tx;
-    const tgy = target.ty;
-
-    const pDist = Math.hypot((tgx * TILE_SIZE + 16) - (this.player.x + this.player.w / 2), (tgy * TILE_SIZE + 16) - (this.player.y + this.player.h / 2));
-    if (pDist > 180) return;
-
-    const t = this.world.getTile(tgx, tgy);
-    if (t === AIR || t === LAVA) return;
-
-    const evalMine = evaluateMiningInteraction(this.player, t);
-    const key = `${tgx},${tgy}`;
-
-    if (!evalMine.canDamage) {
-      this.soundTimer++;
-      if (this.soundTimer % 18 === 0) {
-        this.sound.play("mine_metal");
-        this.floatTexts.push(new FloatingText(tgx * TILE_SIZE, tgy * TILE_SIZE, evalMine.msg, COLOR_HP, 30));
-      }
-      return;
-    }
-
-    const hardness = BLOCK_DATA[t].hardness || 1.0;
-    const dt = 1.0 / 60.0;
-    const progressInc = dt * this.player.mine_mult * evalMine.effMult;
-
-    let cur = this.world.damage_map.get(key) || 0.0;
-    cur += progressInc;
-    this.world.damage_map.set(key, cur);
-
-    this.player.swingAnim = 6;
-    this.soundTimer++;
-
-    if (this.soundTimer % 12 === 0) {
-      const mat = getBlockMaterial(t);
-      this.sound.play(`mine_${mat}`);
-      this.particles.push(new Particle(tgx * TILE_SIZE + 16, tgy * TILE_SIZE + 16, (Math.random() - 0.5) * 3, -1 - Math.random() * 2, BLOCK_DATA[t].color, 4, 18));
-    }
-
-    if (cur >= hardness) {
-      const mat = getBlockMaterial(t);
-      this.sound.play(`break_${mat}`);
-      const drop = BLOCK_DATA[t].drop;
-      if (evalMine.canDrop && drop) {
-        this.player.inv.addItem(drop, 1);
-        this.player.addXp(BLOCK_DATA[t].xp || 4, this.floatTexts, this.sound);
-      }
-      this.world.setTile(tgx, tgy, AIR);
-      this.world.damage_map.delete(key);
-    }
-  }
-
-  processEnvironmentalHazards() {
-    const pTy = Math.floor(this.player.y / TILE_SIZE);
-    const hasExosuit = this.player.inv.armor.chest === "Core Exosuit";
-    const hasThermal = this.player.inv.armor.chest === "Thermal Suit";
-    const hasOxygen = this.player.inv.countItem("Oxygen Tank") > 0;
-
-    if (this.world.current_planet !== "Earth") {
-      const haz = PLANET_DATA[this.world.current_planet]?.hazard || "";
-      if (haz.includes("Vacuum") && !hasOxygen && !hasExosuit && Math.random() < 0.08) {
-        this.player.hp -= 1.2;
-        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "OXYGEN DEPRIVATION!", COLOR_CYAN));
-      }
-    } else {
-      if (pTy >= OUTER_CORE_BOTTOM && !hasExosuit && Math.random() < 0.15) {
-        this.player.hp -= 4.0;
-        this.sound.play("hurt");
-        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "PRESSURE CRUSH!", COLOR_PRESSURE));
-      } else if (pTy >= UPPER_MANTLE_BOTTOM && !hasThermal && !hasExosuit && Math.random() < 0.15) {
-        this.player.hp -= 1.5;
-        this.sound.play("hurt");
-        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "EXTREME HEAT!", COLOR_HEAT));
-      }
-    }
-
-    if (this.player.inLava) {
-      this.player.hp -= 1.5;
-      if (Math.random() < 0.2) this.sound.play("hurt");
-    }
-
-    if (this.player.hp <= 0) {
-      this.player.hp = this.player.max_hp;
-      this.player.x = Math.floor(WORLD_WIDTH / 2) * TILE_SIZE;
-      this.player.y = 60 * TILE_SIZE;
-      this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "CLONING RESPAWN", COLOR_HP, 80));
-    }
-  }
-
-  update() {
-    if (this.state === "PLAYING" && this.player) {
-      this.player.update(this.world, this.keys, this.sound);
-      this.processContinuousDigging();
-      this.world.updateLiquids(this.particles, this.sound);
-      this.processEnvironmentalHazards();
-
-      this.camX += (this.player.x - SCREEN_WIDTH / 2 - this.camX) * 0.1;
-      this.camY += (this.player.y - SCREEN_HEIGHT / 2 - this.camY) * 0.1;
-      this.camX = Math.max(0, Math.min(this.camX, this.world.width * TILE_SIZE - SCREEN_WIDTH));
-      this.camY = Math.max(0, Math.min(this.camY, this.world.height * TILE_SIZE - SCREEN_HEIGHT));
-
-      this.autoSaveTimer++;
-      if (this.autoSaveTimer % 900 === 0) {
-        this.saveCurrentSector();
-      }
-
-      for (let i = this.projectiles.length - 1; i >= 0; i--) {
-        const p = this.projectiles[i];
-        p.update();
-        if (p.type === "dynamite") {
-          const gx = Math.floor(p.x / TILE_SIZE);
-          const gy = Math.floor(p.y / TILE_SIZE);
-          if (p.life <= 0 || this.world.getTile(gx, gy) !== AIR) {
-            this.sound.play("boom");
-            for (let dx = -1; dx <= 1; dx++) {
-              for (let dy = -1; dy <= 1; dy++) {
-                const tx = gx + dx;
-                const ty = gy + dy;
-                if (![AIR, LAVA, INNER_CORE_METAL, CORE_CRYSTAL].includes(this.world.getTile(tx, ty))) {
-                  const drop = BLOCK_DATA[this.world.getTile(tx, ty)]?.drop;
-                  if (drop) this.player.inv.addItem(drop, 1);
-                  this.world.setTile(tx, ty, AIR);
-                }
-              }
-            }
-            this.projectiles.splice(i, 1);
-            continue;
-          }
-        }
-        if (p.life <= 0) this.projectiles.splice(i, 1);
-      }
-
-      for (const e of this.enemies) e.update(this.world, this.player);
-      for (let i = this.particles.length - 1; i >= 0; i--) {
-        this.particles[i].update();
-        if (this.particles[i].life <= 0) this.particles.splice(i, 1);
-      }
-      for (let i = this.floatTexts.length - 1; i >= 0; i--) {
-        this.floatTexts[i].update();
-        if (this.floatTexts[i].life <= 0) this.floatTexts.splice(i, 1);
-      }
-    }
-  }
-
-  draw() {
-    this.ctx.fillStyle = COLOR_BG_DARK;
-    this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-    if (this.state === "MENU") {
-      this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 34px 'Courier New', monospace";
-      this.ctx.textAlign = "center";
-      this.ctx.fillText("ASTROSTRATA: REIGNITION", SCREEN_WIDTH / 2, 220);
-
-      this.ctx.fillStyle = COLOR_CYAN;
-      this.ctx.font = "14px 'Courier New', monospace";
-      this.ctx.fillText("Stratum Geology | Planetary Dynamos | Interplanetary Aerospace", SCREEN_WIDTH / 2, 255);
-
-      const b1 = { x: SCREEN_WIDTH / 2 - 160, y: 310, w: 320, h: 48 };
-      this.ctx.fillStyle = "#1e2436";
-      this.ctx.fillRect(b1.x, b1.y, b1.w, b1.h);
-      this.ctx.strokeStyle = COLOR_GOLD;
-      this.ctx.strokeRect(b1.x, b1.y, b1.w, b1.h);
-
-      this.ctx.fillStyle = COLOR_WHITE;
-      this.ctx.font = "bold 15px 'Courier New', monospace";
-      this.ctx.fillText("ENTER EXPEDITION / SECTORS", SCREEN_WIDTH / 2, 340);
-
-      this.ctx.fillStyle = "#606880";
-      this.ctx.font = "bold 13px monospace";
-      this.ctx.textAlign = "left";
-      this.ctx.fillText(VERSION_STRING, 24, SCREEN_HEIGHT - 24);
-      return;
-    }
-
-    if (this.state === "WORLD_SELECT") {
-      this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 28px 'Courier New', monospace";
-      this.ctx.textAlign = "center";
-      this.ctx.fillText("EXPEDITION SECTOR ARCHIVE", SCREEN_WIDTH / 2, 60);
-
-      if (this.worldsList.length === 0) {
-        this.ctx.fillStyle = "#8892b0";
-        this.ctx.font = "16px monospace";
-        this.ctx.fillText("No sectors established. Click 'CREATE SECTOR' below.", SCREEN_WIDTH / 2, 240);
-      } else {
-        for (let i = 0; i < Math.min(5, this.worldsList.length); i++) {
-          const w = this.worldsList[i];
-          const cardY = 110 + i * 72;
-          const isSelected = (i === this.selectedWorldIdx);
-
-          this.ctx.fillStyle = isSelected ? "#28344e" : "#192030";
-          this.ctx.fillRect(SCREEN_WIDTH / 2 - 320, cardY, 640, 62);
-          this.ctx.strokeStyle = isSelected ? COLOR_GOLD : "#404c64";
-          this.ctx.lineWidth = isSelected ? 2 : 1;
-          this.ctx.strokeRect(SCREEN_WIDTH / 2 - 320, cardY, 640, 62);
-
-          this.ctx.fillStyle = COLOR_WHITE;
-          this.ctx.font = "bold 16px 'Courier New', monospace";
-          this.ctx.textAlign = "left";
-          this.ctx.fillText(w.name, SCREEN_WIDTH / 2 - 300, cardY + 26);
-          this.ctx.fillStyle = COLOR_CYAN;
-          this.ctx.font = "12px 'Courier New', monospace";
-          this.ctx.fillText(`Class: ${w.pClass} | Location: ${w.planet} | Date: ${w.savedAt}`, SCREEN_WIDTH / 2 - 300, cardY + 46);
-        }
-      }
-
-      const hasWorlds = this.worldsList.length > 0;
-      const buttons = [
-        { label: "ENTER SECTOR", x: SCREEN_WIDTH / 2 - 330, w: 155, active: hasWorlds, color: COLOR_GOLD },
-        { label: "CREATE SECTOR", x: SCREEN_WIDTH / 2 - 165, w: 155, active: true, color: COLOR_WHITE },
-        { label: "DELETE", x: SCREEN_WIDTH / 2 + 5, w: 150, active: hasWorlds, color: COLOR_HP },
-        { label: "MAIN MENU", x: SCREEN_WIDTH / 2 + 165, w: 155, active: true, color: COLOR_WHITE }
-      ];
-
-      for (const btn of buttons) {
-        this.ctx.fillStyle = btn.active ? "#1e2436" : "#12141c";
-        this.ctx.fillRect(btn.x, SCREEN_HEIGHT - 80, btn.w, 44);
-        this.ctx.strokeStyle = btn.active ? btn.color : "#333948";
-        this.ctx.strokeRect(btn.x, SCREEN_HEIGHT - 80, btn.w, 44);
-        this.ctx.fillStyle = btn.active ? btn.color : "#606880";
-        this.ctx.textAlign = "center";
-        this.ctx.font = "bold 13px 'Courier New', monospace";
-        this.ctx.fillText(btn.label, btn.x + btn.w / 2, SCREEN_HEIGHT - 53);
-      }
-      return;
-    }
-
-    if (this.state === "CREATE_WORLD") {
-      this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 28px 'Courier New', monospace";
-      this.ctx.textAlign = "center";
-      this.ctx.fillText("INITIALIZE SECTOR PROFILE", SCREEN_WIDTH / 2, 60);
-
-      this.ctx.fillStyle = "#141824";
-      this.ctx.fillRect(SCREEN_WIDTH / 2 - 200, 175, 400, 44);
-      this.ctx.strokeStyle = this.nameInputActive ? COLOR_GOLD : "#44506c";
-      this.ctx.strokeRect(SCREEN_WIDTH / 2 - 200, 175, 400, 44);
-
-      this.ctx.fillStyle = COLOR_WHITE;
-      this.ctx.font = "bold 16px 'Courier New', monospace";
-      this.ctx.fillText(this.inputWorldName + (this.nameInputActive ? "_" : ""), SCREEN_WIDTH / 2, 203);
-
-      const clist = Object.keys(CLASSES);
-      for (let i = 0; i < clist.length; i++) {
-        const cname = clist[i];
-        const cardX = SCREEN_WIDTH / 2 - 260 + i * 135;
-        this.ctx.fillStyle = (this.selectedCreateClass === cname) ? "#28344e" : "#141824";
-        this.ctx.fillRect(cardX, 275, 120, 180);
-        this.ctx.strokeStyle = (this.selectedCreateClass === cname) ? COLOR_GOLD : "#44506c";
-        this.ctx.strokeRect(cardX, 275, 120, 180);
-
-        this.ctx.fillStyle = CLASSES[cname].color;
-        this.ctx.fillText(cname, cardX + 60, 305);
-      }
-
-      this.ctx.fillStyle = "#1e2436";
-      this.ctx.fillRect(SCREEN_WIDTH / 2 - 210, 520, 200, 44);
-      this.ctx.strokeStyle = COLOR_GOLD;
-      this.ctx.strokeRect(SCREEN_WIDTH / 2 - 210, 520, 200, 44);
-      this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.fillText("LAUNCH SECTOR", SCREEN_WIDTH / 2 - 110, 547);
-
-      this.ctx.fillStyle = "#1e2436";
-      this.ctx.fillRect(SCREEN_WIDTH / 2 + 10, 520, 200, 44);
-      this.ctx.strokeStyle = "#404c64";
-      this.ctx.strokeRect(SCREEN_WIDTH / 2 + 10, 520, 200, 44);
-      this.ctx.fillStyle = COLOR_WHITE;
-      this.ctx.fillText("CANCEL", SCREEN_WIDTH / 2 + 110, 547);
-      return;
-    }
-
-    // World & Entities Rendering
-    const pTy = Math.floor(this.player.y / TILE_SIZE);
-    this.ctx.fillStyle = (pTy < CRUST_SURFACE) ? (PLANET_DATA[this.world.current_planet]?.sky_color || "#87c3f5") : "#141620";
-    this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-    const minTx = Math.max(0, Math.floor(this.camX / TILE_SIZE));
-    const maxTx = Math.min(this.world.width, Math.ceil((this.camX + SCREEN_WIDTH) / TILE_SIZE));
-    const minTy = Math.max(0, Math.floor(this.camY / TILE_SIZE));
-    const maxTy = Math.min(this.world.height, Math.ceil((this.camY + SCREEN_HEIGHT) / TILE_SIZE));
-
-    for (let x = minTx; x < maxTx; x++) {
-      for (let y = minTy; y < maxTy; y++) {
-        const t = this.world.getTile(x, y);
-        if (t !== AIR && this.art.tiles[t]) {
-          const dx = Math.floor(x * TILE_SIZE - this.camX);
-          const dy = Math.floor(y * TILE_SIZE - this.camY);
-          this.ctx.drawImage(this.art.tiles[t], dx, dy);
-
-          const dmg = this.world.damage_map.get(`${x},${y}`);
-          if (dmg && BLOCK_DATA[t]) {
-            const stage = Math.min(9, Math.floor((dmg / BLOCK_DATA[t].hardness) * 10));
-            this.ctx.drawImage(this.art.crack_overlays[stage], dx, dy);
-          }
-        }
-      }
-    }
-
-    for (const e of this.enemies) e.draw(this.ctx, this.camX, this.camY);
-    if (this.player) this.player.draw(this.ctx, this.camX, this.camY, this.art);
-    for (const p of this.projectiles) p.draw(this.ctx, this.camX, this.camY);
-    for (const pt of this.particles) pt.draw(this.ctx, this.camX, this.camY);
-    for (const ft of this.floatTexts) ft.draw(this.ctx, this.camX, this.camY);
-
-    if (this.player) this.lighting.render(this.ctx, this.player, this.world, this.camX, this.camY);
-
-    // Aiming Reticle & In-World Mining Progress Bar
-    const aim = this.getAimTarget();
-    if (aim) {
-      const pDist = Math.hypot((aim.tx * TILE_SIZE + 16) - (this.player.x + this.player.w / 2), (aim.ty * TILE_SIZE + 16) - (this.player.y + this.player.h / 2));
-      const inReach = pDist <= 180;
-      const rDx = Math.floor(aim.tx * TILE_SIZE - this.camX);
-      const rDy = Math.floor(aim.ty * TILE_SIZE - this.camY);
-
-      this.ctx.strokeStyle = inReach ? COLOR_GOLD : "rgba(235, 60, 60, 0.6)";
-      this.ctx.lineWidth = 2;
-      this.ctx.strokeRect(rDx, rDy, TILE_SIZE, TILE_SIZE);
-
-      const targetTile = this.world.getTile(aim.tx, aim.ty);
-      const dmg = this.world.damage_map.get(`${aim.tx},${aim.ty}`);
-
-      // Floating Block Durability Bar
-      if (dmg && BLOCK_DATA[targetTile]) {
-        const pct = Math.min(1.0, dmg / BLOCK_DATA[targetTile].hardness);
-        const barW = 32;
-        const barH = 5;
-        this.ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
-        this.ctx.fillRect(rDx, rDy - 8, barW, barH);
-        this.ctx.fillStyle = COLOR_GOLD;
-        this.ctx.fillRect(rDx, rDy - 8, Math.floor(barW * pct), barH);
-        this.ctx.strokeStyle = "#ffffff";
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(rDx, rDy - 8, barW, barH);
-      }
-
-      // Target Inspector
-      if (targetTile !== AIR && BLOCK_DATA[targetTile]) {
-        const bdata = BLOCK_DATA[targetTile];
-        const hx = SCREEN_WIDTH - 290;
-        const hy = 16;
-        this.ctx.fillStyle = "rgba(18, 22, 32, 0.9)";
-        this.ctx.fillRect(hx, hy, 270, 85);
-        this.ctx.strokeStyle = COLOR_GOLD;
-        this.ctx.strokeRect(hx, hy, 270, 85);
-
-        this.ctx.fillStyle = COLOR_GOLD;
-        this.ctx.textAlign = "left";
-        this.ctx.font = "bold 13px 'Courier New', monospace";
-        this.ctx.fillText(bdata.name, hx + 12, hy + 20);
-
-        const evalInfo = evaluateMiningInteraction(this.player, targetTile);
-        this.ctx.fillStyle = evalInfo.canDrop ? COLOR_EXP : COLOR_HP;
-        this.ctx.font = "11px monospace";
-        this.ctx.fillText(`Mohs: ${bdata.mohs} | [${evalInfo.msg}]`, hx + 12, hy + 38);
-        this.ctx.fillStyle = COLOR_CYAN;
-        this.ctx.fillText(`Req: ${bdata.req_tool} (${TIER_NAMES[bdata.req_tier]})`, hx + 12, hy + 54);
-
-        const curDmg = dmg || 0.0;
-        const pct = Math.min(1.0, curDmg / bdata.hardness);
-        this.ctx.fillStyle = "rgba(40, 50, 70, 0.8)";
-        this.ctx.fillRect(hx + 12, hy + 64, 246, 12);
-        this.ctx.fillStyle = COLOR_GOLD;
-        this.ctx.fillRect(hx + 12, hy + 64, Math.floor(246 * pct), 12);
-        this.ctx.fillStyle = COLOR_WHITE;
-        this.ctx.font = "bold 9px monospace";
-        this.ctx.fillText(`${Math.floor(pct * 100)}% (${curDmg.toFixed(1)}s / ${bdata.hardness}s)`, hx + 85, hy + 73);
-      }
-    }
-
-    // Geomechanics Layer HUD
-    const layer = World.getLayerInfo(pTy, this.world.current_planet);
-    this.ctx.fillStyle = "rgba(18, 22, 32, 0.85)";
-    this.ctx.fillRect(SCREEN_WIDTH / 2 - 140, 14, 280, 64);
-    this.ctx.strokeStyle = "#404c64";
-    this.ctx.strokeRect(SCREEN_WIDTH / 2 - 140, 14, 280, 64);
-
-    this.ctx.fillStyle = COLOR_GOLD;
-    this.ctx.textAlign = "left";
-    this.ctx.font = "bold 13px 'Courier New', monospace";
-    this.ctx.fillText(`${this.world.current_planet}: ${layer.name}`, SCREEN_WIDTH / 2 - 128, 32);
-    this.ctx.fillStyle = COLOR_WHITE;
-    this.ctx.font = "11px monospace";
-    this.ctx.fillText(`Depth: ${layer.depth} m | ${layer.pressure}`, SCREEN_WIDTH / 2 - 128, 50);
-    this.ctx.fillStyle = COLOR_CYAN;
-    this.ctx.fillText(`Thermal: ${layer.temp}`, SCREEN_WIDTH / 2 - 128, 66);
-
-    // Health and Level HUD
-    this.ctx.fillStyle = COLOR_HP;
-    this.ctx.fillRect(20, 20, Math.floor((this.player.hp / this.player.max_hp) * 180), 16);
-    this.ctx.strokeStyle = COLOR_WHITE;
-    this.ctx.strokeRect(20, 20, 180, 16);
-    this.ctx.fillStyle = COLOR_WHITE;
-    this.ctx.font = "bold 11px monospace";
-    this.ctx.fillText(`HP ${Math.floor(this.player.hp)} / ${this.player.max_hp}`, 26, 32);
-
-    this.ctx.fillStyle = COLOR_EXP;
-    this.ctx.fillRect(20, 42, Math.floor((this.player.xp / this.player.xp_next) * 180), 12);
-    this.ctx.strokeStyle = COLOR_WHITE;
-    this.ctx.strokeRect(20, 42, 180, 12);
-    this.ctx.fillStyle = COLOR_GOLD;
-    this.ctx.fillText(`LVL ${this.player.level} (${this.player.pClass})`, 210, 32);
-
-    // Hotbar
-    for (let i = 0; i < 10; i++) {
-      const bx = SCREEN_WIDTH / 2 - 240 + i * 48;
-      const by = SCREEN_HEIGHT - 60;
-      this.ctx.fillStyle = (i === this.player.inv.selectedHotbar) ? "rgba(255, 215, 0, 0.4)" : "rgba(20, 24, 36, 0.85)";
-      this.ctx.fillRect(bx, by, 44, 44);
-      this.ctx.strokeStyle = (i === this.player.inv.selectedHotbar) ? COLOR_GOLD : "#404c64";
-      this.ctx.strokeRect(bx, by, 44, 44);
-
-      const slot = this.player.inv.slots[i];
-      if (slot && this.art.icons[slot.item]) {
-        this.ctx.drawImage(this.art.icons[slot.item], bx + 6, by + 6);
-        if (slot.count > 1) {
-          this.ctx.fillStyle = COLOR_GOLD;
-          this.ctx.font = "bold 12px monospace";
-          this.ctx.fillText(`${slot.count}`, bx + 26, by + 38);
-        }
-      }
-    }
-
-    // Touch Virtual Controls Overlay
-    if (this.state === "PLAYING" && this.isTouchDevice) {
-      this.ctx.save();
-      for (const [key, btn] of Object.entries(TOUCH_CONTROLS)) {
-        let isActive = false;
-        for (const [tid, touch] of this.activeTouches) {
-          if (touch.type === btn.id) { isActive = true; break; }
-        }
-
-        this.ctx.fillStyle = isActive ? "rgba(255, 215, 0, 0.4)" : "rgba(20, 26, 40, 0.65)";
-        this.ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
-        this.ctx.strokeStyle = isActive ? COLOR_GOLD : "rgba(90, 220, 255, 0.5)";
-        this.ctx.lineWidth = 2;
-        this.ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
-
-        this.ctx.fillStyle = isActive ? COLOR_GOLD : COLOR_WHITE;
-        this.ctx.font = "bold 16px 'Courier New', monospace";
-        this.ctx.textAlign = "center";
-        this.ctx.fillText(btn.label, btn.x + btn.w / 2, btn.y + btn.h / 2 + 5);
-      }
-      this.ctx.restore();
-    }
-
-    // Inventory & Crafting Matrix
-    if (this.state === "INVENTORY") {
-      this.ctx.fillStyle = "rgba(10, 12, 18, 0.95)";
-      this.ctx.fillRect(INV_UI_X, INV_UI_Y, 780, 540);
-      this.ctx.strokeStyle = COLOR_GOLD;
-      this.ctx.strokeRect(INV_UI_X, INV_UI_Y, 780, 540);
-
-      this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 20px 'Courier New', monospace";
-      this.ctx.fillText("WORKSHOP & FABRICATION MATRIX", INV_UI_X + 24, INV_UI_Y + 36);
-
-      // Close Button [X]
-      this.ctx.fillStyle = "#e63c3c";
-      this.ctx.fillRect(INV_UI_X + 735, INV_UI_Y + 12, 30, 30);
-      this.ctx.strokeStyle = COLOR_WHITE;
-      this.ctx.strokeRect(INV_UI_X + 735, INV_UI_Y + 12, 30, 30);
-      this.ctx.fillStyle = COLOR_WHITE;
-      this.ctx.font = "bold 18px monospace";
-      this.ctx.textAlign = "center";
-      this.ctx.fillText("X", INV_UI_X + 750, INV_UI_Y + 33);
-      this.ctx.textAlign = "left";
-
-      // Search Box
-      this.ctx.fillStyle = "#141824";
-      this.ctx.fillRect(INV_UI_X + 24, INV_UI_Y + 225, 200, 24);
-      this.ctx.strokeStyle = this.searchActive ? COLOR_CYAN : "#404c64";
-      this.ctx.strokeRect(INV_UI_X + 24, INV_UI_Y + 225, 200, 24);
-      this.ctx.fillStyle = COLOR_WHITE;
-      this.ctx.font = "12px monospace";
-      this.ctx.fillText(this.searchQuery || "Search items...", INV_UI_X + 30, INV_UI_Y + 241);
-
-      // Category Tabs
-      const categories = ["ALL", "TOOLS", "WEAPONS", "ARMOR", "ROCKETS", "BLOCKS"];
-      let catX = INV_UI_X + 24 + 240;
-      for (const cat of categories) {
-        const isSel = this.craftCategory === cat;
-        this.ctx.fillStyle = isSel ? "#2b3b55" : "#161c28";
-        this.ctx.fillRect(catX, INV_UI_Y + 225, 62, 24);
-        this.ctx.strokeStyle = isSel ? COLOR_GOLD : "#404c64";
-        this.ctx.strokeRect(catX, INV_UI_Y + 225, 62, 24);
-        this.ctx.fillStyle = isSel ? COLOR_GOLD : COLOR_WHITE;
-        this.ctx.font = "10px monospace";
-        this.ctx.fillText(cat, catX + 6, INV_UI_Y + 241);
-        catX += 68;
-      }
-
-      // Inventory slots
-      for (let i = 0; i < 30; i++) {
-        const srec = getSlotRect(i);
-        this.ctx.fillStyle = "#1c2230";
-        this.ctx.fillRect(srec.x, srec.y, srec.w, srec.h);
-        this.ctx.strokeStyle = "#404c64";
-        this.ctx.strokeRect(srec.x, srec.y, srec.w, srec.h);
-
-        const slot = this.player.inv.slots[i];
-        if (slot && this.art.icons[slot.item]) {
-          this.ctx.drawImage(this.art.icons[slot.item], srec.x + 6, srec.y + 6);
-          if (slot.count > 1) {
-            this.ctx.fillStyle = COLOR_GOLD;
-            this.ctx.font = "bold 11px monospace";
-            this.ctx.fillText(`${slot.count}`, srec.x + 24, srec.y + 38);
-          }
-        }
-      }
-
-      // Recipes List
-      const displayedRecipes = this.getFilteredRecipes();
-      const visibleSlice = displayedRecipes.slice(this.recipeScrollOffset, this.recipeScrollOffset + 9);
-      for (let idx = 0; idx < visibleSlice.length; idx++) {
-        const rec = visibleSlice[idx];
-        const recY = INV_UI_Y + 258 + idx * 29;
-
-        const reqStation = rec.station || "hand";
-        const stationOk = (reqStation === "hand" || this.isNearStation(reqStation === "workbench" ? WORKBENCH : reqStation === "furnace" ? FURNACE : reqStation === "assembler" ? ASSEMBLER : LAUNCHPAD));
-
-        let canCraft = stationOk;
-        const reqTexts = [];
-        for (const [rk, ramt] of Object.entries(rec.req)) {
-          const have = this.player.inv.countItem(rk);
-          if (have < ramt) canCraft = false;
-          const rName = BLOCK_DATA[rk]?.name || rk;
-          reqTexts.push(`${rName}:${have}/${ramt}`);
-        }
-
-        this.ctx.fillStyle = "#161c28";
-        this.ctx.fillRect(INV_UI_X + 24, recY, 720, 26);
-        this.ctx.strokeStyle = canCraft ? "#5adcff" : "#38445a";
-        this.ctx.strokeRect(INV_UI_X + 24, recY, 720, 26);
-
-        const rName = BLOCK_DATA[rec.result]?.name || String(rec.result);
-        this.ctx.fillStyle = COLOR_GOLD;
-        this.ctx.font = "12px monospace";
-        this.ctx.fillText(`[${reqStation.toUpperCase()}] ${rName} x${rec.count}`, INV_UI_X + 32, recY + 18);
-
-        this.ctx.fillStyle = canCraft ? COLOR_EXP : "#9aa0a6";
-        this.ctx.font = "10px monospace";
-        this.ctx.fillText(reqTexts.join(" "), INV_UI_X + 310, recY + 18);
-
-        const craftBtn = { x: INV_UI_X + 675, y: recY + 2, w: 65, h: 22 };
-        this.ctx.fillStyle = canCraft ? "#236437" : "#303440";
-        this.ctx.fillRect(craftBtn.x, craftBtn.y, craftBtn.w, craftBtn.h);
-        this.ctx.strokeStyle = canCraft ? COLOR_EXP : "#505460";
-        this.ctx.strokeRect(craftBtn.x, craftBtn.y, craftBtn.w, craftBtn.h);
-        this.ctx.fillStyle = canCraft ? COLOR_WHITE : "#777c88";
-        this.ctx.font = "bold 11px monospace";
-        this.ctx.fillText("CRAFT", craftBtn.x + 14, craftBtn.y + 15);
-      }
-    }
-
-    // Star Map UI
-    if (this.state === "STAR_MAP") {
-      this.ctx.fillStyle = "rgba(8, 12, 22, 0.95)";
-      this.ctx.fillRect(INV_UI_X, INV_UI_Y, 820, 540);
-      this.ctx.strokeStyle = COLOR_CYAN;
-      this.ctx.strokeRect(INV_UI_X, INV_UI_Y, 820, 540);
-
-      this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 20px 'Courier New', monospace";
-      this.ctx.fillText("AEROSPACE STAR MAP (TIER 1 - 15)", INV_UI_X + 24, INV_UI_Y + 36);
-
-      const visiblePlanets = PLANET_ORDER.slice(this.planetScrollOffset, this.planetScrollOffset + 4);
-      for (let idx = 0; idx < visiblePlanets.length; idx++) {
-        const pKey = visiblePlanets[idx];
-        const pdata = PLANET_DATA[pKey];
-        const cardY = INV_UI_Y + 70 + idx * 105;
-
-        this.ctx.fillStyle = (pKey === this.world.current_planet) ? "#20344a" : "#141c2a";
-        this.ctx.fillRect(INV_UI_X + 24, cardY, 760, 95);
-        this.ctx.strokeStyle = COLOR_CYAN;
-        this.ctx.strokeRect(INV_UI_X + 24, cardY, 760, 95);
-
-        this.ctx.fillStyle = COLOR_WHITE;
-        this.ctx.font = "bold 15px 'Courier New', monospace";
-        this.ctx.fillText(`${pdata.name} (Tier ${pdata.tier})`, INV_UI_X + 40, cardY + 28);
-        this.ctx.fillStyle = COLOR_CYAN;
-        this.ctx.font = "12px monospace";
-        this.ctx.fillText(`Gravity: ${pdata.gravity}g | Hazard: ${pdata.hazard}`, INV_UI_X + 40, cardY + 50);
-
-        this.ctx.fillStyle = "#1e2e44";
-        this.ctx.fillRect(INV_UI_X + 650, cardY + 30, 110, 36);
-        this.ctx.strokeStyle = COLOR_GOLD;
-        this.ctx.strokeRect(INV_UI_X + 650, cardY + 30, 110, 36);
-        this.ctx.fillStyle = COLOR_GOLD;
-        this.ctx.fillText("LAUNCH", INV_UI_X + 680, cardY + 52);
-      }
-    }
-
-    // Pause Menu Overlay
-    if (this.state === "PAUSE") {
-      this.ctx.fillStyle = "rgba(5, 5, 10, 0.85)";
-      this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-      this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 28px 'Courier New', monospace";
-      this.ctx.textAlign = "center";
-      this.ctx.fillText("EXPEDITION PAUSED", SCREEN_WIDTH / 2, 230);
-
-      const pauseOpts = [
-        { label: "RESUME SECTOR", y: 300 },
-        { label: "SAVE SECTOR PROGRESS", y: 354 },
-        { label: "QUIT TO SECTOR ARCHIVE", y: 408 }
-      ];
-
-      for (const opt of pauseOpts) {
-        this.ctx.fillStyle = "#1e2436";
-        this.ctx.fillRect(SCREEN_WIDTH / 2 - 160, opt.y, 320, 42);
-        this.ctx.strokeStyle = COLOR_GOLD;
-        this.ctx.strokeRect(SCREEN_WIDTH / 2 - 160, opt.y, 320, 42);
-        this.ctx.fillStyle = COLOR_WHITE;
-        this.ctx.font = "bold 14px 'Courier New', monospace";
-        this.ctx.fillText(opt.label, SCREEN_WIDTH / 2, opt.y + 26);
-      }
-    }
-  }
-
-  run() {
-    const loop = () => {
-      this.update();
-      this.draw();
-      requestAnimationFrame(loop);
-    };
-    requestAnimationFrame(loop);
-  }
-}
-
-// Global Bootstrap that executes whether DOM is loading or already interactive
-function startAstroStrataApp() {
-  const overlay = document.getElementById("loading-overlay");
-  const startBtn = document.getElementById("start-btn");
-
-  let gameInstance = null;
-  try {
-    gameInstance = new AstroStrataEngine();
-  } catch (err) {
-    console.error("Game engine startup error:", err);
-    alert("Startup error: " + err.message);
-    return;
-  }
-
-  const dismissAndPlay = (e) => {
-    if (e) e.preventDefault();
-    try {
-      gameInstance.sound.init();
-    } catch (audioErr) {
-      console.warn("Audio Context init warning:", audioErr);
-    }
-    if (overlay) {
-      overlay.classList.add("fade-out");
-      setTimeout(() => {
-        overlay.style.display = "none";
-      }, 350);
-    }
-  };
-
-  if (startBtn) {
-    startBtn.addEventListener("click", dismissAndPlay);
-    startBtn.addEventListener("touchend", dismissAndPlay);
-  }
-
-  if (overlay) {
-    overlay.addEventListener("click", (e) => {
-      if (e.target !== startBtn) dismissAndPlay(e);
-    });
-  }
-
-  gameInstance.run();
-}
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", startAstroStrataApp);
-} else {
-  startAstroStrataApp();
-}

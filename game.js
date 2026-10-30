@@ -1343,10 +1343,58 @@ class World {
 // ==========================================
 class OptimizedLighting {
   constructor() {
-    this.canvas = document.createElement("canvas");
-    this.canvas.width = LIGHT_W;
-    this.canvas.height = LIGHT_H;
+    this.canvas = document.getElementById("gameCanvas");
     this.ctx = this.canvas.getContext("2d");
+
+    // High-DPI / Retina Crisp Rendering Setup (removes text blur)
+    this.dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    this.canvas.width = Math.floor(SCREEN_WIDTH * this.dpr);
+    this.canvas.height = Math.floor(SCREEN_HEIGHT * this.dpr);
+
+    this.sound = new SoundEngine();
+    this.art = new PixelArtGenerator();
+    this.lighting = new OptimizedLighting();
+    this.world = new World(WORLD_WIDTH, WORLD_HEIGHT);
+
+    this.state = "MENU";
+    this.worldsList = [];
+    this.selectedWorldIdx = 0;
+    this.activeWorldKey = null;
+
+    this.inputWorldName = "New Sector";
+    this.selectedCreateClass = "Warrior";
+    this.nameInputActive = false;
+
+    this.player = null;
+    this.enemies = [];
+    this.projectiles = [];
+    this.particles = [];
+    this.floatTexts = [];
+
+    this.cursorItem = null;
+    this.selectedInvSlot = null; // Tracks inspected item (prevents items from vanishing)
+    this.camX = 0;
+    this.camY = 0;
+
+    this.craftCategory = "ALL";
+    this.searchQuery = "";
+    this.searchActive = false;
+    this.recipeScrollOffset = 0;
+    this.planetScrollOffset = 0;
+    this.gameWon = false;
+
+    this.keys = {};
+    this.mouse = { x: 0, y: 0, down: false, rightDown: false };
+    this.soundTimer = 0;
+    this.autoSaveTimer = 0;
+
+    this.lockedTargetTile = null;
+
+    this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    this.activeTouches = new Map();
+
+    this.loadSectorIndex();
+    this.setupListeners();
   }
 
   render(mainCtx, player, world, camX, camY) {
@@ -2484,7 +2532,7 @@ class AstroStrataEngine {
       return;
     }
 
-    // Search Focus
+    // Search Box Focus
     if (mx >= rx && mx <= rx + 140 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 251) {
       this.searchActive = true;
       this.sound.play("click");
@@ -2506,11 +2554,13 @@ class AstroStrataEngine {
       catX += 58;
     }
 
-    // Action Button on Inspected Item Panel ([ USE ] / [ EQUIP ])
+    // Item Action Button ([ USE ] or [ EQUIP ]) inside Details Card
     if (this.selectedInvSlot !== null && this.player.inv.slots[this.selectedInvSlot]) {
       const curItem = this.player.inv.slots[this.selectedInvSlot].item;
       const idata = ITEM_DEFINITIONS[curItem] || {};
-      const actBtn = { x: INV_UI_X + 648, y: INV_UI_Y + 186, w: 108, h: 26 };
+      const cardX = INV_UI_X + 648;
+      const cardY = INV_UI_Y + 75;
+      const actBtn = { x: cardX + 6, y: cardY + 111, w: 96, h: 24 };
 
       if (mx >= actBtn.x && mx <= actBtn.x + actBtn.w && my >= actBtn.y && my <= actBtn.y + actBtn.h) {
         if (idata.type === "consumable" && idata.heal) {
@@ -2552,7 +2602,6 @@ class AstroStrataEngine {
             return;
           }
         } else if (equipped) {
-          // Unequip to bag
           if (this.player.inv.addItem(equipped, 1)) {
             this.player.inv.armor[aslot] = null;
             this.sound.play("click");
@@ -2562,7 +2611,7 @@ class AstroStrataEngine {
       }
     }
 
-    // 30 Bag Slots (Tap to Inspect -> Tap to Move/Swap)
+    // 30 Bag Slots (Tap to Select -> Tap Destination to Move/Swap)
     for (let i = 0; i < 30; i++) {
       const srec = getSlotRect(i);
       if (mx >= srec.x && mx <= srec.x + srec.w && my >= srec.y && my <= srec.y + srec.h) {
@@ -2577,7 +2626,7 @@ class AstroStrataEngine {
           this.selectedInvSlot = null;
           this.sound.play("click");
         } else {
-          // Second tap: move or swap items
+          // Move or swap items
           const source = this.player.inv.slots[this.selectedInvSlot];
           if (source) {
             if (!clickedSlot) {
@@ -2603,7 +2652,7 @@ class AstroStrataEngine {
       }
     }
 
-    // Recipes Crafting
+    // Recipes Click
     const displayedRecipes = this.getFilteredRecipes();
     const visibleSlice = displayedRecipes.slice(this.recipeScrollOffset, this.recipeScrollOffset + 9);
     for (let idx = 0; idx < visibleSlice.length; idx++) {
@@ -3140,6 +3189,7 @@ class AstroStrataEngine {
 
     // Inventory & Crafting Matrix
     // Modern Crisp Inventory & Crafting Matrix
+    // Modern Crisp Inventory & Crafting Matrix
     if (this.state === "INVENTORY") {
       this.ctx.fillStyle = "rgba(10, 12, 18, 0.96)";
       this.ctx.fillRect(INV_UI_X, INV_UI_Y, 780, 540);
@@ -3148,7 +3198,7 @@ class AstroStrataEngine {
       this.ctx.strokeRect(INV_UI_X, INV_UI_Y, 780, 540);
 
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 20px system-ui, sans-serif";
+      this.ctx.font = "bold 20px system-ui, -apple-system, sans-serif";
       this.ctx.textAlign = "left";
       this.ctx.fillText("WORKSHOP & FABRICATION MATRIX", INV_UI_X + 24, INV_UI_Y + 36);
 
@@ -3164,7 +3214,7 @@ class AstroStrataEngine {
       this.ctx.fillText("✕", INV_UI_X + 750, INV_UI_Y + 33);
       this.ctx.textAlign = "left";
 
-      // 3 Armor Slots on the Left
+      // 3 Armor Slots on Left
       const armorSlots = ["helmet", "chest", "boots"];
       for (const aslot of armorSlots) {
         const arec = getArmorRect(aslot);
@@ -3179,14 +3229,14 @@ class AstroStrataEngine {
           this.ctx.drawImage(this.art.icons[aItem], arec.x + 7, arec.y + 7);
         } else {
           this.ctx.fillStyle = "#4a5266";
-          this.ctx.font = "9px system-ui, sans-serif";
+          this.ctx.font = "bold 9px system-ui, sans-serif";
           this.ctx.textAlign = "center";
           this.ctx.fillText(aslot.toUpperCase(), arec.x + arec.w / 2, arec.y + arec.h / 2 + 3);
           this.ctx.textAlign = "left";
         }
       }
 
-      // 30 Inventory Slots
+      // 30 Bag Slots
       for (let i = 0; i < 30; i++) {
         const srec = getSlotRect(i);
         const isSelected = (this.selectedInvSlot === i);
@@ -3194,7 +3244,7 @@ class AstroStrataEngine {
         this.ctx.fillStyle = isSelected ? "#2a3b5c" : "#1c2230";
         this.ctx.fillRect(srec.x, srec.y, srec.w, srec.h);
         this.ctx.strokeStyle = isSelected ? COLOR_GOLD : "#404c64";
-        this.ctx.lineWidth = isSelected ? 2 : 1;
+        this.ctx.lineWidth = isSelected ? 2.5 : 1;
         this.ctx.strokeRect(srec.x, srec.y, srec.w, srec.h);
 
         const slot = this.player.inv.slots[i];
@@ -3208,7 +3258,7 @@ class AstroStrataEngine {
         }
       }
 
-      // Dedicated Item Details Inspector Card (Right of slots)
+      // Dedicated Item Details Inspector Card
       const cardX = INV_UI_X + 648;
       const cardY = INV_UI_Y + 75;
       const cardW = 108;
@@ -3217,7 +3267,7 @@ class AstroStrataEngine {
       this.ctx.fillStyle = "#141824";
       this.ctx.fillRect(cardX, cardY, cardW, cardH);
       this.ctx.strokeStyle = (this.selectedInvSlot !== null) ? COLOR_GOLD : "#2e3646";
-      this.ctx.lineWidth = 1;
+      this.ctx.lineWidth = 1.5;
       this.ctx.strokeRect(cardX, cardY, cardW, cardH);
 
       if (this.selectedInvSlot !== null && this.player.inv.slots[this.selectedInvSlot]) {
@@ -3225,26 +3275,23 @@ class AstroStrataEngine {
         const idata = ITEM_DEFINITIONS[activeItem] || {};
         const bdata = BLOCK_DATA[activeItem] || {};
 
-        // Icon
         if (this.art.icons[activeItem]) {
           this.ctx.drawImage(this.art.icons[activeItem], cardX + cardW / 2 - 16, cardY + 8);
         }
 
-        // Name
         const displayName = bdata.name || activeItem;
         this.ctx.fillStyle = COLOR_GOLD;
         this.ctx.font = "bold 11px system-ui, sans-serif";
         this.ctx.textAlign = "center";
         this.ctx.fillText(displayName.length > 13 ? displayName.substring(0, 12) + "…" : displayName, cardX + cardW / 2, cardY + 52);
 
-        // Type / Tier
         const typeStr = idata.type ? idata.type.toUpperCase() : "BLOCK";
         this.ctx.fillStyle = COLOR_CYAN;
-        this.ctx.font = "9px system-ui, sans-serif";
+        this.ctx.font = "bold 9px system-ui, sans-serif";
         this.ctx.fillText(typeStr, cardX + cardW / 2, cardY + 66);
 
-        // Stats
         this.ctx.fillStyle = COLOR_WHITE;
+        this.ctx.font = "10px system-ui, sans-serif";
         let statStr = "";
         if (idata.dmg) statStr = `DMG: ${idata.dmg}`;
         else if (idata.defense) statStr = `DEF: +${idata.defense}`;
@@ -3253,27 +3300,27 @@ class AstroStrataEngine {
         else if (bdata.mohs) statStr = `Mohs: ${bdata.mohs}`;
         this.ctx.fillText(statStr, cardX + cardW / 2, cardY + 80);
 
-        // Action Button ([ USE ] / [ EQUIP ])
         if (idata.type === "consumable" || idata.type === "armor") {
           const btnLabel = (idata.type === "consumable") ? "USE" : "EQUIP";
           this.ctx.fillStyle = "#236437";
           this.ctx.fillRect(cardX + 6, cardY + 111, cardW - 12, 24);
           this.ctx.strokeStyle = COLOR_EXP;
+          this.ctx.lineWidth = 1;
           this.ctx.strokeRect(cardX + 6, cardY + 111, cardW - 12, 24);
           this.ctx.fillStyle = COLOR_WHITE;
           this.ctx.font = "bold 11px system-ui, sans-serif";
           this.ctx.fillText(btnLabel, cardX + cardW / 2, cardY + 127);
         } else {
           this.ctx.fillStyle = "#66728a";
-          this.ctx.font = "8px system-ui, sans-serif";
+          this.ctx.font = "9px system-ui, sans-serif";
           this.ctx.fillText("Tap slot to move", cardX + cardW / 2, cardY + 126);
         }
         this.ctx.textAlign = "left";
       } else {
         this.ctx.fillStyle = "#4a5266";
-        this.ctx.font = "10px system-ui, sans-serif";
+        this.ctx.font = "11px system-ui, sans-serif";
         this.ctx.textAlign = "center";
-        this.ctx.fillText("Select item", cardX + cardW / 2, cardY + 65);
+        this.ctx.fillText("Tap item", cardX + cardW / 2, cardY + 65);
         this.ctx.fillText("to inspect", cardX + cardW / 2, cardY + 80);
         this.ctx.textAlign = "left";
       }
@@ -3316,7 +3363,6 @@ class AstroStrataEngine {
       const endIdx = Math.min(displayedRecipes.length, this.recipeScrollOffset + 9);
       this.ctx.fillText(`${startIdx}-${endIdx} / ${displayedRecipes.length}`, INV_UI_X + 530, INV_UI_Y + 242);
 
-      // Dedicated Scroll Buttons [ ▲ ] and [ ▼ ]
       this.ctx.fillStyle = (this.recipeScrollOffset > 0) ? "#24324a" : "#151922";
       this.ctx.fillRect(INV_UI_X + 680, INV_UI_Y + 225, 28, 26);
       this.ctx.strokeStyle = (this.recipeScrollOffset > 0) ? COLOR_GOLD : "#3a4254";

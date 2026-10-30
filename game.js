@@ -2,7 +2,7 @@
 // ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 1 / 3)
 // =============================================================================
 
-const VERSION_STRING = "v0.3.0-web";
+const VERSION_STRING = "v0.3.7-web";
 const SCREEN_WIDTH = 1280;
 const SCREEN_HEIGHT = 720;
 const TILE_SIZE = 32;
@@ -1756,7 +1756,7 @@ class AstroStrataEngine {
     this.mouse = { x: 0, y: 0, down: false, rightDown: false };
     this.soundTimer = 0;
     this.autoSaveTimer = 0;
-
+    this.selectedInvSlot = null;
     this.lockedTargetTile = null;
 
     this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
@@ -2024,9 +2024,11 @@ class AstroStrataEngine {
   }
 
   setupListeners() {
+    // Keydown Window Listener
     window.addEventListener("keydown", (e) => {
       this.keys[e.code] = true;
 
+      // 1. Textbox Input for Sector Creation
       if (this.state === "CREATE_WORLD" && this.nameInputActive) {
         if (e.key === "Enter") this.nameInputActive = false;
         else if (e.key === "Backspace") this.inputWorldName = this.inputWorldName.slice(0, -1);
@@ -2034,6 +2036,7 @@ class AstroStrataEngine {
         return;
       }
 
+      // 2. Textbox Input for Inventory Search
       if (this.state === "INVENTORY" && this.searchActive) {
         if (e.key === "Enter" || e.key === "Escape") this.searchActive = false;
         else if (e.key === "Backspace") {
@@ -2046,17 +2049,45 @@ class AstroStrataEngine {
         return;
       }
 
+      // 3. Inventory Toggle (E, I, Tab)
       if (e.code === "KeyE" || e.code === "KeyI" || e.code === "Tab") {
-        if (this.state === "PLAYING") this.state = "INVENTORY";
-        else if (this.state === "INVENTORY") this.state = "PLAYING";
-        this.sound.play("click");
+        if (e.code === "Tab") e.preventDefault(); // Stop browser address bar focus
+
+        if (this.state === "PLAYING") {
+          this.state = "INVENTORY";
+          this.sound.play("click");
+        } else if (this.state === "INVENTORY") {
+          // Return any floating cursor item safely to inventory
+          if (this.cursorItem) {
+            this.player.inv.addItem(this.cursorItem.item, this.cursorItem.count);
+            this.cursorItem = null;
+          }
+          this.selectedInvSlot = null;
+          this.state = "PLAYING";
+          this.sound.play("click");
+        }
       }
+
+      // 4. Escape Handling
       if (e.code === "Escape") {
-        if (this.state === "INVENTORY" || this.state === "STAR_MAP") this.state = "PLAYING";
-        else if (this.state === "PLAYING") this.state = "PAUSE";
-        else if (this.state === "PAUSE") this.state = "PLAYING";
-        this.sound.play("click");
+        if (this.state === "INVENTORY" || this.state === "STAR_MAP") {
+          if (this.cursorItem) {
+            this.player.inv.addItem(this.cursorItem.item, this.cursorItem.count);
+            this.cursorItem = null;
+          }
+          this.selectedInvSlot = null;
+          this.state = "PLAYING";
+          this.sound.play("click");
+        } else if (this.state === "PLAYING") {
+          this.state = "PAUSE";
+          this.sound.play("click");
+        } else if (this.state === "PAUSE") {
+          this.state = "PLAYING";
+          this.sound.play("click");
+        }
       }
+
+      // 5. Quick Heal Hotkey (H)
       if (e.code === "KeyH" && this.state === "PLAYING") {
         if (this.player.inv.countItem("Health Potion") > 0) {
           this.player.inv.removeItem("Health Potion", 1);
@@ -2066,7 +2097,8 @@ class AstroStrataEngine {
         }
       }
 
-      if (e.code.startsWith("Digit") || e.code.startsWith("Numpad")) {
+      // 6. Hotbar Quick Number Select (1 - 0)
+      if (this.state === "PLAYING" && (e.code.startsWith("Digit") || e.code.startsWith("Numpad"))) {
         const d = parseInt(e.key, 10);
         if (!isNaN(d)) {
           this.player.inv.selectedHotbar = (d === 0) ? 9 : d - 1;
@@ -2427,12 +2459,19 @@ class AstroStrataEngine {
   handleInventoryClick(mx, my, btn) {
     const rx = INV_UI_X + 24;
 
+    // Close Button [X]
     if (mx >= INV_UI_X + 735 && mx <= INV_UI_X + 765 && my >= INV_UI_Y + 12 && my <= INV_UI_Y + 42) {
+      if (this.cursorItem) {
+        this.player.inv.addItem(this.cursorItem.item, this.cursorItem.count);
+        this.cursorItem = null;
+      }
+      this.selectedInvSlot = null;
       this.state = "PLAYING";
       this.sound.play("click");
       return;
     }
 
+    // Scroll Buttons
     const maxScroll = Math.max(0, this.getFilteredRecipes().length - 9);
     if (mx >= INV_UI_X + 680 && mx <= INV_UI_X + 710 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 250) {
       this.recipeScrollOffset = Math.max(0, this.recipeScrollOffset - 1);
@@ -2445,6 +2484,7 @@ class AstroStrataEngine {
       return;
     }
 
+    // Search Focus
     if (mx >= rx && mx <= rx + 140 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 251) {
       this.searchActive = true;
       this.sound.play("click");
@@ -2453,6 +2493,7 @@ class AstroStrataEngine {
       this.searchActive = false;
     }
 
+    // Category Tabs
     const categories = ["ALL", "TOOLS", "WEAPONS", "ARMOR", "ROCKETS", "BLOCKS"];
     let catX = INV_UI_X + 172;
     for (const cat of categories) {
@@ -2465,35 +2506,104 @@ class AstroStrataEngine {
       catX += 58;
     }
 
+    // Action Button on Inspected Item Panel ([ USE ] / [ EQUIP ])
+    if (this.selectedInvSlot !== null && this.player.inv.slots[this.selectedInvSlot]) {
+      const curItem = this.player.inv.slots[this.selectedInvSlot].item;
+      const idata = ITEM_DEFINITIONS[curItem] || {};
+      const actBtn = { x: INV_UI_X + 648, y: INV_UI_Y + 186, w: 108, h: 26 };
+
+      if (mx >= actBtn.x && mx <= actBtn.x + actBtn.w && my >= actBtn.y && my <= actBtn.y + actBtn.h) {
+        if (idata.type === "consumable" && idata.heal) {
+          this.player.hp = Math.min(this.player.max_hp, this.player.hp + idata.heal);
+          this.player.inv.removeItem(curItem, 1);
+          this.sound.play("potion");
+          this.floatTexts.push(new FloatingText(this.player.x, this.player.y, `+${idata.heal} HP`, COLOR_EXP));
+          if (!this.player.inv.slots[this.selectedInvSlot]) this.selectedInvSlot = null;
+          return;
+        } else if (idata.type === "armor") {
+          const prev = this.player.inv.armor[idata.slot];
+          this.player.inv.armor[idata.slot] = curItem;
+          if (prev) {
+            this.player.inv.slots[this.selectedInvSlot] = { item: prev, count: 1 };
+          } else {
+            this.player.inv.slots[this.selectedInvSlot] = null;
+            this.selectedInvSlot = null;
+          }
+          this.sound.play("craft");
+          return;
+        }
+      }
+    }
+
+    // Armor Slots Click Interaction
+    const armorSlots = ["helmet", "chest", "boots"];
+    for (const aslot of armorSlots) {
+      const arec = getArmorRect(aslot);
+      if (mx >= arec.x && mx <= arec.x + arec.w && my >= arec.y && my <= arec.y + arec.h) {
+        const equipped = this.player.inv.armor[aslot];
+        if (this.selectedInvSlot !== null) {
+          const src = this.player.inv.slots[this.selectedInvSlot];
+          const idata = src ? ITEM_DEFINITIONS[src.item] : null;
+          if (idata && idata.type === "armor" && idata.slot === aslot) {
+            this.player.inv.armor[aslot] = src.item;
+            this.player.inv.slots[this.selectedInvSlot] = equipped ? { item: equipped, count: 1 } : null;
+            this.sound.play("place");
+            this.selectedInvSlot = null;
+            return;
+          }
+        } else if (equipped) {
+          // Unequip to bag
+          if (this.player.inv.addItem(equipped, 1)) {
+            this.player.inv.armor[aslot] = null;
+            this.sound.play("click");
+          }
+          return;
+        }
+      }
+    }
+
+    // 30 Bag Slots (Tap to Inspect -> Tap to Move/Swap)
     for (let i = 0; i < 30; i++) {
       const srec = getSlotRect(i);
       if (mx >= srec.x && mx <= srec.x + srec.w && my >= srec.y && my <= srec.y + srec.h) {
-        const slotData = this.player.inv.slots[i];
-        if (btn === 1) {
-          if (!this.cursorItem && slotData) {
-            this.cursorItem = slotData;
-            this.player.inv.slots[i] = null;
+        const clickedSlot = this.player.inv.slots[i];
+
+        if (this.selectedInvSlot === null) {
+          if (clickedSlot) {
+            this.selectedInvSlot = i;
             this.sound.play("click");
-          } else if (this.cursorItem && !slotData) {
-            this.player.inv.slots[i] = this.cursorItem;
-            this.cursorItem = null;
-            this.sound.play("place");
-          } else if (this.cursorItem && slotData) {
-            if (this.cursorItem.item === slotData.item) {
-              slotData.count += this.cursorItem.count;
-              this.cursorItem = null;
+          }
+        } else if (this.selectedInvSlot === i) {
+          this.selectedInvSlot = null;
+          this.sound.play("click");
+        } else {
+          // Second tap: move or swap items
+          const source = this.player.inv.slots[this.selectedInvSlot];
+          if (source) {
+            if (!clickedSlot) {
+              this.player.inv.slots[i] = source;
+              this.player.inv.slots[this.selectedInvSlot] = null;
+              this.selectedInvSlot = i;
+              this.sound.play("place");
+            } else if (clickedSlot.item === source.item) {
+              clickedSlot.count += source.count;
+              this.player.inv.slots[this.selectedInvSlot] = null;
+              this.selectedInvSlot = i;
+              this.sound.play("place");
             } else {
               const temp = this.player.inv.slots[i];
-              this.player.inv.slots[i] = this.cursorItem;
-              this.cursorItem = temp;
+              this.player.inv.slots[i] = source;
+              this.player.inv.slots[this.selectedInvSlot] = temp;
+              this.selectedInvSlot = i;
+              this.sound.play("place");
             }
-            this.sound.play("click");
           }
         }
         return;
       }
     }
 
+    // Recipes Crafting
     const displayedRecipes = this.getFilteredRecipes();
     const visibleSlice = displayedRecipes.slice(this.recipeScrollOffset, this.recipeScrollOffset + 9);
     for (let idx = 0; idx < visibleSlice.length; idx++) {
@@ -3029,6 +3139,7 @@ class AstroStrataEngine {
     }
 
     // Inventory & Crafting Matrix
+    // Modern Crisp Inventory & Crafting Matrix
     if (this.state === "INVENTORY") {
       this.ctx.fillStyle = "rgba(10, 12, 18, 0.96)";
       this.ctx.fillRect(INV_UI_X, INV_UI_Y, 780, 540);
@@ -3041,27 +3152,143 @@ class AstroStrataEngine {
       this.ctx.textAlign = "left";
       this.ctx.fillText("WORKSHOP & FABRICATION MATRIX", INV_UI_X + 24, INV_UI_Y + 36);
 
-      // Close Button [X]
+      // Close [X] Button
       this.ctx.fillStyle = "#e63c3c";
       this.ctx.fillRect(INV_UI_X + 735, INV_UI_Y + 12, 30, 30);
       this.ctx.strokeStyle = COLOR_WHITE;
+      this.ctx.lineWidth = 1;
       this.ctx.strokeRect(INV_UI_X + 735, INV_UI_Y + 12, 30, 30);
       this.ctx.fillStyle = COLOR_WHITE;
-      this.ctx.font = "bold 18px system-ui, sans-serif";
+      this.ctx.font = "bold 16px system-ui, sans-serif";
       this.ctx.textAlign = "center";
       this.ctx.fillText("✕", INV_UI_X + 750, INV_UI_Y + 33);
       this.ctx.textAlign = "left";
+
+      // 3 Armor Slots on the Left
+      const armorSlots = ["helmet", "chest", "boots"];
+      for (const aslot of armorSlots) {
+        const arec = getArmorRect(aslot);
+        this.ctx.fillStyle = "#161c28";
+        this.ctx.fillRect(arec.x, arec.y, arec.w, arec.h);
+        this.ctx.strokeStyle = "#404c64";
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(arec.x, arec.y, arec.w, arec.h);
+
+        const aItem = this.player.inv.armor[aslot];
+        if (aItem && this.art.icons[aItem]) {
+          this.ctx.drawImage(this.art.icons[aItem], arec.x + 7, arec.y + 7);
+        } else {
+          this.ctx.fillStyle = "#4a5266";
+          this.ctx.font = "9px system-ui, sans-serif";
+          this.ctx.textAlign = "center";
+          this.ctx.fillText(aslot.toUpperCase(), arec.x + arec.w / 2, arec.y + arec.h / 2 + 3);
+          this.ctx.textAlign = "left";
+        }
+      }
+
+      // 30 Inventory Slots
+      for (let i = 0; i < 30; i++) {
+        const srec = getSlotRect(i);
+        const isSelected = (this.selectedInvSlot === i);
+
+        this.ctx.fillStyle = isSelected ? "#2a3b5c" : "#1c2230";
+        this.ctx.fillRect(srec.x, srec.y, srec.w, srec.h);
+        this.ctx.strokeStyle = isSelected ? COLOR_GOLD : "#404c64";
+        this.ctx.lineWidth = isSelected ? 2 : 1;
+        this.ctx.strokeRect(srec.x, srec.y, srec.w, srec.h);
+
+        const slot = this.player.inv.slots[i];
+        if (slot && this.art.icons[slot.item]) {
+          this.ctx.drawImage(this.art.icons[slot.item], srec.x + 6, srec.y + 6);
+          if (slot.count > 1) {
+            this.ctx.fillStyle = COLOR_GOLD;
+            this.ctx.font = "bold 11px system-ui, sans-serif";
+            this.ctx.fillText(`${slot.count}`, srec.x + 24, srec.y + 38);
+          }
+        }
+      }
+
+      // Dedicated Item Details Inspector Card (Right of slots)
+      const cardX = INV_UI_X + 648;
+      const cardY = INV_UI_Y + 75;
+      const cardW = 108;
+      const cardH = 142;
+
+      this.ctx.fillStyle = "#141824";
+      this.ctx.fillRect(cardX, cardY, cardW, cardH);
+      this.ctx.strokeStyle = (this.selectedInvSlot !== null) ? COLOR_GOLD : "#2e3646";
+      this.ctx.lineWidth = 1;
+      this.ctx.strokeRect(cardX, cardY, cardW, cardH);
+
+      if (this.selectedInvSlot !== null && this.player.inv.slots[this.selectedInvSlot]) {
+        const activeItem = this.player.inv.slots[this.selectedInvSlot].item;
+        const idata = ITEM_DEFINITIONS[activeItem] || {};
+        const bdata = BLOCK_DATA[activeItem] || {};
+
+        // Icon
+        if (this.art.icons[activeItem]) {
+          this.ctx.drawImage(this.art.icons[activeItem], cardX + cardW / 2 - 16, cardY + 8);
+        }
+
+        // Name
+        const displayName = bdata.name || activeItem;
+        this.ctx.fillStyle = COLOR_GOLD;
+        this.ctx.font = "bold 11px system-ui, sans-serif";
+        this.ctx.textAlign = "center";
+        this.ctx.fillText(displayName.length > 13 ? displayName.substring(0, 12) + "…" : displayName, cardX + cardW / 2, cardY + 52);
+
+        // Type / Tier
+        const typeStr = idata.type ? idata.type.toUpperCase() : "BLOCK";
+        this.ctx.fillStyle = COLOR_CYAN;
+        this.ctx.font = "9px system-ui, sans-serif";
+        this.ctx.fillText(typeStr, cardX + cardW / 2, cardY + 66);
+
+        // Stats
+        this.ctx.fillStyle = COLOR_WHITE;
+        let statStr = "";
+        if (idata.dmg) statStr = `DMG: ${idata.dmg}`;
+        else if (idata.defense) statStr = `DEF: +${idata.defense}`;
+        else if (idata.mult) statStr = `${idata.mult}x SPD`;
+        else if (idata.heal) statStr = `+${idata.heal} HP`;
+        else if (bdata.mohs) statStr = `Mohs: ${bdata.mohs}`;
+        this.ctx.fillText(statStr, cardX + cardW / 2, cardY + 80);
+
+        // Action Button ([ USE ] / [ EQUIP ])
+        if (idata.type === "consumable" || idata.type === "armor") {
+          const btnLabel = (idata.type === "consumable") ? "USE" : "EQUIP";
+          this.ctx.fillStyle = "#236437";
+          this.ctx.fillRect(cardX + 6, cardY + 111, cardW - 12, 24);
+          this.ctx.strokeStyle = COLOR_EXP;
+          this.ctx.strokeRect(cardX + 6, cardY + 111, cardW - 12, 24);
+          this.ctx.fillStyle = COLOR_WHITE;
+          this.ctx.font = "bold 11px system-ui, sans-serif";
+          this.ctx.fillText(btnLabel, cardX + cardW / 2, cardY + 127);
+        } else {
+          this.ctx.fillStyle = "#66728a";
+          this.ctx.font = "8px system-ui, sans-serif";
+          this.ctx.fillText("Tap slot to move", cardX + cardW / 2, cardY + 126);
+        }
+        this.ctx.textAlign = "left";
+      } else {
+        this.ctx.fillStyle = "#4a5266";
+        this.ctx.font = "10px system-ui, sans-serif";
+        this.ctx.textAlign = "center";
+        this.ctx.fillText("Select item", cardX + cardW / 2, cardY + 65);
+        this.ctx.fillText("to inspect", cardX + cardW / 2, cardY + 80);
+        this.ctx.textAlign = "left";
+      }
 
       // Compact Search Box
       this.ctx.fillStyle = "#141824";
       this.ctx.fillRect(INV_UI_X + 24, INV_UI_Y + 225, 140, 26);
       this.ctx.strokeStyle = this.searchActive ? COLOR_CYAN : "#404c64";
+      this.ctx.lineWidth = 1;
       this.ctx.strokeRect(INV_UI_X + 24, INV_UI_Y + 225, 140, 26);
       this.ctx.fillStyle = this.searchQuery ? COLOR_WHITE : "#7c8599";
       this.ctx.font = "12px system-ui, sans-serif";
       this.ctx.fillText(this.searchQuery || "Search...", INV_UI_X + 32, INV_UI_Y + 242);
 
-      // Category Tabs
+      // Clean Non-Overlapping Category Tabs
       const categories = ["ALL", "TOOLS", "WEAPONS", "ARMOR", "ROCKETS", "BLOCKS"];
       let catX = INV_UI_X + 172;
       for (const cat of categories) {
@@ -3069,6 +3296,7 @@ class AstroStrataEngine {
         this.ctx.fillStyle = isSel ? "#2b3b55" : "#161c28";
         this.ctx.fillRect(catX, INV_UI_Y + 225, 54, 26);
         this.ctx.strokeStyle = isSel ? COLOR_GOLD : "#404c64";
+        this.ctx.lineWidth = 1;
         this.ctx.strokeRect(catX, INV_UI_Y + 225, 54, 26);
         this.ctx.fillStyle = isSel ? COLOR_GOLD : COLOR_WHITE;
         this.ctx.font = "bold 10px system-ui, sans-serif";
@@ -3078,7 +3306,7 @@ class AstroStrataEngine {
       }
       this.ctx.textAlign = "left";
 
-      // Page Counter & Scroll Buttons
+      // Clear Page Counter & Scroll Buttons
       const displayedRecipes = this.getFilteredRecipes();
       const maxScroll = Math.max(0, displayedRecipes.length - 9);
 
@@ -3088,6 +3316,7 @@ class AstroStrataEngine {
       const endIdx = Math.min(displayedRecipes.length, this.recipeScrollOffset + 9);
       this.ctx.fillText(`${startIdx}-${endIdx} / ${displayedRecipes.length}`, INV_UI_X + 530, INV_UI_Y + 242);
 
+      // Dedicated Scroll Buttons [ ▲ ] and [ ▼ ]
       this.ctx.fillStyle = (this.recipeScrollOffset > 0) ? "#24324a" : "#151922";
       this.ctx.fillRect(INV_UI_X + 680, INV_UI_Y + 225, 28, 26);
       this.ctx.strokeStyle = (this.recipeScrollOffset > 0) ? COLOR_GOLD : "#3a4254";
@@ -3105,26 +3334,7 @@ class AstroStrataEngine {
       this.ctx.fillText("▼", INV_UI_X + 728, INV_UI_Y + 242);
       this.ctx.textAlign = "left";
 
-      // Inventory slots
-      for (let i = 0; i < 30; i++) {
-        const srec = getSlotRect(i);
-        this.ctx.fillStyle = "#1c2230";
-        this.ctx.fillRect(srec.x, srec.y, srec.w, srec.h);
-        this.ctx.strokeStyle = "#404c64";
-        this.ctx.strokeRect(srec.x, srec.y, srec.w, srec.h);
-
-        const slot = this.player.inv.slots[i];
-        if (slot && this.art.icons[slot.item]) {
-          this.ctx.drawImage(this.art.icons[slot.item], srec.x + 6, srec.y + 6);
-          if (slot.count > 1) {
-            this.ctx.fillStyle = COLOR_GOLD;
-            this.ctx.font = "bold 11px system-ui, sans-serif";
-            this.ctx.fillText(`${slot.count}`, srec.x + 24, srec.y + 38);
-          }
-        }
-      }
-
-      // Recipes List
+      // Recipe List
       const visibleSlice = displayedRecipes.slice(this.recipeScrollOffset, this.recipeScrollOffset + 9);
       for (let idx = 0; idx < visibleSlice.length; idx++) {
         const rec = visibleSlice[idx];
@@ -3145,6 +3355,7 @@ class AstroStrataEngine {
         this.ctx.fillStyle = "#161c28";
         this.ctx.fillRect(INV_UI_X + 24, recY, 720, 26);
         this.ctx.strokeStyle = canCraft ? "rgba(90, 220, 255, 0.4)" : "#2e3646";
+        this.ctx.lineWidth = 1;
         this.ctx.strokeRect(INV_UI_X + 24, recY, 720, 26);
 
         const rName = BLOCK_DATA[rec.result]?.name || String(rec.result);

@@ -121,7 +121,7 @@ const TIER_NAMES = {
 };
 
 const BLOCK_DATA = {
-  [CHEST]: { name: "Loot Cache", hardness: 1.2, mohs: 2.5, color: "#a56e2d", drop: CHEST, req_tier: 0, req_tool: "Axe", desc: "Subterranean cache with survival supplies." },
+  [CHEST]: { name: "Loot Cache", hardness: 1.2, mohs: 2.5, color: "#a56e2d", drop: CHEST, req_tier: 0, req_tool: "Axe", desc: "Subterranean cache with survival gear." },
   [DIRT]: { name: "Dirt", hardness: 0.7, mohs: 1.5, color: "#734b2d", drop: DIRT, req_tier: 0, req_tool: "Shovel", desc: "Soft organic topsoil." },
   [GRASS]: { name: "Grass Block", hardness: 0.7, mohs: 1.5, color: "#4b9128", drop: DIRT, req_tier: 0, req_tool: "Shovel", desc: "Root-bound surface humus layer." },
   [STONE]: { name: "Crust Stone", hardness: 1.8, mohs: 5.5, color: "#787880", drop: STONE, req_tier: 1, req_tool: "Pickaxe", desc: "Brittle continental granitic bedrock." },
@@ -874,7 +874,7 @@ class FloatingText {
 }
 
 // ==========================================
-// INVENTORY MANAGER (CRITICAL CLASS RESTORATION)
+// INVENTORY MANAGER
 // ==========================================
 class InventoryManager {
   constructor() {
@@ -1173,13 +1173,6 @@ class World {
     return { name: "Inner Core (Solid)", depth: d, temp: `${5400 + Math.floor((d - 1550) * 1.2)} C`, pressure: `${(330 + (d - 1550) * 0.6).toFixed(1)} GPa` };
   }
 }
-// =============================================================================
-// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 3 / 3)
-// =============================================================================
-
-// ==========================================
-// DYNAMIC LIGHTING ENGINE
-// ==========================================
 // =============================================================================
 // ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 3 / 3)
 // =============================================================================
@@ -1975,12 +1968,14 @@ class AstroStrataEngine {
       if (this.state === "PLAYING" && this.player) {
         this.player.inv.selectedHotbar = (this.player.inv.selectedHotbar + (e.deltaY > 0 ? 1 : -1) + 10) % 10;
       } else if (this.state === "INVENTORY") {
-        this.recipeScrollOffset = Math.max(0, this.recipeScrollOffset + (e.deltaY > 0 ? 1 : -1));
+        const maxScroll = Math.max(0, this.getFilteredRecipes().length - 9);
+        this.recipeScrollOffset = Math.max(0, Math.min(maxScroll, this.recipeScrollOffset + (e.deltaY > 0 ? 1 : -1)));
       } else if (this.state === "STAR_MAP") {
         this.planetScrollOffset = Math.max(0, Math.min(PLANET_ORDER.length - 4, this.planetScrollOffset + (e.deltaY > 0 ? 1 : -1)));
       }
     });
 
+    // Touch Listeners (Mobile Multi-Touch)
     this.canvas.addEventListener("touchstart", (e) => {
       e.preventDefault();
       this.sound.init();
@@ -1990,11 +1985,20 @@ class AstroStrataEngine {
         const t = e.changedTouches[i];
         const pos = getTouchPos(t);
 
+        if (this.state === "INVENTORY") {
+          this.invTouchStartY = pos.y;
+          this.invTouchStartX = pos.x;
+          this.invTouchStartOffset = this.recipeScrollOffset;
+          this.invHasDragged = false;
+        }
+
         if (this.state !== "PLAYING") {
           this.mouse.x = pos.x;
           this.mouse.y = pos.y;
           this.activeTouches.set(t.identifier, { type: "menu", ...pos });
-          this.handleLeftClick();
+          if (this.state !== "INVENTORY") {
+            this.handleLeftClick();
+          }
           continue;
         }
 
@@ -2053,6 +2057,17 @@ class AstroStrataEngine {
         const t = e.changedTouches[i];
         const pos = getTouchPos(t);
         const existing = this.activeTouches.get(t.identifier);
+
+        if (this.state === "INVENTORY" && this.invTouchStartY !== undefined) {
+          const dy = pos.y - this.invTouchStartY;
+          if (Math.abs(dy) > 8) {
+            this.invHasDragged = true;
+            const maxScroll = Math.max(0, this.getFilteredRecipes().length - 9);
+            const step = Math.round(-dy / 28);
+            this.recipeScrollOffset = Math.max(0, Math.min(maxScroll, this.invTouchStartOffset + step));
+          }
+        }
+
         if (existing && existing.type === "world") {
           this.lockedTargetTile = {
             tx: Math.floor((pos.x + this.camX) / TILE_SIZE),
@@ -2067,6 +2082,19 @@ class AstroStrataEngine {
       for (let i = 0; i < e.changedTouches.length; i++) {
         const t = e.changedTouches[i];
         const existing = this.activeTouches.get(t.identifier);
+        const pos = getTouchPos(t);
+
+        if (this.state === "INVENTORY" && !this.invHasDragged) {
+          this.mouse.x = pos.x;
+          this.mouse.y = pos.y;
+          this.handleLeftClick();
+        }
+
+        if (this.state === "INVENTORY") {
+          this.invTouchStartY = undefined;
+          this.invHasDragged = false;
+        }
+
         if (!existing) continue;
 
         if (existing.type === "left")  this.keys["KeyA"] = false;
@@ -2239,6 +2267,18 @@ class AstroStrataEngine {
       return;
     }
 
+    const maxScroll = Math.max(0, this.getFilteredRecipes().length - 9);
+    if (mx >= INV_UI_X + 680 && mx <= INV_UI_X + 710 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 250) {
+      this.recipeScrollOffset = Math.max(0, this.recipeScrollOffset - 1);
+      this.sound.play("click");
+      return;
+    }
+    if (mx >= INV_UI_X + 715 && mx <= INV_UI_X + 745 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 250) {
+      this.recipeScrollOffset = Math.min(maxScroll, this.recipeScrollOffset + 1);
+      this.sound.play("click");
+      return;
+    }
+
     if (mx >= rx && mx <= rx + 200 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 249) {
       this.searchActive = true;
       this.sound.play("click");
@@ -2248,15 +2288,15 @@ class AstroStrataEngine {
     }
 
     const categories = ["ALL", "TOOLS", "WEAPONS", "ARMOR", "ROCKETS", "BLOCKS"];
-    let catX = rx + 240;
+    let catX = rx + 215;
     for (const cat of categories) {
-      if (mx >= catX && mx <= catX + 62 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 249) {
+      if (mx >= catX && mx <= catX + 56 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 249) {
         this.craftCategory = cat;
         this.recipeScrollOffset = 0;
         this.sound.play("click");
         return;
       }
-      catX += 68;
+      catX += 60;
     }
 
     for (let i = 0; i < 30; i++) {
@@ -2850,18 +2890,43 @@ class AstroStrataEngine {
 
       // Category Tabs
       const categories = ["ALL", "TOOLS", "WEAPONS", "ARMOR", "ROCKETS", "BLOCKS"];
-      let catX = INV_UI_X + 24 + 240;
+      let catX = INV_UI_X + 24 + 215;
       for (const cat of categories) {
         const isSel = this.craftCategory === cat;
         this.ctx.fillStyle = isSel ? "#2b3b55" : "#161c28";
-        this.ctx.fillRect(catX, INV_UI_Y + 225, 62, 24);
+        this.ctx.fillRect(catX, INV_UI_Y + 225, 56, 24);
         this.ctx.strokeStyle = isSel ? COLOR_GOLD : "#404c64";
-        this.ctx.strokeRect(catX, INV_UI_Y + 225, 62, 24);
+        this.ctx.strokeRect(catX, INV_UI_Y + 225, 56, 24);
         this.ctx.fillStyle = isSel ? COLOR_GOLD : COLOR_WHITE;
-        this.ctx.font = "10px monospace";
-        this.ctx.fillText(cat, catX + 6, INV_UI_Y + 241);
-        catX += 68;
+        this.ctx.font = "bold 9px monospace";
+        this.ctx.fillText(cat, catX + 5, INV_UI_Y + 241);
+        catX += 60;
       }
+
+      // Dedicated Scroll Buttons [ ▲ ] and [ ▼ ]
+      const maxScroll = Math.max(0, this.getFilteredRecipes().length - 9);
+      
+      this.ctx.fillStyle = (this.recipeScrollOffset > 0) ? "#24324a" : "#151922";
+      this.ctx.fillRect(INV_UI_X + 680, INV_UI_Y + 225, 30, 24);
+      this.ctx.strokeStyle = (this.recipeScrollOffset > 0) ? COLOR_GOLD : "#3a4254";
+      this.ctx.strokeRect(INV_UI_X + 680, INV_UI_Y + 225, 30, 24);
+      this.ctx.fillStyle = (this.recipeScrollOffset > 0) ? COLOR_WHITE : "#555d70";
+      this.ctx.font = "bold 13px monospace";
+      this.ctx.fillText("▲", INV_UI_X + 689, INV_UI_Y + 242);
+
+      this.ctx.fillStyle = (this.recipeScrollOffset < maxScroll) ? "#24324a" : "#151922";
+      this.ctx.fillRect(INV_UI_X + 715, INV_UI_Y + 225, 30, 24);
+      this.ctx.strokeStyle = (this.recipeScrollOffset < maxScroll) ? COLOR_GOLD : "#3a4254";
+      this.ctx.strokeRect(INV_UI_X + 715, INV_UI_Y + 225, 30, 24);
+      this.ctx.fillStyle = (this.recipeScrollOffset < maxScroll) ? COLOR_WHITE : "#555d70";
+      this.ctx.fillText("▼", INV_UI_X + 724, INV_UI_Y + 242);
+
+      // Scroll Position Indicator
+      const displayedRecipes = this.getFilteredRecipes();
+      const currentPos = Math.min(displayedRecipes.length, this.recipeScrollOffset + 1);
+      this.ctx.fillStyle = COLOR_CYAN;
+      this.ctx.font = "11px monospace";
+      this.ctx.fillText(`${currentPos}-${Math.min(displayedRecipes.length, this.recipeScrollOffset + 9)} of ${displayedRecipes.length}`, INV_UI_X + 580, INV_UI_Y + 241);
 
       // Inventory slots
       for (let i = 0; i < 30; i++) {
@@ -2883,7 +2948,6 @@ class AstroStrataEngine {
       }
 
       // Recipes List
-      const displayedRecipes = this.getFilteredRecipes();
       const visibleSlice = displayedRecipes.slice(this.recipeScrollOffset, this.recipeScrollOffset + 9);
       for (let idx = 0; idx < visibleSlice.length; idx++) {
         const rec = visibleSlice[idx];
@@ -3002,7 +3066,7 @@ class AstroStrataEngine {
   }
 }
 
-// Global Bootstrap
+// Global Bootstrap that executes whether DOM is loading or already interactive
 function startAstroStrataApp() {
   const overlay = document.getElementById("loading-overlay");
   const startBtn = document.getElementById("start-btn");

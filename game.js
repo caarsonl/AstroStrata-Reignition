@@ -129,9 +129,9 @@ const BLOCK_DATA = {
   [IRON_ORE]: { name: "Iron Ore", hardness: 2.6, mohs: 5.5, color: "#b98769", drop: "Iron Ore", req_tier: 2, req_tool: "Pickaxe", desc: "Dense banded iron formation.", xp: 20 },
   [GOLD_ORE]: { name: "Gold Ore", hardness: 3.2, mohs: 4.5, color: "#e6c328", drop: "Gold Ore", req_tier: 3, req_tool: "Pickaxe", desc: "Heavy auriferous quartz vein.", xp: 35 },
   [DIAMOND_ORE]: { name: "Diamond Ore", hardness: 4.5, mohs: 10.0, color: "#50e1ff", drop: "Diamond", req_tier: 3, req_tool: "Pickaxe", desc: "Kimberlite diamond crystallization.", xp: 80 },
-  [WOOD]: { name: "Wood Log", hardness: 1.2, mohs: 2.5, color: "#825532", drop: WOOD, req_tier: 0, req_tool: "Axe", desc: "Combustible timber. Burns near lava!" },
+  [WOOD]: { name: "Wood Log", hardness: 1.2, mohs: 2.5, color: "#825532", drop: WOOD, req_tier: 0, req_tool: "Axe", desc: "Combustible timber log." },
   [LEAVES]: { name: "Leaves", hardness: 0.25, mohs: 1.0, color: "#289632", drop: null, req_tier: 0, req_tool: "Any", desc: "Soft solar-capture canopy." },
-  [PLANKS]: { name: "Wood Planks", hardness: 1.0, mohs: 2.5, color: "#af7d46", drop: PLANKS, req_tier: 0, req_tool: "Axe", desc: "Processed lumber." },
+  [PLANKS]: { name: "Wood Planks", hardness: 1.0, mohs: 2.5, color: "#af7d46", drop: PLANKS, req_tier: 0, req_tool: "Axe", desc: "Processed building lumber." },
   [TORCH]: { name: "Torch", hardness: 0.1, mohs: 1.0, color: "#ffb428", drop: TORCH, req_tier: 0, req_tool: "Any", desc: "Illuminates dark subterranean caverns.", light: 140 },
   [WORKBENCH]: { name: "Workbench", hardness: 1.4, mohs: 2.5, color: "#966437", drop: WORKBENCH, req_tier: 0, req_tool: "Axe", desc: "Workshop station for tools & gear." },
   [FURNACE]: { name: "Stone Furnace", hardness: 2.0, mohs: 5.5, color: "#64646e", drop: FURNACE, req_tier: 2, req_tool: "Pickaxe", desc: "Thermal forge station for smelting ingots.", light: 110 },
@@ -151,13 +151,13 @@ const BLOCK_DATA = {
   [LAVA]: { name: "Liquid Lava", hardness: 999, mohs: 0.0, color: "#ff550a", drop: null, req_tier: 0, req_tool: "Bucket", desc: "Viscous molten silicate melt.", light: 145, liquid: true },
 
   [LAUNCHPAD]: { name: "Aerospace Launchpad", hardness: 3.2, mohs: 6.5, color: "#4b5064", drop: LAUNCHPAD, req_tier: 3, req_tool: "Pickaxe", desc: "Station for assembling & launching Rockets.", light: 100 },
-  [ASSEMBLER]: { name: "Circuit Assembler", hardness: 2.5, mohs: 5.5, color: "#237387", drop: ASSEMBLER, req_tier: 2, req_tool: "Pickaxe", desc: "Precision fabricator for advanced electronics." },
+  [ASSEMBLER]: { name: "Circuit Assembler", hardness: 2.5, mohs: 5.5, color: "#237387", drop: ASSEMBLER, req_tier: 2, req_tool: "Pickaxe", desc: "Precision fabricator for electronics." },
   [PARTICLE_COLLIDER]: { name: "Particle Collider", hardness: 4.5, mohs: 7.5, color: "#9632d2", drop: PARTICLE_COLLIDER, req_tier: 4, req_tool: "Pickaxe", desc: "Synchrotron for antimatter synthesis.", light: 130 },
 
   [STONE_PILLAR]: { name: "Stone Pillar", hardness: 1.8, mohs: 5.5, color: "#a0a0a8", drop: STONE_PILLAR, req_tier: 1, req_tool: "Pickaxe", desc: "Classical carved architectural pillar." },
   [MARBLE_BLOCK]: { name: "Marble Block", hardness: 1.6, mohs: 4.5, color: "#ebf0f5", drop: MARBLE_BLOCK, req_tier: 1, req_tool: "Pickaxe", desc: "Pristine calcitic metamorphic rock." },
-  [NEON_LAMP]: { name: "Neon Cyber-Lamp", hardness: 0.6, mohs: 3.0, color: "#50ffdc", drop: NEON_LAMP, req_tier: 1, req_tool: "Any", desc: "High-efficiency argon gas luminary.", light: 180 },
-  [TECH_PLATING]: { name: "Hull Plating", hardness: 3.6, mohs: 6.5, color: "#373c4b", drop: TECH_PLATING, req_tier: 3, req_tool: "Pickaxe", desc: "Corrosion-resistant titanium alloy plate." },
+  [NEON_LAMP]: { name: "Neon Cyber-Lamp", hardness: 0.6, mohs: 3.0, color: "#50ffdc", drop: NEON_LAMP, req_tier: 1, req_tool: "Any", desc: "High-efficiency argon luminary.", light: 180 },
+  [TECH_PLATING]: { name: "Hull Plating", hardness: 3.6, mohs: 6.5, color: "#373c4b", drop: TECH_PLATING, req_tier: 3, req_tool: "Pickaxe", desc: "Titanium alloy structural plating." },
   [WOOD_TABLE]: { name: "Oak Table", hardness: 1.0, mohs: 2.5, color: "#9b6941", drop: WOOD_TABLE, req_tier: 0, req_tool: "Axe", desc: "Rustic domestic timber table." },
   [WOOD_CHAIR]: { name: "Oak Chair", hardness: 0.7, mohs: 2.5, color: "#915f37", drop: WOOD_CHAIR, req_tier: 0, req_tool: "Axe", desc: "Sturdy carved wooden chair." },
   [CRYSTAL_GLASS]: { name: "Crystal Glass", hardness: 1.0, mohs: 6.5, color: "#bef0ff", drop: CRYSTAL_GLASS, req_tier: 1, req_tool: "Pickaxe", desc: "Diamond-reinforced blast glass." }
@@ -587,7 +587,7 @@ class SoundEngine {
 }
 
 // ==========================================
-// PROCEDURAL PIXEL ART GENERATOR
+// HIGH-DETAIL PROCEDURAL PIXEL ART GENERATOR
 // ==========================================
 class PixelArtGenerator {
   constructor() {
@@ -607,6 +607,7 @@ class PixelArtGenerator {
   }
 
   _bakeAll() {
+    // 1. Bake Blocks
     for (const [bidStr, data] of Object.entries(BLOCK_DATA)) {
       const bid = Number(bidStr);
       const cvs = document.createElement("canvas");
@@ -614,10 +615,10 @@ class PixelArtGenerator {
       cvs.height = TILE_SIZE;
       const ctx = cvs.getContext("2d");
 
-      const baseRgb = this._hexToRgb(data.color);
-      const hi = `rgb(${Math.min(255, Math.floor(baseRgb.r * 1.35) + 20)}, ${Math.min(255, Math.floor(baseRgb.g * 1.35) + 20)}, ${Math.min(255, Math.floor(baseRgb.b * 1.35) + 20)})`;
-      const mid = `rgb(${Math.floor(baseRgb.r * 0.85)}, ${Math.floor(baseRgb.g * 0.85)}, ${Math.floor(baseRgb.b * 0.85)})`;
-      const dark = `rgb(${Math.floor(baseRgb.r * 0.60)}, ${Math.floor(baseRgb.g * 0.60)}, ${Math.floor(baseRgb.b * 0.60)})`;
+      const base = this._hexToRgb(data.color);
+      const hi = `rgb(${Math.min(255, base.r + 45)}, ${Math.min(255, base.g + 45)}, ${Math.min(255, base.b + 45)})`;
+      const mid = `rgb(${Math.floor(base.r * 0.82)}, ${Math.floor(base.g * 0.82)}, ${Math.floor(base.b * 0.82)})`;
+      const dark = `rgb(${Math.floor(base.r * 0.58)}, ${Math.floor(base.g * 0.58)}, ${Math.floor(base.b * 0.58)})`;
 
       ctx.fillStyle = data.color;
       ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
@@ -632,86 +633,104 @@ class PixelArtGenerator {
           }
         }
         for (let x = 0; x < TILE_SIZE; x++) {
-          const rootLen = 6 + (x * 5 % 5);
+          const rootLen = 7 + (x * 7 % 6);
           for (let y = 0; y < rootLen; y++) {
-            ctx.fillStyle = (y < 2) ? "#73cd32" : (y < 4) ? "#4b9128" : "#2d6e14";
+            ctx.fillStyle = (y < 2) ? "#8ae63c" : (y < 5) ? "#4b9128" : "#2d6e14";
             ctx.fillRect(x, y, 1, 1);
           }
         }
       } else if (bid === CHEST) {
         ctx.fillStyle = "#8c5a2d";
         ctx.fillRect(2, 2, 28, 28);
-        ctx.strokeStyle = "#503219";
+        ctx.strokeStyle = "#462814";
         ctx.lineWidth = 2;
         ctx.strokeRect(2, 2, 28, 28);
         ctx.beginPath();
-        ctx.moveTo(2, 12);
-        ctx.lineTo(29, 12);
+        ctx.moveTo(2, 13);
+        ctx.lineTo(29, 13);
         ctx.stroke();
-        ctx.fillStyle = "#d7af28";
+        ctx.fillStyle = "#2d2014";
+        ctx.fillRect(4, 4, 3, 3); ctx.fillRect(25, 4, 3, 3);
+        ctx.fillRect(4, 25, 3, 3); ctx.fillRect(25, 25, 3, 3);
+        ctx.fillStyle = "#ffd700";
         ctx.fillRect(14, 10, 4, 6);
-      } else if ([DIRT, MOON_REGOLITH, MARTIAN_SOIL, TITAN_METHANE_CRUST].includes(bid)) {
-        for (let x = 0; x < TILE_SIZE; x++) {
-          for (let y = 0; y < TILE_SIZE; y++) {
-            if ((x * 5 + y * 13) % 7 === 0) { ctx.fillStyle = dark; ctx.fillRect(x, y, 1, 1); }
-            else if ((x * 11 + y * 7) % 6 === 0) { ctx.fillStyle = hi; ctx.fillRect(x, y, 1, 1); }
-          }
-        }
+        ctx.fillStyle = "#322300";
+        ctx.fillRect(15, 12, 2, 3);
       } else if (data.name.includes("Ore") || data.name.includes("Crystal") || data.name.includes("Shard")) {
-        ctx.fillStyle = "#73737a";
+        ctx.fillStyle = "#6e6e76";
         ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
         for (let x = 0; x < TILE_SIZE; x++) {
           for (let y = 0; y < TILE_SIZE; y++) {
-            if ((x ^ y) % 6 === 0) { ctx.fillStyle = "#5c5c62"; ctx.fillRect(x, y, 1, 1); }
+            if ((x ^ y) % 5 === 0) { ctx.fillStyle = "#56565c"; ctx.fillRect(x, y, 1, 1); }
           }
         }
-        const nodules = [[9, 9, 5], [21, 10, 4], [12, 21, 6], [24, 22, 4]];
-        for (const [nx, ny, nr] of nodules) {
+        const gems = [[8, 8, 5], [22, 10, 4], [11, 22, 6], [23, 23, 5]];
+        for (const [gx, gy, gr] of gems) {
           ctx.fillStyle = dark;
-          ctx.beginPath(); ctx.arc(nx, ny, nr + 1, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(gx, gy, gr + 1, 0, Math.PI * 2); ctx.fill();
           ctx.fillStyle = data.color;
-          ctx.beginPath(); ctx.arc(nx, ny, nr, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(gx, gy, gr, 0, Math.PI * 2); ctx.fill();
           ctx.fillStyle = hi;
-          ctx.fillRect(nx - 1, ny - 2, 2, 2);
+          ctx.fillRect(gx - 1, gy - 2, 2, 2);
           ctx.fillStyle = "#ffffff";
-          ctx.fillRect(nx, ny - 1, 1, 1);
+          ctx.fillRect(gx, gy - 1, 1, 1);
         }
       } else if (bid === WOOD) {
-        ctx.fillStyle = "#7d502d";
+        ctx.fillStyle = "#784b28";
         ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        for (let x = 0; x < TILE_SIZE; x += 5) {
-          ctx.fillStyle = "#5f3c23";
+        for (let x = 0; x < TILE_SIZE; x += 4) {
+          ctx.fillStyle = (x % 8 === 0) ? "#553219" : "#8c5a32";
           ctx.fillRect(x, 0, 2, TILE_SIZE);
-          ctx.fillStyle = "#915f37";
-          ctx.fillRect(x + 2, 0, 1, TILE_SIZE);
         }
+        ctx.fillStyle = "#462814";
+        ctx.fillRect(12, 10, 4, 6);
       } else if (bid === PLANKS) {
         ctx.fillStyle = "#af7d46";
         ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        for (const y of [9, 19, 29]) {
-          ctx.fillStyle = "#644123";
-          ctx.fillRect(0, y, TILE_SIZE, 2);
+        for (const py of [10, 21]) {
+          ctx.fillStyle = "#5a3c1e";
+          ctx.fillRect(0, py, TILE_SIZE, 2);
           ctx.fillStyle = "#d7a569";
-          ctx.fillRect(0, y + 1, TILE_SIZE, 1);
+          ctx.fillRect(0, py + 2, TILE_SIZE, 1);
         }
-        ctx.fillStyle = "#3c2814";
-        ctx.fillRect(7, 5, 2, 2);
-        ctx.fillRect(24, 15, 2, 2);
-        ctx.fillRect(7, 25, 2, 2);
+        ctx.fillStyle = "#28190a";
+        ctx.fillRect(5, 5, 2, 2); ctx.fillRect(25, 5, 2, 2);
+        ctx.fillRect(15, 15, 2, 2);
+        ctx.fillRect(5, 26, 2, 2); ctx.fillRect(25, 26, 2, 2);
+      } else if (bid === WORKBENCH) {
+        ctx.fillStyle = "#9b6941";
+        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        ctx.fillStyle = "#5a371e";
+        ctx.fillRect(0, 0, TILE_SIZE, 6);
+        ctx.fillStyle = "#e1b478";
+        ctx.fillRect(0, 6, TILE_SIZE, 2);
+        ctx.fillStyle = "#3c2314";
+        ctx.fillRect(4, 12, 10, 8); ctx.fillRect(18, 12, 10, 8);
+        ctx.fillStyle = "#ffd700";
+        ctx.fillRect(8, 15, 2, 2); ctx.fillRect(22, 15, 2, 2);
+      } else if (bid === FURNACE) {
+        ctx.fillStyle = "#64646e";
+        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        ctx.fillStyle = "#323237";
+        ctx.fillRect(6, 12, 20, 16);
+        ctx.fillStyle = "#ff550a";
+        ctx.fillRect(9, 16, 14, 10);
+        ctx.fillStyle = "#ffdd4b";
+        ctx.fillRect(12, 19, 8, 5);
       } else if (bid === STONE_BRICKS || bid === BASALT_BRICKS) {
         ctx.fillStyle = (bid === STONE_BRICKS) ? "#828287" : "#32323c";
         ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        ctx.strokeStyle = (bid === STONE_BRICKS) ? "#4b4b50" : "#191923";
+        ctx.strokeStyle = (bid === STONE_BRICKS) ? "#46464b" : "#191923";
         ctx.lineWidth = 2;
-        for (const y of [10, 21, 31]) {
-          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(TILE_SIZE, y); ctx.stroke();
-        }
         ctx.strokeRect(0, 0, 16, 10);
+        ctx.strokeRect(16, 0, 16, 10);
         ctx.strokeRect(8, 10, 16, 11);
+        ctx.strokeRect(0, 21, 16, 11);
+        ctx.strokeRect(16, 21, 16, 11);
       } else if (bid === GLASS || bid === CRYSTAL_GLASS) {
         ctx.fillStyle = (bid === CRYSTAL_GLASS) ? "rgba(190, 240, 255, 0.45)" : "rgba(175, 225, 240, 0.35)";
         ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
         ctx.lineWidth = 2;
         ctx.strokeRect(1, 1, 30, 30);
         ctx.beginPath();
@@ -724,8 +743,30 @@ class PixelArtGenerator {
         ctx.fillRect(14, 12, 5, 17);
         ctx.fillStyle = "#ffb428";
         ctx.beginPath(); ctx.arc(16, 9, 6, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#ff500a";
+        ctx.fillStyle = "#ff4600";
         ctx.beginPath(); ctx.arc(16, 9, 3, 0, Math.PI * 2); ctx.fill();
+      } else if (bid === LANTERN) {
+        ctx.clearRect(0, 0, TILE_SIZE, TILE_SIZE);
+        ctx.fillStyle = "#2d323c";
+        ctx.fillRect(12, 4, 8, 4);
+        ctx.fillRect(10, 8, 12, 18);
+        ctx.fillStyle = "#ffd24b";
+        ctx.fillRect(12, 11, 8, 12);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(15, 14, 2, 4);
+      } else if (bid === BOOKSHELF) {
+        ctx.fillStyle = "#7d4b28";
+        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        ctx.fillStyle = "#4b2814";
+        ctx.fillRect(3, 4, 26, 10);
+        ctx.fillRect(3, 17, 26, 11);
+        const bookColors = ["#c33232", "#3264c3", "#32a046", "#dcb428", "#9632c8"];
+        for (let bx = 5; bx < 27; bx += 4) {
+          ctx.fillStyle = bookColors[(bx * 3) % bookColors.length];
+          ctx.fillRect(bx, 5, 3, 8);
+          ctx.fillStyle = bookColors[(bx * 7) % bookColors.length];
+          ctx.fillRect(bx, 18, 3, 9);
+        }
       } else if (bid === LAVA) {
         ctx.fillStyle = "#eb460a";
         ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
@@ -743,7 +784,8 @@ class PixelArtGenerator {
         }
       }
 
-      if (![AIR, LAVA, TORCH, GLASS, CRYSTAL_GLASS].includes(bid)) {
+      // Universal 3D Edge Bevel
+      if (![AIR, LAVA, TORCH, LANTERN, GLASS, CRYSTAL_GLASS].includes(bid)) {
         ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -759,6 +801,7 @@ class PixelArtGenerator {
       this.icons[bid] = cvs;
     }
 
+    // 2. Bake Detailed Individual Item & Tool Icons
     for (const [name, idata] of Object.entries(ITEM_DEFINITIONS)) {
       if (this.icons[name]) continue;
       const cvs = document.createElement("canvas");
@@ -766,39 +809,157 @@ class PixelArtGenerator {
       cvs.height = 32;
       const ctx = cvs.getContext("2d");
 
-      if (idata.type === "weapon" || idata.type === "tool") {
-        ctx.strokeStyle = COLOR_GOLD;
+      const tColor = name.includes("Wood") ? "#966432" :
+                     name.includes("Stone") ? "#9696a0" :
+                     name.includes("Iron") ? "#dce1ec" :
+                     name.includes("Gold") ? "#ffd700" :
+                     name.includes("Diamond") ? "#50e1ff" :
+                     name.includes("Obsidian") ? "#6e37b4" :
+                     name.includes("Titanium") ? "#78a0c8" :
+                     name.includes("Cryo") ? "#a0f0ff" :
+                     name.includes("Core") ? "#ff461e" :
+                     name.includes("Singularity") ? "#b432ff" : "#5adcff";
+
+      if (idata.tool_type === "pickaxe" || name.includes("Pickaxe")) {
+        // Diagonal stick handle
+        ctx.strokeStyle = "#643c1e";
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(21, 11); ctx.stroke();
+        // Curved pick head
+        ctx.strokeStyle = tColor;
         ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.moveTo(6, 26);
-        ctx.lineTo(26, 6);
+        ctx.arc(23, 9, 9, Math.PI * 0.75, Math.PI * 1.6);
         ctx.stroke();
+        // Pick tips
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(25, 2, 2, 2);
+      } else if (idata.tool_type === "axe" || name.includes("Axe")) {
+        ctx.strokeStyle = "#643c1e";
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(22, 10); ctx.stroke();
+        ctx.fillStyle = tColor;
+        ctx.beginPath();
+        ctx.moveTo(18, 5); ctx.lineTo(27, 8); ctx.lineTo(23, 17); ctx.lineTo(16, 12);
+        ctx.closePath(); ctx.fill();
+      } else if (idata.tool_type === "shovel" || name.includes("Shovel")) {
+        ctx.strokeStyle = "#643c1e";
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(21, 11); ctx.stroke();
+        ctx.fillStyle = tColor;
+        ctx.beginPath();
+        ctx.arc(23, 9, 6, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (idata.type === "weapon" || name.includes("Blade") || name.includes("Sword") || name.includes("Dagger")) {
+        // Crossguard
+        ctx.strokeStyle = "#ffd700";
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(8, 18); ctx.lineTo(14, 24); ctx.stroke();
+        // Hilt
+        ctx.strokeStyle = "#503219";
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(6, 26); ctx.lineTo(10, 22); ctx.stroke();
+        // Blade
+        ctx.strokeStyle = tColor;
+        ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(11, 21); ctx.lineTo(26, 6); ctx.stroke();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(12, 20); ctx.lineTo(25, 7); ctx.stroke();
+      } else if (idata.type === "ranged" || name.includes("Bow") || name.includes("Rifle")) {
+        ctx.strokeStyle = tColor;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(16, 16, 11, Math.PI * 0.25, Math.PI * 1.25);
+        ctx.stroke();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(24, 8); ctx.lineTo(8, 24); ctx.stroke();
+      } else if (idata.type === "magic" || name.includes("Wand") || name.includes("Scepter")) {
+        ctx.strokeStyle = "#784b28";
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(22, 10); ctx.stroke();
+        ctx.fillStyle = tColor;
+        ctx.beginPath(); ctx.arc(24, 8, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath(); ctx.arc(24, 8, 2, 0, Math.PI * 2); ctx.fill();
       } else if (idata.type === "armor") {
-        ctx.fillStyle = "#aaafbe";
-        ctx.fillRect(6, 6, 20, 20);
+        ctx.fillStyle = tColor;
+        if (idata.slot === "helmet") {
+          ctx.fillRect(7, 8, 18, 14);
+          ctx.clearRect(11, 15, 10, 4);
+        } else if (idata.slot === "boots") {
+          ctx.fillRect(6, 14, 8, 12); ctx.fillRect(18, 14, 8, 12);
+        } else {
+          ctx.fillRect(6, 6, 20, 18);
+          ctx.clearRect(12, 6, 8, 5);
+        }
+      } else if (idata.type === "consumable" || name.includes("Potion") || name.includes("Flask") || name.includes("Elixir")) {
+        ctx.fillStyle = "#b48c50";
+        ctx.fillRect(14, 5, 4, 3);
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        ctx.fillRect(11, 8, 10, 4);
+        ctx.fillStyle = name.includes("Health") ? "#e62828" : name.includes("Swift") ? "#ffd700" : "#50dcff";
+        ctx.beginPath();
+        ctx.arc(16, 20, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(13, 16, 2, 3);
       } else if (idata.type === "rocket") {
-        ctx.fillStyle = "#e6e6eb";
+        ctx.fillStyle = "#ffffff";
         ctx.beginPath();
-        ctx.moveTo(16, 4);
-        ctx.lineTo(24, 26);
-        ctx.lineTo(8, 26);
-        ctx.closePath();
+        ctx.moveTo(16, 3); ctx.lineTo(23, 23); ctx.lineTo(9, 23); ctx.closePath();
         ctx.fill();
+        ctx.fillStyle = tColor;
+        ctx.fillRect(10, 15, 12, 4);
+        ctx.fillStyle = "#50e1ff";
+        ctx.beginPath(); ctx.arc(16, 11, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#ff5000";
+        ctx.beginPath(); ctx.moveTo(12, 23); ctx.lineTo(16, 29); ctx.lineTo(20, 23); ctx.fill();
+      } else if (name.includes("Ingot")) {
+        ctx.fillStyle = tColor;
+        ctx.beginPath();
+        ctx.moveTo(6, 20); ctx.lineTo(11, 11); ctx.lineTo(25, 11); ctx.lineTo(22, 20); ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      } else if (name === "Dynamite") {
+        ctx.fillStyle = "#c82828";
+        ctx.fillRect(9, 10, 14, 16);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(9, 16, 14, 4);
+        ctx.strokeStyle = "#ffd700";
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(16, 10); ctx.lineTo(19, 5); ctx.stroke();
+        ctx.fillStyle = "#ff4600";
+        ctx.fillRect(18, 4, 3, 3);
+      } else if (name === "Planetary Dynamo") {
+        ctx.strokeStyle = "#ffd700";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(16, 16, 12, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(16, 16, 12, 4, Math.PI * 0.25, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = "#5adcff";
+        ctx.beginPath(); ctx.arc(16, 16, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(15, 15, 2, 2);
       } else {
-        ctx.fillStyle = COLOR_CYAN;
-        ctx.beginPath();
-        ctx.arc(16, 16, 8, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillStyle = tColor;
+        ctx.beginPath(); ctx.arc(16, 16, 7, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(14, 13, 2, 2);
       }
+
       this.icons[name] = cvs;
     }
 
+    // 3. Bake Crack Overlays
     for (let stage = 0; stage < 10; stage++) {
       const cvs = document.createElement("canvas");
       cvs.width = TILE_SIZE;
       cvs.height = TILE_SIZE;
       const ctx = cvs.getContext("2d");
-      ctx.strokeStyle = `rgba(0, 0, 0, ${0.45 + stage * 0.05})`;
+      ctx.strokeStyle = `rgba(0, 0, 0, ${0.48 + stage * 0.05})`;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(16, 16);
@@ -867,7 +1028,7 @@ class FloatingText {
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.fillStyle = this.color;
-    ctx.font = "bold 13px 'Courier New', monospace";
+    ctx.font = "bold 13px system-ui, sans-serif";
     ctx.fillText(this.text, Math.floor(this.x - camX), Math.floor(this.y - camY));
     ctx.restore();
   }
@@ -1554,6 +1715,11 @@ class AstroStrataEngine {
   constructor() {
     this.canvas = document.getElementById("gameCanvas");
     this.ctx = this.canvas.getContext("2d");
+
+    // High-DPI / Retina Crisp Rendering Setup
+    this.dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    this.canvas.width = Math.floor(SCREEN_WIDTH * this.dpr);
+    this.canvas.height = Math.floor(SCREEN_HEIGHT * this.dpr);
 
     this.sound = new SoundEngine();
     this.art = new PixelArtGenerator();
@@ -2279,7 +2445,7 @@ class AstroStrataEngine {
       return;
     }
 
-    if (mx >= rx && mx <= rx + 200 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 249) {
+    if (mx >= rx && mx <= rx + 140 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 251) {
       this.searchActive = true;
       this.sound.play("click");
       return;
@@ -2288,15 +2454,15 @@ class AstroStrataEngine {
     }
 
     const categories = ["ALL", "TOOLS", "WEAPONS", "ARMOR", "ROCKETS", "BLOCKS"];
-    let catX = rx + 215;
+    let catX = INV_UI_X + 172;
     for (const cat of categories) {
-      if (mx >= catX && mx <= catX + 56 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 249) {
+      if (mx >= catX && mx <= catX + 54 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 251) {
         this.craftCategory = cat;
         this.recipeScrollOffset = 0;
         this.sound.play("click");
         return;
       }
-      catX += 60;
+      catX += 58;
     }
 
     for (let i = 0; i < 30; i++) {
@@ -2332,7 +2498,7 @@ class AstroStrataEngine {
     const visibleSlice = displayedRecipes.slice(this.recipeScrollOffset, this.recipeScrollOffset + 9);
     for (let idx = 0; idx < visibleSlice.length; idx++) {
       const rec = visibleSlice[idx];
-      const recY = INV_UI_Y + 258 + idx * 29;
+      const recY = INV_UI_Y + 260 + idx * 29;
       const craftBtn = { x: INV_UI_X + 675, y: recY + 2, w: 65, h: 22 };
 
       if (mx >= craftBtn.x && mx <= craftBtn.x + craftBtn.w && my >= craftBtn.y && my <= craftBtn.y + craftBtn.h) {
@@ -2557,31 +2723,35 @@ class AstroStrataEngine {
   }
 
   draw() {
+    // Reset transform and apply Retina high-definition scale
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+
     this.ctx.fillStyle = COLOR_BG_DARK;
     this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
     if (this.state === "MENU") {
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 34px 'Courier New', monospace";
+      this.ctx.font = "bold 34px system-ui, sans-serif";
       this.ctx.textAlign = "center";
       this.ctx.fillText("ASTROSTRATA: REIGNITION", SCREEN_WIDTH / 2, 220);
 
       this.ctx.fillStyle = COLOR_CYAN;
-      this.ctx.font = "14px 'Courier New', monospace";
+      this.ctx.font = "14px system-ui, sans-serif";
       this.ctx.fillText("Stratum Geology | Planetary Dynamos | Interplanetary Aerospace", SCREEN_WIDTH / 2, 255);
 
       const b1 = { x: SCREEN_WIDTH / 2 - 160, y: 310, w: 320, h: 48 };
       this.ctx.fillStyle = "#1e2436";
       this.ctx.fillRect(b1.x, b1.y, b1.w, b1.h);
       this.ctx.strokeStyle = COLOR_GOLD;
+      this.ctx.lineWidth = 2;
       this.ctx.strokeRect(b1.x, b1.y, b1.w, b1.h);
 
       this.ctx.fillStyle = COLOR_WHITE;
-      this.ctx.font = "bold 15px 'Courier New', monospace";
+      this.ctx.font = "bold 15px system-ui, sans-serif";
       this.ctx.fillText("ENTER EXPEDITION / SECTORS", SCREEN_WIDTH / 2, 340);
 
       this.ctx.fillStyle = "#606880";
-      this.ctx.font = "bold 13px monospace";
+      this.ctx.font = "bold 13px system-ui, sans-serif";
       this.ctx.textAlign = "left";
       this.ctx.fillText(VERSION_STRING, 24, SCREEN_HEIGHT - 24);
       return;
@@ -2589,13 +2759,13 @@ class AstroStrataEngine {
 
     if (this.state === "WORLD_SELECT") {
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 28px 'Courier New', monospace";
+      this.ctx.font = "bold 28px system-ui, sans-serif";
       this.ctx.textAlign = "center";
       this.ctx.fillText("EXPEDITION SECTOR ARCHIVE", SCREEN_WIDTH / 2, 60);
 
       if (this.worldsList.length === 0) {
         this.ctx.fillStyle = "#8892b0";
-        this.ctx.font = "16px monospace";
+        this.ctx.font = "16px system-ui, sans-serif";
         this.ctx.fillText("No sectors established. Click 'CREATE SECTOR' below.", SCREEN_WIDTH / 2, 240);
       } else {
         for (let i = 0; i < Math.min(5, this.worldsList.length); i++) {
@@ -2610,11 +2780,11 @@ class AstroStrataEngine {
           this.ctx.strokeRect(SCREEN_WIDTH / 2 - 320, cardY, 640, 62);
 
           this.ctx.fillStyle = COLOR_WHITE;
-          this.ctx.font = "bold 16px 'Courier New', monospace";
+          this.ctx.font = "bold 16px system-ui, sans-serif";
           this.ctx.textAlign = "left";
           this.ctx.fillText(w.name, SCREEN_WIDTH / 2 - 300, cardY + 26);
           this.ctx.fillStyle = COLOR_CYAN;
-          this.ctx.font = "12px 'Courier New', monospace";
+          this.ctx.font = "12px system-ui, sans-serif";
           this.ctx.fillText(`Class: ${w.pClass} | Location: ${w.planet} | Date: ${w.savedAt}`, SCREEN_WIDTH / 2 - 300, cardY + 46);
         }
       }
@@ -2634,7 +2804,7 @@ class AstroStrataEngine {
         this.ctx.strokeRect(btn.x, SCREEN_HEIGHT - 80, btn.w, 44);
         this.ctx.fillStyle = btn.active ? btn.color : "#606880";
         this.ctx.textAlign = "center";
-        this.ctx.font = "bold 13px 'Courier New', monospace";
+        this.ctx.font = "bold 13px system-ui, sans-serif";
         this.ctx.fillText(btn.label, btn.x + btn.w / 2, SCREEN_HEIGHT - 53);
       }
       return;
@@ -2642,7 +2812,7 @@ class AstroStrataEngine {
 
     if (this.state === "CREATE_WORLD") {
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 28px 'Courier New', monospace";
+      this.ctx.font = "bold 28px system-ui, sans-serif";
       this.ctx.textAlign = "center";
       this.ctx.fillText("INITIALIZE SECTOR PROFILE", SCREEN_WIDTH / 2, 60);
 
@@ -2652,7 +2822,7 @@ class AstroStrataEngine {
       this.ctx.strokeRect(SCREEN_WIDTH / 2 - 200, 175, 400, 44);
 
       this.ctx.fillStyle = COLOR_WHITE;
-      this.ctx.font = "bold 16px 'Courier New', monospace";
+      this.ctx.font = "bold 16px system-ui, sans-serif";
       this.ctx.fillText(this.inputWorldName + (this.nameInputActive ? "_" : ""), SCREEN_WIDTH / 2, 203);
 
       const clist = Object.keys(CLASSES);
@@ -2673,7 +2843,7 @@ class AstroStrataEngine {
       this.ctx.strokeStyle = COLOR_GOLD;
       this.ctx.strokeRect(SCREEN_WIDTH / 2 - 220, 515, 220, 54);
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 16px 'Courier New', monospace";
+      this.ctx.font = "bold 16px system-ui, sans-serif";
       this.ctx.fillText("LAUNCH SECTOR", SCREEN_WIDTH / 2 - 110, 547);
 
       this.ctx.fillStyle = "#1e2436";
@@ -2759,12 +2929,12 @@ class AstroStrataEngine {
 
         this.ctx.fillStyle = COLOR_GOLD;
         this.ctx.textAlign = "left";
-        this.ctx.font = "bold 13px 'Courier New', monospace";
+        this.ctx.font = "bold 13px system-ui, sans-serif";
         this.ctx.fillText(bdata.name, hx + 12, hy + 20);
 
         const evalInfo = evaluateMiningInteraction(this.player, targetTile);
         this.ctx.fillStyle = evalInfo.canDrop ? COLOR_EXP : COLOR_HP;
-        this.ctx.font = "11px monospace";
+        this.ctx.font = "11px system-ui, sans-serif";
         this.ctx.fillText(`Mohs: ${bdata.mohs} | [${evalInfo.msg}]`, hx + 12, hy + 38);
         this.ctx.fillStyle = COLOR_CYAN;
         this.ctx.fillText(`Req: ${bdata.req_tool} (${TIER_NAMES[bdata.req_tier]})`, hx + 12, hy + 54);
@@ -2776,7 +2946,7 @@ class AstroStrataEngine {
         this.ctx.fillStyle = COLOR_GOLD;
         this.ctx.fillRect(hx + 12, hy + 64, Math.floor(246 * pct), 12);
         this.ctx.fillStyle = COLOR_WHITE;
-        this.ctx.font = "bold 9px monospace";
+        this.ctx.font = "bold 9px system-ui, sans-serif";
         this.ctx.fillText(`${Math.floor(pct * 100)}% (${curDmg.toFixed(1)}s / ${bdata.hardness}s)`, hx + 85, hy + 73);
       }
     }
@@ -2790,10 +2960,10 @@ class AstroStrataEngine {
 
     this.ctx.fillStyle = COLOR_GOLD;
     this.ctx.textAlign = "left";
-    this.ctx.font = "bold 13px 'Courier New', monospace";
+    this.ctx.font = "bold 13px system-ui, sans-serif";
     this.ctx.fillText(`${this.world.current_planet}: ${layer.name}`, SCREEN_WIDTH / 2 - 128, 32);
     this.ctx.fillStyle = COLOR_WHITE;
-    this.ctx.font = "11px monospace";
+    this.ctx.font = "11px system-ui, sans-serif";
     this.ctx.fillText(`Depth: ${layer.depth} m | ${layer.pressure}`, SCREEN_WIDTH / 2 - 128, 50);
     this.ctx.fillStyle = COLOR_CYAN;
     this.ctx.fillText(`Thermal: ${layer.temp}`, SCREEN_WIDTH / 2 - 128, 66);
@@ -2804,7 +2974,7 @@ class AstroStrataEngine {
     this.ctx.strokeStyle = COLOR_WHITE;
     this.ctx.strokeRect(20, 20, 180, 16);
     this.ctx.fillStyle = COLOR_WHITE;
-    this.ctx.font = "bold 11px monospace";
+    this.ctx.font = "bold 11px system-ui, sans-serif";
     this.ctx.fillText(`HP ${Math.floor(this.player.hp)} / ${this.player.max_hp}`, 26, 32);
 
     this.ctx.fillStyle = COLOR_EXP;
@@ -2814,58 +2984,61 @@ class AstroStrataEngine {
     this.ctx.fillStyle = COLOR_GOLD;
     this.ctx.fillText(`LVL ${this.player.level} (${this.player.pClass})`, 210, 32);
 
-    // Hotbar
-    for (let i = 0; i < 10; i++) {
-      const bx = SCREEN_WIDTH / 2 - 240 + i * 48;
-      const by = SCREEN_HEIGHT - 60;
-      this.ctx.fillStyle = (i === this.player.inv.selectedHotbar) ? "rgba(255, 215, 0, 0.4)" : "rgba(20, 24, 36, 0.85)";
-      this.ctx.fillRect(bx, by, 44, 44);
-      this.ctx.strokeStyle = (i === this.player.inv.selectedHotbar) ? COLOR_GOLD : "#404c64";
-      this.ctx.strokeRect(bx, by, 44, 44);
+    // Hotbar & Virtual Controls (Only drawn when PLAYING to prevent bleeding through dialogs)
+    if (this.state === "PLAYING") {
+      for (let i = 0; i < 10; i++) {
+        const bx = SCREEN_WIDTH / 2 - 240 + i * 48;
+        const by = SCREEN_HEIGHT - 60;
+        this.ctx.fillStyle = (i === this.player.inv.selectedHotbar) ? "rgba(255, 215, 0, 0.4)" : "rgba(20, 24, 36, 0.85)";
+        this.ctx.fillRect(bx, by, 44, 44);
+        this.ctx.strokeStyle = (i === this.player.inv.selectedHotbar) ? COLOR_GOLD : "#404c64";
+        this.ctx.strokeRect(bx, by, 44, 44);
 
-      const slot = this.player.inv.slots[i];
-      if (slot && this.art.icons[slot.item]) {
-        this.ctx.drawImage(this.art.icons[slot.item], bx + 6, by + 6);
-        if (slot.count > 1) {
-          this.ctx.fillStyle = COLOR_GOLD;
-          this.ctx.font = "bold 12px monospace";
-          this.ctx.fillText(`${slot.count}`, bx + 26, by + 38);
+        const slot = this.player.inv.slots[i];
+        if (slot && this.art.icons[slot.item]) {
+          this.ctx.drawImage(this.art.icons[slot.item], bx + 6, by + 6);
+          if (slot.count > 1) {
+            this.ctx.fillStyle = COLOR_GOLD;
+            this.ctx.font = "bold 12px system-ui, sans-serif";
+            this.ctx.fillText(`${slot.count}`, bx + 26, by + 38);
+          }
         }
       }
-    }
 
-    // Touch Virtual Controls Overlay
-    if (this.state === "PLAYING" && this.isTouchDevice) {
-      this.ctx.save();
-      for (const [key, btn] of Object.entries(TOUCH_CONTROLS)) {
-        let isActive = false;
-        for (const [tid, touch] of this.activeTouches) {
-          if (touch.type === btn.id) { isActive = true; break; }
+      if (this.isTouchDevice) {
+        this.ctx.save();
+        for (const [key, btn] of Object.entries(TOUCH_CONTROLS)) {
+          let isActive = false;
+          for (const [tid, touch] of this.activeTouches) {
+            if (touch.type === btn.id) { isActive = true; break; }
+          }
+
+          this.ctx.fillStyle = isActive ? "rgba(255, 215, 0, 0.4)" : "rgba(20, 26, 40, 0.65)";
+          this.ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
+          this.ctx.strokeStyle = isActive ? COLOR_GOLD : "rgba(90, 220, 255, 0.5)";
+          this.ctx.lineWidth = 2;
+          this.ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
+
+          this.ctx.fillStyle = isActive ? COLOR_GOLD : COLOR_WHITE;
+          this.ctx.font = "bold 16px system-ui, sans-serif";
+          this.ctx.textAlign = "center";
+          this.ctx.fillText(btn.label, btn.x + btn.w / 2, btn.y + btn.h / 2 + 5);
         }
-
-        this.ctx.fillStyle = isActive ? "rgba(255, 215, 0, 0.4)" : "rgba(20, 26, 40, 0.65)";
-        this.ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
-        this.ctx.strokeStyle = isActive ? COLOR_GOLD : "rgba(90, 220, 255, 0.5)";
-        this.ctx.lineWidth = 2;
-        this.ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
-
-        this.ctx.fillStyle = isActive ? COLOR_GOLD : COLOR_WHITE;
-        this.ctx.font = "bold 16px 'Courier New', monospace";
-        this.ctx.textAlign = "center";
-        this.ctx.fillText(btn.label, btn.x + btn.w / 2, btn.y + btn.h / 2 + 5);
+        this.ctx.restore();
       }
-      this.ctx.restore();
     }
 
     // Inventory & Crafting Matrix
     if (this.state === "INVENTORY") {
-      this.ctx.fillStyle = "rgba(10, 12, 18, 0.95)";
+      this.ctx.fillStyle = "rgba(10, 12, 18, 0.96)";
       this.ctx.fillRect(INV_UI_X, INV_UI_Y, 780, 540);
       this.ctx.strokeStyle = COLOR_GOLD;
+      this.ctx.lineWidth = 2;
       this.ctx.strokeRect(INV_UI_X, INV_UI_Y, 780, 540);
 
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 20px 'Courier New', monospace";
+      this.ctx.font = "bold 20px system-ui, sans-serif";
+      this.ctx.textAlign = "left";
       this.ctx.fillText("WORKSHOP & FABRICATION MATRIX", INV_UI_X + 24, INV_UI_Y + 36);
 
       // Close Button [X]
@@ -2874,59 +3047,63 @@ class AstroStrataEngine {
       this.ctx.strokeStyle = COLOR_WHITE;
       this.ctx.strokeRect(INV_UI_X + 735, INV_UI_Y + 12, 30, 30);
       this.ctx.fillStyle = COLOR_WHITE;
-      this.ctx.font = "bold 18px monospace";
+      this.ctx.font = "bold 18px system-ui, sans-serif";
       this.ctx.textAlign = "center";
-      this.ctx.fillText("X", INV_UI_X + 750, INV_UI_Y + 33);
+      this.ctx.fillText("✕", INV_UI_X + 750, INV_UI_Y + 33);
       this.ctx.textAlign = "left";
 
-      // Search Box
+      // Compact Search Box
       this.ctx.fillStyle = "#141824";
-      this.ctx.fillRect(INV_UI_X + 24, INV_UI_Y + 225, 200, 24);
+      this.ctx.fillRect(INV_UI_X + 24, INV_UI_Y + 225, 140, 26);
       this.ctx.strokeStyle = this.searchActive ? COLOR_CYAN : "#404c64";
-      this.ctx.strokeRect(INV_UI_X + 24, INV_UI_Y + 225, 200, 24);
-      this.ctx.fillStyle = COLOR_WHITE;
-      this.ctx.font = "12px monospace";
-      this.ctx.fillText(this.searchQuery || "Search items...", INV_UI_X + 30, INV_UI_Y + 241);
+      this.ctx.strokeRect(INV_UI_X + 24, INV_UI_Y + 225, 140, 26);
+      this.ctx.fillStyle = this.searchQuery ? COLOR_WHITE : "#7c8599";
+      this.ctx.font = "12px system-ui, sans-serif";
+      this.ctx.fillText(this.searchQuery || "Search...", INV_UI_X + 32, INV_UI_Y + 242);
 
       // Category Tabs
       const categories = ["ALL", "TOOLS", "WEAPONS", "ARMOR", "ROCKETS", "BLOCKS"];
-      let catX = INV_UI_X + 24 + 215;
+      let catX = INV_UI_X + 172;
       for (const cat of categories) {
         const isSel = this.craftCategory === cat;
         this.ctx.fillStyle = isSel ? "#2b3b55" : "#161c28";
-        this.ctx.fillRect(catX, INV_UI_Y + 225, 56, 24);
+        this.ctx.fillRect(catX, INV_UI_Y + 225, 54, 26);
         this.ctx.strokeStyle = isSel ? COLOR_GOLD : "#404c64";
-        this.ctx.strokeRect(catX, INV_UI_Y + 225, 56, 24);
+        this.ctx.strokeRect(catX, INV_UI_Y + 225, 54, 26);
         this.ctx.fillStyle = isSel ? COLOR_GOLD : COLOR_WHITE;
-        this.ctx.font = "bold 9px monospace";
-        this.ctx.fillText(cat, catX + 5, INV_UI_Y + 241);
-        catX += 60;
+        this.ctx.font = "bold 10px system-ui, sans-serif";
+        this.ctx.textAlign = "center";
+        this.ctx.fillText(cat, catX + 27, INV_UI_Y + 242);
+        catX += 58;
       }
+      this.ctx.textAlign = "left";
 
-      // Dedicated Scroll Buttons [ ▲ ] and [ ▼ ]
-      const maxScroll = Math.max(0, this.getFilteredRecipes().length - 9);
-      
+      // Page Counter & Scroll Buttons
+      const displayedRecipes = this.getFilteredRecipes();
+      const maxScroll = Math.max(0, displayedRecipes.length - 9);
+
+      this.ctx.fillStyle = COLOR_CYAN;
+      this.ctx.font = "11px system-ui, sans-serif";
+      const startIdx = displayedRecipes.length > 0 ? this.recipeScrollOffset + 1 : 0;
+      const endIdx = Math.min(displayedRecipes.length, this.recipeScrollOffset + 9);
+      this.ctx.fillText(`${startIdx}-${endIdx} / ${displayedRecipes.length}`, INV_UI_X + 530, INV_UI_Y + 242);
+
       this.ctx.fillStyle = (this.recipeScrollOffset > 0) ? "#24324a" : "#151922";
-      this.ctx.fillRect(INV_UI_X + 680, INV_UI_Y + 225, 30, 24);
+      this.ctx.fillRect(INV_UI_X + 680, INV_UI_Y + 225, 28, 26);
       this.ctx.strokeStyle = (this.recipeScrollOffset > 0) ? COLOR_GOLD : "#3a4254";
-      this.ctx.strokeRect(INV_UI_X + 680, INV_UI_Y + 225, 30, 24);
+      this.ctx.strokeRect(INV_UI_X + 680, INV_UI_Y + 225, 28, 26);
       this.ctx.fillStyle = (this.recipeScrollOffset > 0) ? COLOR_WHITE : "#555d70";
-      this.ctx.font = "bold 13px monospace";
-      this.ctx.fillText("▲", INV_UI_X + 689, INV_UI_Y + 242);
+      this.ctx.font = "bold 12px system-ui, sans-serif";
+      this.ctx.textAlign = "center";
+      this.ctx.fillText("▲", INV_UI_X + 694, INV_UI_Y + 242);
 
       this.ctx.fillStyle = (this.recipeScrollOffset < maxScroll) ? "#24324a" : "#151922";
-      this.ctx.fillRect(INV_UI_X + 715, INV_UI_Y + 225, 30, 24);
+      this.ctx.fillRect(INV_UI_X + 714, INV_UI_Y + 225, 28, 26);
       this.ctx.strokeStyle = (this.recipeScrollOffset < maxScroll) ? COLOR_GOLD : "#3a4254";
-      this.ctx.strokeRect(INV_UI_X + 715, INV_UI_Y + 225, 30, 24);
+      this.ctx.strokeRect(INV_UI_X + 714, INV_UI_Y + 225, 28, 26);
       this.ctx.fillStyle = (this.recipeScrollOffset < maxScroll) ? COLOR_WHITE : "#555d70";
-      this.ctx.fillText("▼", INV_UI_X + 724, INV_UI_Y + 242);
-
-      // Scroll Position Indicator
-      const displayedRecipes = this.getFilteredRecipes();
-      const currentPos = Math.min(displayedRecipes.length, this.recipeScrollOffset + 1);
-      this.ctx.fillStyle = COLOR_CYAN;
-      this.ctx.font = "11px monospace";
-      this.ctx.fillText(`${currentPos}-${Math.min(displayedRecipes.length, this.recipeScrollOffset + 9)} of ${displayedRecipes.length}`, INV_UI_X + 580, INV_UI_Y + 241);
+      this.ctx.fillText("▼", INV_UI_X + 728, INV_UI_Y + 242);
+      this.ctx.textAlign = "left";
 
       // Inventory slots
       for (let i = 0; i < 30; i++) {
@@ -2941,7 +3118,7 @@ class AstroStrataEngine {
           this.ctx.drawImage(this.art.icons[slot.item], srec.x + 6, srec.y + 6);
           if (slot.count > 1) {
             this.ctx.fillStyle = COLOR_GOLD;
-            this.ctx.font = "bold 11px monospace";
+            this.ctx.font = "bold 11px system-ui, sans-serif";
             this.ctx.fillText(`${slot.count}`, srec.x + 24, srec.y + 38);
           }
         }
@@ -2951,7 +3128,7 @@ class AstroStrataEngine {
       const visibleSlice = displayedRecipes.slice(this.recipeScrollOffset, this.recipeScrollOffset + 9);
       for (let idx = 0; idx < visibleSlice.length; idx++) {
         const rec = visibleSlice[idx];
-        const recY = INV_UI_Y + 258 + idx * 29;
+        const recY = INV_UI_Y + 260 + idx * 29;
 
         const reqStation = rec.station || "hand";
         const stationOk = (reqStation === "hand" || this.isNearStation(reqStation === "workbench" ? WORKBENCH : reqStation === "furnace" ? FURNACE : reqStation === "assembler" ? ASSEMBLER : LAUNCHPAD));
@@ -2967,26 +3144,28 @@ class AstroStrataEngine {
 
         this.ctx.fillStyle = "#161c28";
         this.ctx.fillRect(INV_UI_X + 24, recY, 720, 26);
-        this.ctx.strokeStyle = canCraft ? "#5adcff" : "#38445a";
+        this.ctx.strokeStyle = canCraft ? "rgba(90, 220, 255, 0.4)" : "#2e3646";
         this.ctx.strokeRect(INV_UI_X + 24, recY, 720, 26);
 
         const rName = BLOCK_DATA[rec.result]?.name || String(rec.result);
         this.ctx.fillStyle = COLOR_GOLD;
-        this.ctx.font = "12px monospace";
-        this.ctx.fillText(`[${reqStation.toUpperCase()}] ${rName} x${rec.count}`, INV_UI_X + 32, recY + 18);
+        this.ctx.font = "bold 12px system-ui, sans-serif";
+        this.ctx.fillText(`[${reqStation.toUpperCase()}] ${rName} x${rec.count}`, INV_UI_X + 32, recY + 17);
 
-        this.ctx.fillStyle = canCraft ? COLOR_EXP : "#9aa0a6";
-        this.ctx.font = "10px monospace";
-        this.ctx.fillText(reqTexts.join(" "), INV_UI_X + 310, recY + 18);
+        this.ctx.fillStyle = canCraft ? COLOR_EXP : "#8890a0";
+        this.ctx.font = "11px system-ui, sans-serif";
+        this.ctx.fillText(reqTexts.join("  "), INV_UI_X + 270, recY + 17);
 
         const craftBtn = { x: INV_UI_X + 675, y: recY + 2, w: 65, h: 22 };
-        this.ctx.fillStyle = canCraft ? "#236437" : "#303440";
+        this.ctx.fillStyle = canCraft ? "#236437" : "#282d38";
         this.ctx.fillRect(craftBtn.x, craftBtn.y, craftBtn.w, craftBtn.h);
-        this.ctx.strokeStyle = canCraft ? COLOR_EXP : "#505460";
+        this.ctx.strokeStyle = canCraft ? COLOR_EXP : "#424856";
         this.ctx.strokeRect(craftBtn.x, craftBtn.y, craftBtn.w, craftBtn.h);
-        this.ctx.fillStyle = canCraft ? COLOR_WHITE : "#777c88";
-        this.ctx.font = "bold 11px monospace";
-        this.ctx.fillText("CRAFT", craftBtn.x + 14, craftBtn.y + 15);
+        this.ctx.fillStyle = canCraft ? COLOR_WHITE : "#666e80";
+        this.ctx.font = "bold 11px system-ui, sans-serif";
+        this.ctx.textAlign = "center";
+        this.ctx.fillText("CRAFT", craftBtn.x + 32, craftBtn.y + 15);
+        this.ctx.textAlign = "left";
       }
     }
 
@@ -2998,7 +3177,7 @@ class AstroStrataEngine {
       this.ctx.strokeRect(INV_UI_X, INV_UI_Y, 820, 540);
 
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 20px 'Courier New', monospace";
+      this.ctx.font = "bold 20px system-ui, sans-serif";
       this.ctx.fillText("AEROSPACE STAR MAP (TIER 1 - 15)", INV_UI_X + 24, INV_UI_Y + 36);
 
       const visiblePlanets = PLANET_ORDER.slice(this.planetScrollOffset, this.planetScrollOffset + 4);
@@ -3013,10 +3192,10 @@ class AstroStrataEngine {
         this.ctx.strokeRect(INV_UI_X + 24, cardY, 760, 95);
 
         this.ctx.fillStyle = COLOR_WHITE;
-        this.ctx.font = "bold 15px 'Courier New', monospace";
+        this.ctx.font = "bold 15px system-ui, sans-serif";
         this.ctx.fillText(`${pdata.name} (Tier ${pdata.tier})`, INV_UI_X + 40, cardY + 28);
         this.ctx.fillStyle = COLOR_CYAN;
-        this.ctx.font = "12px monospace";
+        this.ctx.font = "12px system-ui, sans-serif";
         this.ctx.fillText(`Gravity: ${pdata.gravity}g | Hazard: ${pdata.hazard}`, INV_UI_X + 40, cardY + 50);
 
         this.ctx.fillStyle = "#1e2e44";
@@ -3034,7 +3213,7 @@ class AstroStrataEngine {
       this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 28px 'Courier New', monospace";
+      this.ctx.font = "bold 28px system-ui, sans-serif";
       this.ctx.textAlign = "center";
       this.ctx.fillText("EXPEDITION PAUSED", SCREEN_WIDTH / 2, 230);
 
@@ -3050,7 +3229,7 @@ class AstroStrataEngine {
         this.ctx.strokeStyle = COLOR_GOLD;
         this.ctx.strokeRect(SCREEN_WIDTH / 2 - 160, opt.y, 320, 42);
         this.ctx.fillStyle = COLOR_WHITE;
-        this.ctx.font = "bold 14px 'Courier New', monospace";
+        this.ctx.font = "bold 14px system-ui, sans-serif";
         this.ctx.fillText(opt.label, SCREEN_WIDTH / 2, opt.y + 26);
       }
     }

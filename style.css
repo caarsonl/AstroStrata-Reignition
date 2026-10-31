@@ -7,58 +7,69 @@
   -webkit-touch-callout: none;
 }
 
-body {
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
   background-color: #0a0a0f;
   color: #f5f5fa;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   touch-action: none;
 }
 
-#game-container {
-  position: relative;
-  width: 100%;
-  max-width: 1280px;
-  aspect-ratio: 16 / 9;
-  max-height: 100vh;
-  background-color: #10121a;
-  box-shadow: 0 0 50px rgba(0, 0, 0, 0.95), 0 0 25px rgba(90, 220, 255, 0.18);
-  border: 2px solid #222738;
+body {
   display: flex;
   justify-content: center;
   align-items: center;
-  touch-action: none;
+}
+
+/* 16:9 Letterboxed Canvas Container */
+#game-container {
+  position: relative;
+  width: 100vw;
+  height: 56.25vw; /* 16:9 aspect ratio */
+  max-height: 100vh;
+  max-width: 177.78vh; /* 16:9 aspect ratio */
+  background-color: #10121a;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.95), 0 0 25px rgba(90, 220, 255, 0.12);
+  border: 1px solid #222738;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   overflow: hidden;
+
+  /* Safe-area insets for notched phones and tablets */
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 #gameCanvas {
   width: 100%;
   height: 100%;
   display: block;
-  background: #10121a;
+  background-color: #10121a;
   touch-action: none;
 }
 
+/* Audio Boot / Loading Screen */
 #loading-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(10, 10, 15, 0.95);
-  backdrop-filter: blur(4px);
+  background: rgba(10, 10, 15, 0.96);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 100;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
   cursor: pointer;
 }
 
 #loading-overlay.fade-out {
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
 }
 
@@ -68,7 +79,7 @@ body {
   background: #141824;
   border: 2px solid #ffd700;
   border-radius: 8px;
-  box-shadow: 0 0 35px rgba(255, 215, 0, 0.25);
+  box-shadow: 0 0 35px rgba(255, 215, 0, 0.22);
   max-width: 580px;
   width: 90%;
 }
@@ -79,11 +90,11 @@ body {
   color: #ffd700;
   letter-spacing: 2px;
   margin-bottom: 12px;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.35);
 }
 
 .loader-content p {
-  font-size: 14px;
+  font-size: 13px;
   color: #5adcff;
   margin-bottom: 24px;
   line-height: 1.6;
@@ -93,8 +104,8 @@ body {
   background: #1b2336;
   color: #ffd700;
   border: 2px solid #ffd700;
-  padding: 14px 32px;
-  font-size: 15px;
+  padding: 14px 34px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 1.5px;
   cursor: pointer;
@@ -108,6 +119,60 @@ body {
 #start-btn:hover, #start-btn:active {
   background: #ffd700;
   color: #0a0a0f;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
-  transform: scale(1.03);
+  box-shadow: 0 0 22px rgba(255, 215, 0, 0.65);
+  transform: scale(1.02);
+}
+
+/* Orientation Lock Blocker */
+#rotate-device-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #0a0a0f;
+  z-index: 9999;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #ffd700;
+  padding: 24px;
+}
+
+#rotate-device-overlay .phone-icon {
+  font-size: 54px;
+  margin-bottom: 16px;
+  animation: rotateHint 2.2s infinite ease-in-out;
+}
+
+#rotate-device-overlay h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+#rotate-device-overlay p {
+  color: #5adcff;
+  font-size: 14px;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+@keyframes rotateHint {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-90deg);
+  }
+}
+
+/* Display overlay on phones and small tablets held in portrait */
+@media screen and (orientation: portrait) and (max-width: 950px) {
+  #rotate-device-overlay {
+    display: flex;
+  }
+  #game-container {
+    display: none;
+  }
 }

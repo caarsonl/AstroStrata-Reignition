@@ -1,9 +1,9 @@
 // =============================================================================
-// ASTROSTRATA: REIGNITION — ZERO-DEPENDENCY ENGINE (PART 1 / 3)
-// Architecture: Unified Texture Atlas & Pre-Baked Radial Lighting
+// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 1 / 4)
+// Core Engine Configuration, Geological Registries & Material Database
 // =============================================================================
 
-const VERSION_STRING = "v0.3.1-retina";
+const VERSION_STRING = "v0.3.2-mobile";
 const SCREEN_WIDTH = 1280;
 const SCREEN_HEIGHT = 720;
 const TILE_SIZE = 32;
@@ -28,7 +28,7 @@ const COLOR_HEAT = "#ff5f1e";
 const COLOR_PRESSURE = "#b450f0";
 const COLOR_BG_DARK = "#10121a";
 
-// Strata Depth Boundaries (tile rows)
+// Strata Depth Boundaries (Tile Grid Y Coordinates)
 const CRUST_SURFACE = 28;
 const CRUST_BOTTOM = 54;
 const UPPER_MANTLE_BOTTOM = 85;
@@ -125,7 +125,7 @@ const BLOCK_DATA = {
   [CHEST]: { name: "Loot Cache", hardness: 1.2, mohs: 2.5, color: "#a56e2d", drop: CHEST, req_tier: 0, req_tool: "Axe", desc: "Subterranean cache with survival supplies." },
   [DIRT]: { name: "Dirt", hardness: 0.7, mohs: 1.5, color: "#734b2d", drop: DIRT, req_tier: 0, req_tool: "Shovel", desc: "Soft organic topsoil." },
   [GRASS]: { name: "Grass Block", hardness: 0.7, mohs: 1.5, color: "#4b9128", drop: DIRT, req_tier: 0, req_tool: "Shovel", desc: "Root-bound surface humus layer." },
-  [STONE]: { name: "Crust Stone", hardness: 1.8, mohs: 5.5, color: "#787880", drop: STONE, req_tier: 1, req_tool: "Pickaxe", desc: "Brittle continental bedrock." },
+  [STONE]: { name: "Crust Stone", hardness: 1.8, mohs: 5.5, color: "#787880", drop: STONE, req_tier: 1, req_tool: "Pickaxe", desc: "Brittle continental granitic bedrock." },
   [COAL_ORE]: { name: "Coal Ore", hardness: 2.0, mohs: 3.0, color: "#28282d", drop: "Coal", req_tier: 1, req_tool: "Pickaxe", desc: "Compressed carbon fuel matrix.", xp: 12 },
   [IRON_ORE]: { name: "Iron Ore", hardness: 2.6, mohs: 5.5, color: "#b98769", drop: "Iron Ore", req_tier: 2, req_tool: "Pickaxe", desc: "Dense banded iron formation.", xp: 20 },
   [GOLD_ORE]: { name: "Gold Ore", hardness: 3.2, mohs: 4.5, color: "#e6c328", drop: "Gold Ore", req_tier: 3, req_tool: "Pickaxe", desc: "Heavy auriferous quartz vein.", xp: 35 },
@@ -402,6 +402,10 @@ const RECIPES = [
   { result: "Antimatter Annihilator", count: 1, req: { "Antimatter": 8, "Warp Drive Coil": 1 }, station: "particle_collider" },
   { result: "Infinity Singularity Blade", count: 1, req: { "Singularity Core": 4, "Chronos Crystal": 4, "Warp Drive Coil": 2 }, station: "particle_collider" }
 ];
+// =============================================================================
+// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 2 / 4)
+// UI Helpers, Mobile/Tablet Controls, Texture Atlas & Audio/Lighting Engines
+// =============================================================================
 
 // UI Coordinate Helpers
 const INV_UI_X = Math.floor((SCREEN_WIDTH - 780) / 2);
@@ -481,15 +485,79 @@ function evaluateMiningInteraction(player, tileId) {
   return { canDamage: true, canDrop: true, effMult: cap.mult, msg: "Harvestable" };
 }
 
-// Touch Control Layout
+// Adaptive Phone & Tablet Touch Layout Detection
+const isPhoneDevice = (('ontouchstart' in window) || navigator.maxTouchPoints > 0) &&
+                      Math.min(window.screen.width, window.screen.height) < 520;
+
 const TOUCH_CONTROLS = {
-  btnLeft:  { id: "left",  x: 25,  y: SCREEN_HEIGHT - 120, w: 70, h: 70, label: "◀" },
-  btnRight: { id: "right", x: 105, y: SCREEN_HEIGHT - 120, w: 70, h: 70, label: "▶" },
-  btnJump:  { id: "jump",  x: 65,  y: SCREEN_HEIGHT - 200, w: 70, h: 70, label: "▲" },
-  btnMine:  { id: "mine",  x: SCREEN_WIDTH - 180, y: SCREEN_HEIGHT - 120, w: 70, h: 70, label: "DIG" },
-  btnPlace: { id: "place", x: SCREEN_WIDTH - 95,  y: SCREEN_HEIGHT - 120, w: 70, h: 70, label: "USE" },
-  btnInv:   { id: "inv",   x: SCREEN_WIDTH - 85,  y: 18, w: 68, h: 36, label: "INV" },
-  btnHeal:  { id: "heal",  x: SCREEN_WIDTH - 165, y: 18, w: 68, h: 36, label: "HEAL" }
+  // Left Hand: Movement
+  btnLeft: {
+    id: "left",
+    x: isPhoneDevice ? 52 : 40,
+    y: SCREEN_HEIGHT - (isPhoneDevice ? 145 : 135),
+    w: isPhoneDevice ? 84 : 76,
+    h: isPhoneDevice ? 84 : 76,
+    pad: isPhoneDevice ? 18 : 14,
+    label: "◀"
+  },
+  btnRight: {
+    id: "right",
+    x: isPhoneDevice ? 148 : 126,
+    y: SCREEN_HEIGHT - (isPhoneDevice ? 145 : 135),
+    w: isPhoneDevice ? 84 : 76,
+    h: isPhoneDevice ? 84 : 76,
+    pad: isPhoneDevice ? 18 : 14,
+    label: "▶"
+  },
+
+  // Right Hand: Action & Jump
+  btnJump: {
+    id: "jump",
+    x: SCREEN_WIDTH - (isPhoneDevice ? 165 : 145),
+    y: SCREEN_HEIGHT - (isPhoneDevice ? 235 : 215),
+    w: isPhoneDevice ? 94 : 84,
+    h: isPhoneDevice ? 82 : 76,
+    pad: isPhoneDevice ? 18 : 14,
+    label: "JUMP"
+  },
+  btnMine: {
+    id: "mine",
+    x: SCREEN_WIDTH - (isPhoneDevice ? 215 : 195),
+    y: SCREEN_HEIGHT - (isPhoneDevice ? 140 : 130),
+    w: isPhoneDevice ? 84 : 76,
+    h: isPhoneDevice ? 84 : 76,
+    pad: isPhoneDevice ? 18 : 14,
+    label: "DIG"
+  },
+  btnPlace: {
+    id: "place",
+    x: SCREEN_WIDTH - (isPhoneDevice ? 115 : 105),
+    y: SCREEN_HEIGHT - (isPhoneDevice ? 140 : 130),
+    w: isPhoneDevice ? 84 : 76,
+    h: isPhoneDevice ? 84 : 76,
+    pad: isPhoneDevice ? 18 : 14,
+    label: "USE"
+  },
+
+  // Top Utility Bar
+  btnHeal: {
+    id: "heal",
+    x: SCREEN_WIDTH - (isPhoneDevice ? 190 : 180),
+    y: 16,
+    w: isPhoneDevice ? 78 : 72,
+    h: isPhoneDevice ? 42 : 38,
+    pad: 10,
+    label: "HEAL"
+  },
+  btnInv: {
+    id: "inv",
+    x: SCREEN_WIDTH - (isPhoneDevice ? 102 : 95),
+    y: 16,
+    w: isPhoneDevice ? 78 : 72,
+    h: isPhoneDevice ? 42 : 38,
+    pad: 10,
+    label: "INV"
+  }
 };
 
 // ==========================================
@@ -726,10 +794,6 @@ class UnifiedTextureAtlas {
     }
   }
 }
-// =============================================================================
-// ASTROSTRATA: REIGNITION — ZERO-DEPENDENCY ENGINE (PART 2 / 3)
-// Components: Sound Synthesis, Pre-Baked Lighting, World Gen & Entities
-// =============================================================================
 
 // ==========================================
 // PROCEDURAL AUDIO SYNTHESIZER
@@ -825,7 +889,7 @@ class SoundEngine {
 
 // ==========================================
 // PRE-BAKED RADIAL LIGHTING ENGINE
-// Zero per-frame gradient allocation (Restores 60 FPS on Mobile)
+// Zero per-frame gradient allocations (Maintains 60 FPS on Mobile)
 // ==========================================
 class OptimizedLighting {
   constructor() {
@@ -834,7 +898,6 @@ class OptimizedLighting {
     this.canvas.height = LIGHT_H;
     this.ctx = this.canvas.getContext("2d");
 
-    // Pre-bake light stamps of key radii to eliminate runtime createRadialGradient stalls
     this.stamps = {};
     for (const r of [16, 24, 35, 45]) {
       const cvs = document.createElement("canvas");
@@ -876,7 +939,6 @@ class OptimizedLighting {
     this.ctx.fillRect(0, 0, LIGHT_W, LIGHT_H);
     this.ctx.globalCompositeOperation = "lighter";
 
-    // Player Headlamp
     const px = Math.floor((player.x + player.w / 2 - camX) / LIGHT_SCALE);
     const py = Math.floor((player.y + player.h / 2 - camY) / LIGHT_SCALE);
     const pStamp = this.stamps[35];
@@ -909,6 +971,10 @@ class OptimizedLighting {
     mainCtx.restore();
   }
 }
+// =============================================================================
+// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 3 / 4)
+// Entities, Particle Dynamics, Physics System & World Generation
+// =============================================================================
 
 // ==========================================
 // PARTICLES & FLOATING TEXTS
@@ -1558,7 +1624,11 @@ class Player {
 
       const sel = this.inv.getSelected();
       if (sel) {
-        atlas.draw(ctx, "i_" + sel.item, armX + ox - 12, armY + oy - 12, 24, 24);
+        if (typeof sel.item === "number" || atlas.get("b_" + sel.item)) {
+          atlas.draw(ctx, "b_" + sel.item, armX + ox - 12, armY + oy - 12, 24, 24);
+        } else {
+          atlas.draw(ctx, "i_" + sel.item, armX + ox - 12, armY + oy - 12, 24, 24);
+        }
       }
     } else {
       ctx.lineTo(armX + (this.facingRight ? 3 : -3), armY + 12);
@@ -1567,8 +1637,8 @@ class Player {
   }
 }
 // =============================================================================
-// ASTROSTRATA: REIGNITION — ZERO-DEPENDENCY ENGINE (PART 3 / 3)
-// Components: Engine Controller, High-DPI Draw, Inspector & Bootstrap
+// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 4 / 4)
+// Main Engine Controller, Unified Draw, Inspector Card & Mobile Bootstrap
 // =============================================================================
 
 class AstroStrataEngine {
@@ -1576,7 +1646,7 @@ class AstroStrataEngine {
     this.canvas = document.getElementById("gameCanvas");
     this.ctx = this.canvas.getContext("2d");
 
-    // High-DPI / Retina 平滑清晰渲染配置
+    // 高畫質 Retina / High-DPI 渲染配置（徹底解決文字模糊問題）
     this.dpr = Math.min(window.devicePixelRatio || 1, 2.5);
     this.canvas.width = Math.floor(SCREEN_WIDTH * this.dpr);
     this.canvas.height = Math.floor(SCREEN_HEIGHT * this.dpr);
@@ -1602,7 +1672,7 @@ class AstroStrataEngine {
     this.floatTexts = [];
 
     this.cursorItem = null;
-    this.selectedInvSlot = null; // 檢視與移動鎖定槽位
+    this.selectedInvSlot = null; // 檢視與移動鎖定槽位（防止物品點擊後消失）
     this.camX = 0;
     this.camY = 0;
 
@@ -1627,7 +1697,7 @@ class AstroStrataEngine {
     this.setupListeners();
   }
 
-  // 統一圖標繪製助手（同時支持方塊 ID 與物品名稱）
+  // 統一圖標繪製助手（同時支持數值型方塊 ID 與字串型物品名稱）
   drawItemIcon(ctx, key, x, y, w = 32, h = 32) {
     if (typeof key === "number" || this.atlas.get("b_" + key)) {
       this.atlas.draw(ctx, "b_" + key, x, y, w, h);
@@ -1899,6 +1969,7 @@ class AstroStrataEngine {
     window.addEventListener("keydown", (e) => {
       this.keys[e.code] = true;
 
+      // 建立世界輸入框監聽
       if (this.state === "CREATE_WORLD" && this.nameInputActive) {
         if (e.key === "Enter") this.nameInputActive = false;
         else if (e.key === "Backspace") this.inputWorldName = this.inputWorldName.slice(0, -1);
@@ -1906,6 +1977,7 @@ class AstroStrataEngine {
         return;
       }
 
+      // 背包搜尋框輸入監聽
       if (this.state === "INVENTORY" && this.searchActive) {
         if (e.key === "Enter" || e.key === "Escape") this.searchActive = false;
         else if (e.key === "Backspace") {
@@ -1918,6 +1990,7 @@ class AstroStrataEngine {
         return;
       }
 
+      // 背包開關快捷鍵 (E, I, Tab)
       if (e.code === "KeyE" || e.code === "KeyI" || e.code === "Tab") {
         if (e.code === "Tab") e.preventDefault();
         if (this.state === "PLAYING") {
@@ -1930,6 +2003,7 @@ class AstroStrataEngine {
         }
       }
 
+      // Escape 鍵處理
       if (e.code === "Escape") {
         if (this.state === "INVENTORY" || this.state === "STAR_MAP") {
           this.selectedInvSlot = null;
@@ -1944,6 +2018,7 @@ class AstroStrataEngine {
         }
       }
 
+      // 快速治癒快捷鍵 (H)
       if (e.code === "KeyH" && this.state === "PLAYING") {
         if (this.player.inv.countItem("Health Potion") > 0) {
           this.player.inv.removeItem("Health Potion", 1);
@@ -1953,6 +2028,7 @@ class AstroStrataEngine {
         }
       }
 
+      // 快捷列數字鍵 (1-0)
       if (this.state === "PLAYING" && (e.code.startsWith("Digit") || e.code.startsWith("Numpad"))) {
         const d = parseInt(e.key, 10);
         if (!isNaN(d)) {
@@ -1980,8 +2056,18 @@ class AstroStrataEngine {
       return { x: (touch.clientX - rect.left) * sx, y: (touch.clientY - rect.top) * sy };
     };
 
-    const pointInRect = (px, py, r) => {
-      return px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
+    // 內縮與膨脹觸控判定（防止拇指小幅偏移漏按）
+    const pointInPaddedRect = (px, py, btn) => {
+      const p = btn.pad || 0;
+      return px >= btn.x - p && px <= btn.x + btn.w + p &&
+             py >= btn.y - p && py <= btn.y + btn.h + p;
+    };
+
+    const getTouchButtonId = (px, py) => {
+      for (const [key, btn] of Object.entries(TOUCH_CONTROLS)) {
+        if (pointInPaddedRect(px, py, btn)) return btn.id;
+      }
+      return null;
     };
 
     this.canvas.addEventListener("mousemove", (e) => {
@@ -2028,8 +2114,7 @@ class AstroStrataEngine {
       }
     });
 
-    // 多點觸控監聽（包含移動端滑動滾動）
-    // Touch Listeners with Hotbar Selection & Reticle Clearing
+    // 多點觸控監聽（手機與平板自適應）
     this.canvas.addEventListener("touchstart", (e) => {
       e.preventDefault();
       this.sound.init();
@@ -2038,6 +2123,13 @@ class AstroStrataEngine {
       for (let i = 0; i < e.changedTouches.length; i++) {
         const t = e.changedTouches[i];
         const pos = getTouchPos(t);
+
+        if (this.state === "INVENTORY") {
+          this.invTouchStartY = pos.y;
+          this.invTouchStartX = pos.x;
+          this.invTouchStartOffset = this.recipeScrollOffset;
+          this.invHasDragged = false;
+        }
 
         if (this.state !== "PLAYING") {
           this.mouse.x = pos.x;
@@ -2049,51 +2141,46 @@ class AstroStrataEngine {
           continue;
         }
 
-        // A. Check Virtual Control Buttons
-        let handled = false;
-        for (const [key, btn] of Object.entries(TOUCH_CONTROLS)) {
-          if (pointInRect(pos.x, pos.y, btn)) {
-            this.activeTouches.set(t.identifier, { type: btn.id, ...pos });
-            handled = true;
+        // A. 虛擬控制鍵判定
+        const btnId = getTouchButtonId(pos.x, pos.y);
+        if (btnId) {
+          this.activeTouches.set(t.identifier, { type: btnId, ...pos });
 
-            if (btn.id === "left")  this.keys["KeyA"] = true;
-            if (btn.id === "right") this.keys["KeyD"] = true;
-            if (btn.id === "jump")  this.keys["KeyW"] = true;
-            if (btn.id === "inv") {
-              this.state = "INVENTORY";
-              this.sound.play("click");
-            }
-            if (btn.id === "heal") {
-              if (this.player.inv.countItem("Health Potion") > 0) {
-                this.player.inv.removeItem("Health Potion", 1);
-                this.player.hp = Math.min(this.player.max_hp, this.player.hp + 50);
-                this.sound.play("potion");
-                this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "+50 HP", COLOR_EXP));
-              }
-            }
-            if (btn.id === "mine") {
-              this.mouse.down = true;
-              if (!this.lockedTargetTile) {
-                const aheadX = this.player.x + (this.player.facingRight ? this.player.w + 12 : -12);
-                this.lockedTargetTile = {
-                  tx: Math.floor(aheadX / TILE_SIZE),
-                  ty: Math.floor((this.player.y + this.player.h / 2) / TILE_SIZE)
-                };
-              }
-            }
-            if (btn.id === "place") {
-              this.handleRightClick();
-            }
-            break;
+          if (btnId === "left")  this.keys["KeyA"] = true;
+          if (btnId === "right") this.keys["KeyD"] = true;
+          if (btnId === "jump")  this.keys["KeyW"] = true;
+          if (btnId === "inv") {
+            this.state = "INVENTORY";
+            this.sound.play("click");
           }
+          if (btnId === "heal") {
+            if (this.player.inv.countItem("Health Potion") > 0) {
+              this.player.inv.removeItem("Health Potion", 1);
+              this.player.hp = Math.min(this.player.max_hp, this.player.hp + 50);
+              this.sound.play("potion");
+              this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "+50 HP", COLOR_EXP));
+            }
+          }
+          if (btnId === "mine") {
+            this.mouse.down = true;
+            if (!this.lockedTargetTile) {
+              const aheadX = this.player.x + (this.player.facingRight ? this.player.w + 12 : -12);
+              this.lockedTargetTile = {
+                tx: Math.floor(aheadX / TILE_SIZE),
+                ty: Math.floor((this.player.y + this.player.h / 2) / TILE_SIZE)
+              };
+            }
+          }
+          if (btnId === "place") {
+            this.handleRightClick();
+          }
+          continue;
         }
 
-        if (handled) continue;
-
-        // B. Check Hotbar Touch Collision (Fixes unresponsive hotbar slots)
+        // B. 底部快捷列觸控切換（杜絕誤觸挖掘）
         const hotbarY = SCREEN_HEIGHT - 60;
         const hotbarStartX = SCREEN_WIDTH / 2 - 240;
-        if (pos.y >= hotbarY && pos.y <= hotbarY + 44 && pos.x >= hotbarStartX && pos.x <= hotbarStartX + 480) {
+        if (pos.y >= hotbarY - 8 && pos.y <= hotbarY + 52 && pos.x >= hotbarStartX && pos.x <= hotbarStartX + 480) {
           const clickedIdx = Math.floor((pos.x - hotbarStartX) / 48);
           if (clickedIdx >= 0 && clickedIdx < 10) {
             this.player.inv.selectedHotbar = clickedIdx;
@@ -2103,7 +2190,7 @@ class AstroStrataEngine {
           }
         }
 
-        // C. Default World Tap / Digging
+        // C. 地圖點擊/持續挖掘
         this.activeTouches.set(t.identifier, { type: "world", ...pos });
         this.lockedTargetTile = {
           tx: Math.floor((pos.x + this.camX) / TILE_SIZE),
@@ -2113,14 +2200,58 @@ class AstroStrataEngine {
       }
     }, { passive: false });
 
+    this.canvas.addEventListener("touchmove", (e) => {
+      e.preventDefault();
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        const pos = getTouchPos(t);
+        const existing = this.activeTouches.get(t.identifier);
+        if (!existing) continue;
+
+        // 拇指在方向鍵之間平滑橫向滑動過渡
+        if (existing.type === "left" || existing.type === "right") {
+          const newBtnId = getTouchButtonId(pos.x, pos.y);
+          if (newBtnId === "left" && existing.type !== "left") {
+            this.keys["KeyD"] = false;
+            this.keys["KeyA"] = true;
+            existing.type = "left";
+          } else if (newBtnId === "right" && existing.type !== "right") {
+            this.keys["KeyA"] = false;
+            this.keys["KeyD"] = true;
+            existing.type = "right";
+          }
+        }
+
+        // 背包滑動滾動配方列表
+        if (this.state === "INVENTORY" && this.invTouchStartY !== undefined) {
+          const dy = pos.y - this.invTouchStartY;
+          if (Math.abs(dy) > 8) {
+            this.invHasDragged = true;
+            const maxScroll = Math.max(0, this.getFilteredRecipes().length - 9);
+            const step = Math.round(-dy / 28);
+            this.recipeScrollOffset = Math.max(0, Math.min(maxScroll, this.invTouchStartOffset + step));
+          }
+        }
+
+        // 地圖手指拖曳跟隨準星
+        if (existing.type === "world") {
+          this.lockedTargetTile = {
+            tx: Math.floor((pos.x + this.camX) / TILE_SIZE),
+            ty: Math.floor((pos.y + this.camY) / TILE_SIZE)
+          };
+        }
+      }
+    }, { passive: false });
+
     const handleTouchEnd = (e) => {
       e.preventDefault();
       for (let i = 0; i < e.changedTouches.length; i++) {
         const t = e.changedTouches[i];
         const existing = this.activeTouches.get(t.identifier);
+        const pos = getTouchPos(t);
 
+        // 背包點擊執行（僅在未發生滑動拖曳時觸發）
         if (this.state === "INVENTORY" && !this.invHasDragged) {
-          const pos = getTouchPos(t);
           this.mouse.x = pos.x;
           this.mouse.y = pos.y;
           this.handleLeftClick();
@@ -2137,15 +2268,17 @@ class AstroStrataEngine {
           if (existing.type === "jump")  this.keys["KeyW"] = false;
           if (existing.type === "mine" || existing.type === "world") {
             this.mouse.down = false;
-            // Clears reticle when finger leaves the screen
-            this.lockedTargetTile = null;
+            this.lockedTargetTile = null; // 手指離開螢幕立即清除幽靈準星
           }
           this.activeTouches.delete(t.identifier);
         }
       }
 
-      // If no active touches remain, clear any lingering target tile
+      // 所有手指均離開時的安全狀態重置
       if (this.activeTouches.size === 0) {
+        this.keys["KeyA"] = false;
+        this.keys["KeyD"] = false;
+        this.keys["KeyW"] = false;
         this.mouse.down = false;
         this.lockedTargetTile = null;
       }
@@ -2313,7 +2446,7 @@ class AstroStrataEngine {
       return;
     }
 
-    // 滾動翻頁按鈕
+    // 滾動翻頁按鈕 [▲] 與 [▼]
     const maxScroll = Math.max(0, this.getFilteredRecipes().length - 9);
     if (mx >= INV_UI_X + 680 && mx <= INV_UI_X + 710 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 250) {
       this.recipeScrollOffset = Math.max(0, this.recipeScrollOffset - 1);
@@ -2326,7 +2459,7 @@ class AstroStrataEngine {
       return;
     }
 
-    // 搜尋欄點擊
+    // 搜尋框點擊
     if (mx >= rx && mx <= rx + 140 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 251) {
       this.searchActive = true;
       this.sound.play("click");
@@ -2335,7 +2468,7 @@ class AstroStrataEngine {
       this.searchActive = false;
     }
 
-    // 分類過濾分頁
+    // 分類過濾選單
     const categories = ["ALL", "TOOLS", "WEAPONS", "ARMOR", "ROCKETS", "BLOCKS"];
     let catX = INV_UI_X + 172;
     for (const cat of categories) {
@@ -2379,7 +2512,7 @@ class AstroStrataEngine {
       }
     }
 
-    // 裝備欄點擊互動
+    // 裝備欄點擊卸載或替換
     const armorSlots = ["helmet", "chest", "boots"];
     for (const aslot of armorSlots) {
       const arec = getArmorRect(aslot);
@@ -2675,7 +2808,7 @@ class AstroStrataEngine {
   }
 
   draw() {
-    // 套用高解析度向量平滑縮放變換
+    // 套用高解析度設備畫素平滑縮放變換
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 
     this.ctx.fillStyle = COLOR_BG_DARK;
@@ -2807,7 +2940,7 @@ class AstroStrataEngine {
       return;
     }
 
-    // 世界與實體渲染
+    // 世界與地形渲染
     const pTy = Math.floor(this.player.y / TILE_SIZE);
     this.ctx.fillStyle = (pTy < CRUST_SURFACE) ? (PLANET_DATA[this.world.current_planet]?.sky_color || "#87c3f5") : "#141620";
     this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -2857,7 +2990,6 @@ class AstroStrataEngine {
       const targetTile = this.world.getTile(aim.tx, aim.ty);
       const dmg = this.world.damage_map.get(`${aim.tx},${aim.ty}`);
 
-      // 頭頂實體挖掘進度條
       if (dmg && BLOCK_DATA[targetTile]) {
         const pct = Math.min(1.0, dmg / BLOCK_DATA[targetTile].hardness);
         const barW = 32;
@@ -2871,12 +3003,11 @@ class AstroStrataEngine {
         this.ctx.strokeRect(rDx, rDy - 8, barW, barH);
       }
 
-      // 右上角目標觀察資訊
-      // Target Block Observation Card (Shifted below HEAL & INV buttons)
+      // 右上方塊資訊卡（向下平移至 hy = 64，徹底避開右上角 INV/HEAL 按鈕重疊）
       if (targetTile !== AIR && BLOCK_DATA[targetTile]) {
         const bdata = BLOCK_DATA[targetTile];
         const hx = SCREEN_WIDTH - 290;
-        const hy = 64; // Moved down to avoid overlapping the top-right touch buttons
+        const hy = 64;
         this.ctx.fillStyle = "rgba(18, 22, 32, 0.92)";
         this.ctx.fillRect(hx, hy, 270, 85);
         this.ctx.strokeStyle = COLOR_GOLD;
@@ -2907,7 +3038,7 @@ class AstroStrataEngine {
       }
     }
 
-    // 地質層資訊 HUD
+    // 地質層深度 HUD
     const layer = World.getLayerInfo(pTy, this.world.current_planet);
     this.ctx.fillStyle = "rgba(18, 22, 32, 0.85)";
     this.ctx.fillRect(SCREEN_WIDTH / 2 - 140, 14, 280, 64);
@@ -2924,7 +3055,7 @@ class AstroStrataEngine {
     this.ctx.fillStyle = COLOR_CYAN;
     this.ctx.fillText(`Thermal: ${layer.temp}`, SCREEN_WIDTH / 2 - 128, 66);
 
-    // 生命值與等級 HUD
+    // 生命與等級條
     this.ctx.fillStyle = COLOR_HP;
     this.ctx.fillRect(20, 20, Math.floor((this.player.hp / this.player.max_hp) * 180), 16);
     this.ctx.strokeStyle = COLOR_WHITE;
@@ -2969,16 +3100,24 @@ class AstroStrataEngine {
             if (touch.type === btn.id) { isActive = true; break; }
           }
 
-          this.ctx.fillStyle = isActive ? "rgba(255, 215, 0, 0.4)" : "rgba(20, 26, 40, 0.65)";
-          this.ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
-          this.ctx.strokeStyle = isActive ? COLOR_GOLD : "rgba(90, 220, 255, 0.5)";
-          this.ctx.lineWidth = 2;
-          this.ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
+          this.ctx.fillStyle = isActive ? "rgba(255, 215, 0, 0.42)" : "rgba(16, 22, 34, 0.72)";
+          this.ctx.beginPath();
+          if (this.ctx.roundRect) {
+            this.ctx.roundRect(btn.x, btn.y, btn.w, btn.h, 10);
+          } else {
+            this.ctx.rect(btn.x, btn.y, btn.w, btn.h);
+          }
+          this.ctx.fill();
+
+          this.ctx.strokeStyle = isActive ? COLOR_GOLD : "rgba(90, 220, 255, 0.55)";
+          this.ctx.lineWidth = isActive ? 2.5 : 1.5;
+          this.ctx.stroke();
 
           this.ctx.fillStyle = isActive ? COLOR_GOLD : COLOR_WHITE;
-          this.ctx.font = "bold 16px system-ui, -apple-system, sans-serif";
+          this.ctx.font = (btn.label.length > 3) ? "bold 13px system-ui, -apple-system, sans-serif" : "bold 17px system-ui, -apple-system, sans-serif";
           this.ctx.textAlign = "center";
-          this.ctx.fillText(btn.label, btn.x + btn.w / 2, btn.y + btn.h / 2 + 5);
+          this.ctx.textBaseline = "middle";
+          this.ctx.fillText(btn.label, btn.x + btn.w / 2, btn.y + btn.h / 2);
         }
         this.ctx.restore();
       }
@@ -3004,7 +3143,7 @@ class AstroStrataEngine {
       this.ctx.lineWidth = 1;
       this.ctx.strokeRect(INV_UI_X + 735, INV_UI_Y + 12, 30, 30);
       this.ctx.fillStyle = COLOR_WHITE;
-      this.ctx.font = "bold 16px system-ui, -apple-system, sans-serif";
+      this.ctx.font = "bold 16px system-ui, sans-serif";
       this.ctx.textAlign = "center";
       this.ctx.fillText("✕", INV_UI_X + 750, INV_UI_Y + 33);
       this.ctx.textAlign = "left";
@@ -3146,7 +3285,7 @@ class AstroStrataEngine {
       }
       this.ctx.textAlign = "left";
 
-      // 頁碼計數與專屬滾動按鈕
+      // 頁碼計數與專屬翻頁滾動按鈕
       const displayedRecipes = this.getFilteredRecipes();
       const maxScroll = Math.max(0, displayedRecipes.length - 9);
 
@@ -3295,7 +3434,9 @@ class AstroStrataEngine {
   }
 }
 
-// 啟動器
+// ==========================================
+// 全局啟動引導器（支援手機全螢幕喚起與音訊上下文解鎖）
+// ==========================================
 function startAstroStrataApp() {
   const overlay = document.getElementById("loading-overlay");
   const startBtn = document.getElementById("start-btn");
@@ -3311,11 +3452,21 @@ function startAstroStrataApp() {
 
   const dismissAndPlay = (e) => {
     if (e) e.preventDefault();
+
+    // 手機端點擊時請求瀏覽器原生全螢幕以隱藏網址列
+    const container = document.documentElement;
+    if (container.requestFullscreen) {
+      container.requestFullscreen().catch(() => {});
+    } else if (container.webkitRequestFullscreen) {
+      container.webkitRequestFullscreen();
+    }
+
     try {
       gameInstance.sound.init();
     } catch (audioErr) {
       console.warn("Audio Context init warning:", audioErr);
     }
+
     if (overlay) {
       overlay.classList.add("fade-out");
       setTimeout(() => {

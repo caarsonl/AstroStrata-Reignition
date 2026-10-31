@@ -2035,7 +2035,6 @@ class AstroStrataEngine {
     window.addEventListener("keydown", (e) => {
       this.keys[e.code] = true;
 
-      // Sector Creation Input
       if (this.state === "CREATE_WORLD" && this.nameInputActive) {
         if (e.key === "Enter") this.nameInputActive = false;
         else if (e.key === "Backspace") this.inputWorldName = this.inputWorldName.slice(0, -1);
@@ -2043,7 +2042,6 @@ class AstroStrataEngine {
         return;
       }
 
-      // Inventory Recipe Search Input
       if (this.state === "INVENTORY" && this.searchActive) {
         if (e.key === "Enter" || e.key === "Escape") this.searchActive = false;
         else if (e.key === "Backspace") {
@@ -2056,7 +2054,6 @@ class AstroStrataEngine {
         return;
       }
 
-      // Inventory Toggle (E, I, Tab)
       if (e.code === "KeyE" || e.code === "KeyI" || e.code === "Tab") {
         if (e.code === "Tab") e.preventDefault();
         if (this.state === "PLAYING") {
@@ -2073,7 +2070,6 @@ class AstroStrataEngine {
         }
       }
 
-      // Escape Handling (Menu & Pause)
       if (e.code === "Escape") {
         if (this.state === "INVENTORY" || this.state === "STAR_MAP") {
           if (this.cursorItem) {
@@ -2092,7 +2088,6 @@ class AstroStrataEngine {
         }
       }
 
-      // Quick Potion Heal (H)
       if (e.code === "KeyH" && this.state === "PLAYING") {
         if (this.player.inv.countItem("Health Potion") > 0) {
           this.player.inv.removeItem("Health Potion", 1);
@@ -2102,7 +2097,6 @@ class AstroStrataEngine {
         }
       }
 
-      // Hotbar Number Selection (1-0)
       if (this.state === "PLAYING" && (e.code.startsWith("Digit") || e.code.startsWith("Numpad"))) {
         const d = parseInt(e.key, 10);
         if (!isNaN(d)) {
@@ -2133,14 +2127,12 @@ class AstroStrataEngine {
       return { x: (touch.clientX - rect.left) * sx, y: (touch.clientY - rect.top) * sy };
     };
 
-    // Padded Hitbox Tester (Prevents missing virtual buttons by small finger drifts)
     const pointInPaddedRect = (px, py, btn) => {
       const p = btn.pad || 0;
       return px >= btn.x - p && px <= btn.x + btn.w + p &&
              py >= btn.y - p && py <= btn.y + btn.h + p;
     };
 
-    // Helper: Find which virtual button matches a coordinate
     const getTouchButtonId = (px, py) => {
       for (const [key, btn] of Object.entries(TOUCH_CONTROLS)) {
         if (pointInPaddedRect(px, py, btn)) return btn.id;
@@ -2207,7 +2199,6 @@ class AstroStrataEngine {
         const t = e.changedTouches[i];
         const pos = getTouchPos(t);
 
-        // Record swipe baseline for inventory crafting list
         if (this.state === "INVENTORY") {
           this.invTouchStartY = pos.y;
           this.invTouchStartX = pos.x;
@@ -2215,7 +2206,6 @@ class AstroStrataEngine {
           this.invHasDragged = false;
         }
 
-        // Outside gameplay, forward tap to UI system
         if (this.state !== "PLAYING") {
           this.mouse.x = pos.x;
           this.mouse.y = pos.y;
@@ -2248,8 +2238,9 @@ class AstroStrataEngine {
           }
           if (btnId === "mine") {
             this.mouse.down = true;
+            // Uses current locked target tile; if none exists, defaults to front
             if (!this.lockedTargetTile) {
-              const aheadX = this.player.x + (this.player.facingRight ? this.player.w + 12 : -12);
+              const aheadX = this.player.x + (this.player.facingRight ? this.player.w + 14 : -14);
               this.lockedTargetTile = {
                 tx: Math.floor(aheadX / TILE_SIZE),
                 ty: Math.floor((this.player.y + this.player.h / 2) / TILE_SIZE)
@@ -2275,7 +2266,7 @@ class AstroStrataEngine {
           }
         }
 
-        // C. World Touch: Smart Interaction (Attack, Place, or Mine)
+        // C. World Touch: Smart Interaction (Targeting, Attack, Placement & Mining)
         const targetWorldX = pos.x + this.camX;
         const targetWorldY = pos.y + this.camY;
         const tx = Math.floor(targetWorldX / TILE_SIZE);
@@ -2294,17 +2285,18 @@ class AstroStrataEngine {
         }
         if (tappedEnemy) continue;
 
-        // 2. Direct Air Tap with Block Selected -> Place Block Immediately
-        if (dist <= 190 && sel && (BLOCK_DATA[sel.item] || typeof sel.item === "number") && this.world.getTile(tx, ty) === AIR) {
-          this.lockedTargetTile = { tx, ty };
+        // 2. Lock reticle to exact touched tile
+        this.lockedTargetTile = { tx, ty };
+
+        // 3. Direct Tap-to-Place (if holding block and tapping nearby empty space)
+        const isBlock = (sel && typeof sel.item === "number" && BLOCK_DATA[sel.item]) || (sel && sel.item === "Obsidian");
+        if (dist <= 190 && isBlock && this.world.getTile(tx, ty) === AIR) {
           this.handleRightClick();
-          this.lockedTargetTile = null;
           continue;
         }
 
-        // 3. Solid Tile Tap -> Lock Reticle & Start Mining
+        // 4. Tap-and-hold solid tile -> Start Digging
         this.activeTouches.set(t.identifier, { type: "world", ...pos });
-        this.lockedTargetTile = { tx, ty };
         this.mouse.down = true;
       }
     }, { passive: false });
@@ -2317,7 +2309,7 @@ class AstroStrataEngine {
         const existing = this.activeTouches.get(t.identifier);
         if (!existing) continue;
 
-        // Thumb sliding across directional movement buttons
+        // Directional thumb sliding between left and right
         if (existing.type === "left" || existing.type === "right") {
           const newBtnId = getTouchButtonId(pos.x, pos.y);
           if (newBtnId === "left" && existing.type !== "left") {
@@ -2331,7 +2323,7 @@ class AstroStrataEngine {
           }
         }
 
-        // Swipe-to-Scroll in Inventory Crafting List
+        // Inventory Recipe Scrolling
         if (this.state === "INVENTORY" && this.invTouchStartY !== undefined) {
           const dy = pos.y - this.invTouchStartY;
           if (Math.abs(dy) > 8) {
@@ -2342,7 +2334,7 @@ class AstroStrataEngine {
           }
         }
 
-        // Reticle tracking during touch-drag
+        // Reticle tracking during dragging on world
         if (existing.type === "world") {
           this.lockedTargetTile = {
             tx: Math.floor((pos.x + this.camX) / TILE_SIZE),
@@ -2359,7 +2351,6 @@ class AstroStrataEngine {
         const existing = this.activeTouches.get(t.identifier);
         const pos = getTouchPos(t);
 
-        // Tap execution in Inventory (only if the user did not drag-scroll)
         if (this.state === "INVENTORY" && !this.invHasDragged) {
           this.mouse.x = pos.x;
           this.mouse.y = pos.y;
@@ -2377,19 +2368,18 @@ class AstroStrataEngine {
           if (existing.type === "jump")  this.keys["KeyW"] = false;
           if (existing.type === "mine" || existing.type === "world") {
             this.mouse.down = false;
-            this.lockedTargetTile = null;
+            // NOTE: Do not clear this.lockedTargetTile here. 
+            // It remains locked so the subsequent USE / DIG button press targets this exact tile.
           }
           this.activeTouches.delete(t.identifier);
         }
       }
 
-      // Safety Reset: When all fingers lift, release motion keys & targets
       if (this.activeTouches.size === 0) {
         this.keys["KeyA"] = false;
         this.keys["KeyD"] = false;
         this.keys["KeyW"] = false;
         this.mouse.down = false;
-        this.lockedTargetTile = null;
       }
     };
 
@@ -2491,6 +2481,12 @@ class AstroStrataEngine {
       const attacked = this.performPlayerAttack(worldMx, worldMy);
       if (attacked) return;
 
+      // 4. Lock reticle to mouse click coordinate
+      this.lockedTargetTile = {
+        tx: Math.floor(worldMx / TILE_SIZE),
+        ty: Math.floor(worldMy / TILE_SIZE)
+      };
+
     } else if (this.state === "INVENTORY") {
       this.handleInventoryClick(mx, my, 1);
     } else if (this.state === "STAR_MAP") {
@@ -2513,8 +2509,11 @@ class AstroStrataEngine {
       const target = this.getAimTarget();
       if (!target) return;
 
-      const pDist = Math.hypot((target.tx * TILE_SIZE + 16) - (this.player.x + this.player.w / 2), (target.ty * TILE_SIZE + 16) - (this.player.y + this.player.h / 2));
-      if (pDist > 190) return;
+      const pDist = Math.hypot(
+        (target.tx * TILE_SIZE + 16) - (this.player.x + this.player.w / 2),
+        (target.ty * TILE_SIZE + 16) - (this.player.y + this.player.h / 2)
+      );
+      if (pDist > 195) return;
 
       const sel = this.player.inv.getSelected();
       if (sel && sel.item === "Prospecting Scanner") {
@@ -2536,22 +2535,47 @@ class AstroStrataEngine {
         return;
       }
 
-      // Check if selected item is a placeable block
-      if (sel && (BLOCK_DATA[sel.item] || typeof sel.item === "number") && clickedBlock === AIR) {
-        const bdata = BLOCK_DATA[sel.item] || {};
-        const isNonSolid = bdata.light || [TORCH, LANTERN, NEON_LAMP].includes(sel.item);
+      // If targeted tile is solid, place against its adjacent air tile
+      let placeTx = target.tx;
+      let placeTy = target.ty;
+      if (clickedBlock !== AIR) {
+        const offsets = [
+          { dx: 0, dy: -1 }, // Top
+          { dx: (this.player.x > target.tx * TILE_SIZE ? 1 : -1), dy: 0 }, // Player-facing side
+          { dx: 0, dy: 1 }, // Bottom
+          { dx: (this.player.x > target.tx * TILE_SIZE ? -1 : 1), dy: 0 } // Opposite side
+        ];
+        let foundAir = false;
+        for (const off of offsets) {
+          if (this.world.getTile(target.tx + off.dx, target.ty + off.dy) === AIR) {
+            placeTx = target.tx + off.dx;
+            placeTy = target.ty + off.dy;
+            foundAir = true;
+            break;
+          }
+        }
+        if (!foundAir) return;
+      }
 
-        const placeRect = { x: target.tx * TILE_SIZE, y: target.ty * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE };
+      const blockIdToPlace = (sel && typeof sel.item === "number" && BLOCK_DATA[sel.item])
+        ? sel.item
+        : (sel && sel.item === "Obsidian") ? OBSIDIAN : null;
+
+      if (blockIdToPlace !== null && this.world.getTile(placeTx, placeTy) === AIR) {
+        const bdata = BLOCK_DATA[blockIdToPlace] || {};
+        const isNonSolid = bdata.light || [TORCH, LANTERN, NEON_LAMP].includes(blockIdToPlace);
+
+        const placeRect = { x: placeTx * TILE_SIZE, y: placeTy * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE };
         const pRect = { x: this.player.x, y: this.player.y, w: this.player.w, h: this.player.h };
 
-        // Check body overlap only for solid blocks
         const overlapsPlayer = (placeRect.x < pRect.x + pRect.w && placeRect.x + placeRect.w > pRect.x &&
                                 placeRect.y < pRect.y + pRect.h && placeRect.y + placeRect.h > pRect.y);
 
         if (isNonSolid || !overlapsPlayer) {
-          this.world.setTile(target.tx, target.ty, sel.item);
+          this.world.setTile(placeTx, placeTy, blockIdToPlace);
           this.player.inv.removeItem(sel.item, 1);
           this.sound.play("place");
+          this.lockedTargetTile = { tx: placeTx, ty: placeTy };
         }
       }
     } else if (this.state === "INVENTORY") {
@@ -2773,9 +2797,21 @@ class AstroStrataEngine {
   }
 
   getAimTarget() {
-    if (this.lockedTargetTile) return this.lockedTargetTile;
+    // If the player manually selected a target tile and is still within 220px, preserve it
+    if (this.lockedTargetTile && this.player) {
+      const dist = Math.hypot(
+        (this.lockedTargetTile.tx * TILE_SIZE + 16) - (this.player.x + this.player.w / 2),
+        (this.lockedTargetTile.ty * TILE_SIZE + 16) - (this.player.y + this.player.h / 2)
+      );
+      if (dist <= 220) {
+        return this.lockedTargetTile;
+      } else {
+        this.lockedTargetTile = null; // Auto-clear if the player walked far away
+      }
+    }
+
     if (!this.player) return null;
-    const aheadX = this.player.x + (this.player.facingRight ? this.player.w + 12 : -12);
+    const aheadX = this.player.x + (this.player.facingRight ? this.player.w + 14 : -14);
     return {
       tx: Math.floor(aheadX / TILE_SIZE),
       ty: Math.floor((this.player.y + this.player.h / 2) / TILE_SIZE)

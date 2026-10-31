@@ -2029,6 +2029,7 @@ class AstroStrataEngine {
     });
 
     // 多點觸控監聽（包含移動端滑動滾動）
+    // Touch Listeners with Hotbar Selection & Reticle Clearing
     this.canvas.addEventListener("touchstart", (e) => {
       e.preventDefault();
       this.sound.init();
@@ -2037,13 +2038,6 @@ class AstroStrataEngine {
       for (let i = 0; i < e.changedTouches.length; i++) {
         const t = e.changedTouches[i];
         const pos = getTouchPos(t);
-
-        if (this.state === "INVENTORY") {
-          this.invTouchStartY = pos.y;
-          this.invTouchStartX = pos.x;
-          this.invTouchStartOffset = this.recipeScrollOffset;
-          this.invHasDragged = false;
-        }
 
         if (this.state !== "PLAYING") {
           this.mouse.x = pos.x;
@@ -2055,6 +2049,7 @@ class AstroStrataEngine {
           continue;
         }
 
+        // A. Check Virtual Control Buttons
         let handled = false;
         for (const [key, btn] of Object.entries(TOUCH_CONTROLS)) {
           if (pointInRect(pos.x, pos.y, btn)) {
@@ -2065,7 +2060,7 @@ class AstroStrataEngine {
             if (btn.id === "right") this.keys["KeyD"] = true;
             if (btn.id === "jump")  this.keys["KeyW"] = true;
             if (btn.id === "inv") {
-              this.state = (this.state === "PLAYING") ? "INVENTORY" : "PLAYING";
+              this.state = "INVENTORY";
               this.sound.play("click");
             }
             if (btn.id === "heal") {
@@ -2093,40 +2088,28 @@ class AstroStrataEngine {
           }
         }
 
-        if (!handled) {
-          this.activeTouches.set(t.identifier, { type: "world", ...pos });
-          this.lockedTargetTile = {
-            tx: Math.floor((pos.x + this.camX) / TILE_SIZE),
-            ty: Math.floor((pos.y + this.camY) / TILE_SIZE)
-          };
-          this.mouse.down = true;
-        }
-      }
-    }, { passive: false });
+        if (handled) continue;
 
-    this.canvas.addEventListener("touchmove", (e) => {
-      e.preventDefault();
-      for (let i = 0; i < e.changedTouches.length; i++) {
-        const t = e.changedTouches[i];
-        const pos = getTouchPos(t);
-        const existing = this.activeTouches.get(t.identifier);
-
-        if (this.state === "INVENTORY" && this.invTouchStartY !== undefined) {
-          const dy = pos.y - this.invTouchStartY;
-          if (Math.abs(dy) > 8) {
-            this.invHasDragged = true;
-            const maxScroll = Math.max(0, this.getFilteredRecipes().length - 9);
-            const step = Math.round(-dy / 28);
-            this.recipeScrollOffset = Math.max(0, Math.min(maxScroll, this.invTouchStartOffset + step));
+        // B. Check Hotbar Touch Collision (Fixes unresponsive hotbar slots)
+        const hotbarY = SCREEN_HEIGHT - 60;
+        const hotbarStartX = SCREEN_WIDTH / 2 - 240;
+        if (pos.y >= hotbarY && pos.y <= hotbarY + 44 && pos.x >= hotbarStartX && pos.x <= hotbarStartX + 480) {
+          const clickedIdx = Math.floor((pos.x - hotbarStartX) / 48);
+          if (clickedIdx >= 0 && clickedIdx < 10) {
+            this.player.inv.selectedHotbar = clickedIdx;
+            this.sound.play("click");
+            this.activeTouches.set(t.identifier, { type: "hotbar", ...pos });
+            continue;
           }
         }
 
-        if (existing && existing.type === "world") {
-          this.lockedTargetTile = {
-            tx: Math.floor((pos.x + this.camX) / TILE_SIZE),
-            ty: Math.floor((pos.y + this.camY) / TILE_SIZE)
-          };
-        }
+        // C. Default World Tap / Digging
+        this.activeTouches.set(t.identifier, { type: "world", ...pos });
+        this.lockedTargetTile = {
+          tx: Math.floor((pos.x + this.camX) / TILE_SIZE),
+          ty: Math.floor((pos.y + this.camY) / TILE_SIZE)
+        };
+        this.mouse.down = true;
       }
     }, { passive: false });
 
@@ -2135,9 +2118,9 @@ class AstroStrataEngine {
       for (let i = 0; i < e.changedTouches.length; i++) {
         const t = e.changedTouches[i];
         const existing = this.activeTouches.get(t.identifier);
-        const pos = getTouchPos(t);
 
         if (this.state === "INVENTORY" && !this.invHasDragged) {
+          const pos = getTouchPos(t);
           this.mouse.x = pos.x;
           this.mouse.y = pos.y;
           this.handleLeftClick();
@@ -2148,15 +2131,23 @@ class AstroStrataEngine {
           this.invHasDragged = false;
         }
 
-        if (!existing) continue;
+        if (existing) {
+          if (existing.type === "left")  this.keys["KeyA"] = false;
+          if (existing.type === "right") this.keys["KeyD"] = false;
+          if (existing.type === "jump")  this.keys["KeyW"] = false;
+          if (existing.type === "mine" || existing.type === "world") {
+            this.mouse.down = false;
+            // Clears reticle when finger leaves the screen
+            this.lockedTargetTile = null;
+          }
+          this.activeTouches.delete(t.identifier);
+        }
+      }
 
-        if (existing.type === "left")  this.keys["KeyA"] = false;
-        if (existing.type === "right") this.keys["KeyD"] = false;
-        if (existing.type === "jump")  this.keys["KeyW"] = false;
-        if (existing.type === "mine")  this.mouse.down = false;
-        if (existing.type === "world") this.mouse.down = false;
-
-        this.activeTouches.delete(t.identifier);
+      // If no active touches remain, clear any lingering target tile
+      if (this.activeTouches.size === 0) {
+        this.mouse.down = false;
+        this.lockedTargetTile = null;
       }
     };
 
@@ -2881,13 +2872,15 @@ class AstroStrataEngine {
       }
 
       // 右上角目標觀察資訊
+      // Target Block Observation Card (Shifted below HEAL & INV buttons)
       if (targetTile !== AIR && BLOCK_DATA[targetTile]) {
         const bdata = BLOCK_DATA[targetTile];
         const hx = SCREEN_WIDTH - 290;
-        const hy = 16;
-        this.ctx.fillStyle = "rgba(18, 22, 32, 0.9)";
+        const hy = 64; // Moved down to avoid overlapping the top-right touch buttons
+        this.ctx.fillStyle = "rgba(18, 22, 32, 0.92)";
         this.ctx.fillRect(hx, hy, 270, 85);
         this.ctx.strokeStyle = COLOR_GOLD;
+        this.ctx.lineWidth = 1;
         this.ctx.strokeRect(hx, hy, 270, 85);
 
         this.ctx.fillStyle = COLOR_GOLD;

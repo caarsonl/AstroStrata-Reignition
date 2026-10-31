@@ -1698,6 +1698,69 @@ class AstroStrataEngine {
   }
 
   // 統一圖標繪製助手（同時支持數值型方塊 ID 與字串型物品名稱）
+  // Universal Combat: Handles Melee Swings, Ranged Projectiles, and Enemy Damage
+  performPlayerAttack(targetWorldX, targetWorldY) {
+    if (!this.player || this.player.attackCooldown > 0) return false;
+
+    const sel = this.player.inv.getSelected();
+    const idata = sel ? (ITEM_DEFINITIONS[sel.item] || {}) : {};
+    const pxCenter = this.player.x + this.player.w / 2;
+    const pyCenter = this.player.y + this.player.h / 2;
+
+    // A. RANGED WEAPONS (Bows, Crossbows, Rifles, Wands)
+    if (idata.type === "ranged" || idata.type === "magic") {
+      this.player.attackCooldown = 18;
+      this.player.swingAnim = 8;
+      const ptype = idata.type === "ranged" ? "arrow" : "magic";
+      const dmg = (this.player.base_damage / 2) + (idata.dmg || 12);
+      this.projectiles.push(new Projectile(pxCenter, pyCenter, targetWorldX, targetWorldY, Math.round(dmg), ptype));
+      this.sound.play(ptype === "arrow" ? "jump" : "mine_glass");
+      return true;
+    }
+
+    // B. MELEE WEAPONS & TOOLS (Swords, Axes, Pickaxes, Bare Hand)
+    this.player.attackCooldown = 14;
+    this.player.swingAnim = 10;
+
+    let hitAny = false;
+    const reach = idata.reach || 70;
+    const baseDmg = this.player.base_damage + (idata.dmg || (idata.tool_type ? 4 : 0));
+
+    for (let i = this.enemies.length - 1; i >= 0; i--) {
+      const e = this.enemies[i];
+      const exCenter = e.x + e.w / 2;
+      const eyCenter = e.y + e.h / 2;
+      const dist = Math.hypot(exCenter - pxCenter, eyCenter - pyCenter);
+
+      // Check distance and facing direction
+      const isFacing = this.player.facingRight ? (exCenter >= pxCenter - 10) : (exCenter <= pxCenter + 10);
+
+      if (dist <= reach && isFacing) {
+        hitAny = true;
+        const totalDmg = Math.round(baseDmg + (Math.random() * 4 - 2));
+        e.hp -= totalDmg;
+
+        // Knockback & FX
+        e.vx = (this.player.facingRight ? 1 : -1) * 5.5;
+        e.vy = -3.8;
+        this.sound.play("hurt");
+        this.floatTexts.push(new FloatingText(e.x + e.w / 2, e.y - 12, `-${totalDmg}`, COLOR_HP, 45));
+
+        for (let p = 0; p < 6; p++) {
+          this.particles.push(new Particle(exCenter, eyCenter, (Math.random() - 0.5) * 4, -1 - Math.random() * 2, e.color, 4, 18));
+        }
+
+        // Enemy Defeated
+        if (e.hp <= 0) {
+          this.player.addXp(e.max_hp, this.floatTexts, this.sound);
+          this.floatTexts.push(new FloatingText(e.x + e.w / 2, e.y - 28, "SLAIN!", COLOR_GOLD, 60));
+          this.enemies.splice(i, 1);
+        }
+      }
+    }
+
+    return hitAny;
+  }
   drawItemIcon(ctx, key, x, y, w = 32, h = 32) {
     if (typeof key === "number" || this.atlas.get("b_" + key)) {
       this.atlas.draw(ctx, "b_" + key, x, y, w, h);
@@ -1966,10 +2029,13 @@ class AstroStrataEngine {
   }
 
   setupListeners() {
+    // -------------------------------------------------------------------------
+    // 1. KEYBOARD LISTENERS
+    // -------------------------------------------------------------------------
     window.addEventListener("keydown", (e) => {
       this.keys[e.code] = true;
 
-      // 建立世界輸入框監聽
+      // Sector Creation Input
       if (this.state === "CREATE_WORLD" && this.nameInputActive) {
         if (e.key === "Enter") this.nameInputActive = false;
         else if (e.key === "Backspace") this.inputWorldName = this.inputWorldName.slice(0, -1);
@@ -1977,7 +2043,7 @@ class AstroStrataEngine {
         return;
       }
 
-      // 背包搜尋框輸入監聽
+      // Inventory Recipe Search Input
       if (this.state === "INVENTORY" && this.searchActive) {
         if (e.key === "Enter" || e.key === "Escape") this.searchActive = false;
         else if (e.key === "Backspace") {
@@ -1990,22 +2056,30 @@ class AstroStrataEngine {
         return;
       }
 
-      // 背包開關快捷鍵 (E, I, Tab)
+      // Inventory Toggle (E, I, Tab)
       if (e.code === "KeyE" || e.code === "KeyI" || e.code === "Tab") {
         if (e.code === "Tab") e.preventDefault();
         if (this.state === "PLAYING") {
           this.state = "INVENTORY";
           this.sound.play("click");
         } else if (this.state === "INVENTORY") {
+          if (this.cursorItem) {
+            this.player.inv.addItem(this.cursorItem.item, this.cursorItem.count);
+            this.cursorItem = null;
+          }
           this.selectedInvSlot = null;
           this.state = "PLAYING";
           this.sound.play("click");
         }
       }
 
-      // Escape 鍵處理
+      // Escape Handling (Menu & Pause)
       if (e.code === "Escape") {
         if (this.state === "INVENTORY" || this.state === "STAR_MAP") {
+          if (this.cursorItem) {
+            this.player.inv.addItem(this.cursorItem.item, this.cursorItem.count);
+            this.cursorItem = null;
+          }
           this.selectedInvSlot = null;
           this.state = "PLAYING";
           this.sound.play("click");
@@ -2018,7 +2092,7 @@ class AstroStrataEngine {
         }
       }
 
-      // 快速治癒快捷鍵 (H)
+      // Quick Potion Heal (H)
       if (e.code === "KeyH" && this.state === "PLAYING") {
         if (this.player.inv.countItem("Health Potion") > 0) {
           this.player.inv.removeItem("Health Potion", 1);
@@ -2028,7 +2102,7 @@ class AstroStrataEngine {
         }
       }
 
-      // 快捷列數字鍵 (1-0)
+      // Hotbar Number Selection (1-0)
       if (this.state === "PLAYING" && (e.code.startsWith("Digit") || e.code.startsWith("Numpad"))) {
         const d = parseInt(e.key, 10);
         if (!isNaN(d)) {
@@ -2042,6 +2116,9 @@ class AstroStrataEngine {
       this.keys[e.code] = false;
     });
 
+    // -------------------------------------------------------------------------
+    // 2. COORDINATE TRANSFORM & HITBOX DETECTION HELPERS
+    // -------------------------------------------------------------------------
     const getCanvasPos = (e) => {
       const rect = this.canvas.getBoundingClientRect();
       const sx = SCREEN_WIDTH / rect.width;
@@ -2056,13 +2133,14 @@ class AstroStrataEngine {
       return { x: (touch.clientX - rect.left) * sx, y: (touch.clientY - rect.top) * sy };
     };
 
-    // 內縮與膨脹觸控判定（防止拇指小幅偏移漏按）
+    // Padded Hitbox Tester (Prevents missing virtual buttons by small finger drifts)
     const pointInPaddedRect = (px, py, btn) => {
       const p = btn.pad || 0;
       return px >= btn.x - p && px <= btn.x + btn.w + p &&
              py >= btn.y - p && py <= btn.y + btn.h + p;
     };
 
+    // Helper: Find which virtual button matches a coordinate
     const getTouchButtonId = (px, py) => {
       for (const [key, btn] of Object.entries(TOUCH_CONTROLS)) {
         if (pointInPaddedRect(px, py, btn)) return btn.id;
@@ -2070,6 +2148,9 @@ class AstroStrataEngine {
       return null;
     };
 
+    // -------------------------------------------------------------------------
+    // 3. DESKTOP MOUSE & WHEEL LISTENERS
+    // -------------------------------------------------------------------------
     this.canvas.addEventListener("mousemove", (e) => {
       const pos = getCanvasPos(e);
       this.mouse.x = pos.x;
@@ -2114,7 +2195,9 @@ class AstroStrataEngine {
       }
     });
 
-    // 多點觸控監聽（手機與平板自適應）
+    // -------------------------------------------------------------------------
+    // 4. MOBILE & TABLET MULTI-TOUCH LISTENERS
+    // -------------------------------------------------------------------------
     this.canvas.addEventListener("touchstart", (e) => {
       e.preventDefault();
       this.sound.init();
@@ -2124,6 +2207,7 @@ class AstroStrataEngine {
         const t = e.changedTouches[i];
         const pos = getTouchPos(t);
 
+        // Record swipe baseline for inventory crafting list
         if (this.state === "INVENTORY") {
           this.invTouchStartY = pos.y;
           this.invTouchStartX = pos.x;
@@ -2131,6 +2215,7 @@ class AstroStrataEngine {
           this.invHasDragged = false;
         }
 
+        // Outside gameplay, forward tap to UI system
         if (this.state !== "PLAYING") {
           this.mouse.x = pos.x;
           this.mouse.y = pos.y;
@@ -2141,7 +2226,7 @@ class AstroStrataEngine {
           continue;
         }
 
-        // A. 虛擬控制鍵判定
+        // A. Virtual Control Button Hitbox Check
         const btnId = getTouchButtonId(pos.x, pos.y);
         if (btnId) {
           this.activeTouches.set(t.identifier, { type: btnId, ...pos });
@@ -2177,7 +2262,7 @@ class AstroStrataEngine {
           continue;
         }
 
-        // B. 底部快捷列觸控切換（杜絕誤觸挖掘）
+        // B. Hotbar Touch Collision
         const hotbarY = SCREEN_HEIGHT - 60;
         const hotbarStartX = SCREEN_WIDTH / 2 - 240;
         if (pos.y >= hotbarY - 8 && pos.y <= hotbarY + 52 && pos.x >= hotbarStartX && pos.x <= hotbarStartX + 480) {
@@ -2190,12 +2275,36 @@ class AstroStrataEngine {
           }
         }
 
-        // C. 地圖點擊/持續挖掘
+        // C. World Touch: Smart Interaction (Attack, Place, or Mine)
+        const targetWorldX = pos.x + this.camX;
+        const targetWorldY = pos.y + this.camY;
+        const tx = Math.floor(targetWorldX / TILE_SIZE);
+        const ty = Math.floor(targetWorldY / TILE_SIZE);
+        const sel = this.player.inv.getSelected();
+        const dist = Math.hypot(targetWorldX - (this.player.x + this.player.w / 2), targetWorldY - (this.player.y + this.player.h / 2));
+
+        // 1. Direct Enemy Tap -> Attack
+        let tappedEnemy = false;
+        for (const e of this.enemies) {
+          if (targetWorldX >= e.x && targetWorldX <= e.x + e.w && targetWorldY >= e.y && targetWorldY <= e.y + e.h) {
+            this.performPlayerAttack(targetWorldX, targetWorldY);
+            tappedEnemy = true;
+            break;
+          }
+        }
+        if (tappedEnemy) continue;
+
+        // 2. Direct Air Tap with Block Selected -> Place Block Immediately
+        if (dist <= 190 && sel && (BLOCK_DATA[sel.item] || typeof sel.item === "number") && this.world.getTile(tx, ty) === AIR) {
+          this.lockedTargetTile = { tx, ty };
+          this.handleRightClick();
+          this.lockedTargetTile = null;
+          continue;
+        }
+
+        // 3. Solid Tile Tap -> Lock Reticle & Start Mining
         this.activeTouches.set(t.identifier, { type: "world", ...pos });
-        this.lockedTargetTile = {
-          tx: Math.floor((pos.x + this.camX) / TILE_SIZE),
-          ty: Math.floor((pos.y + this.camY) / TILE_SIZE)
-        };
+        this.lockedTargetTile = { tx, ty };
         this.mouse.down = true;
       }
     }, { passive: false });
@@ -2208,7 +2317,7 @@ class AstroStrataEngine {
         const existing = this.activeTouches.get(t.identifier);
         if (!existing) continue;
 
-        // 拇指在方向鍵之間平滑橫向滑動過渡
+        // Thumb sliding across directional movement buttons
         if (existing.type === "left" || existing.type === "right") {
           const newBtnId = getTouchButtonId(pos.x, pos.y);
           if (newBtnId === "left" && existing.type !== "left") {
@@ -2222,7 +2331,7 @@ class AstroStrataEngine {
           }
         }
 
-        // 背包滑動滾動配方列表
+        // Swipe-to-Scroll in Inventory Crafting List
         if (this.state === "INVENTORY" && this.invTouchStartY !== undefined) {
           const dy = pos.y - this.invTouchStartY;
           if (Math.abs(dy) > 8) {
@@ -2233,7 +2342,7 @@ class AstroStrataEngine {
           }
         }
 
-        // 地圖手指拖曳跟隨準星
+        // Reticle tracking during touch-drag
         if (existing.type === "world") {
           this.lockedTargetTile = {
             tx: Math.floor((pos.x + this.camX) / TILE_SIZE),
@@ -2250,7 +2359,7 @@ class AstroStrataEngine {
         const existing = this.activeTouches.get(t.identifier);
         const pos = getTouchPos(t);
 
-        // 背包點擊執行（僅在未發生滑動拖曳時觸發）
+        // Tap execution in Inventory (only if the user did not drag-scroll)
         if (this.state === "INVENTORY" && !this.invHasDragged) {
           this.mouse.x = pos.x;
           this.mouse.y = pos.y;
@@ -2268,13 +2377,13 @@ class AstroStrataEngine {
           if (existing.type === "jump")  this.keys["KeyW"] = false;
           if (existing.type === "mine" || existing.type === "world") {
             this.mouse.down = false;
-            this.lockedTargetTile = null; // 手指離開螢幕立即清除幽靈準星
+            this.lockedTargetTile = null;
           }
           this.activeTouches.delete(t.identifier);
         }
       }
 
-      // 所有手指均離開時的安全狀態重置
+      // Safety Reset: When all fingers lift, release motion keys & targets
       if (this.activeTouches.size === 0) {
         this.keys["KeyA"] = false;
         this.keys["KeyD"] = false;
@@ -2351,6 +2460,7 @@ class AstroStrataEngine {
         this.sound.play("click");
       }
     } else if (this.state === "PLAYING") {
+      // 1. Hotbar Slot Click Detection
       const hotbarY = SCREEN_HEIGHT - 60;
       const hotbarStartX = SCREEN_WIDTH / 2 - 240;
       if (my >= hotbarY && my <= hotbarY + 44 && mx >= hotbarStartX && mx <= hotbarStartX + 480) {
@@ -2362,18 +2472,25 @@ class AstroStrataEngine {
         }
       }
 
-      const sel = this.player.inv.getSelected();
       const worldMx = mx + this.camX;
       const worldMy = my + this.camY;
+      const sel = this.player.inv.getSelected();
 
+      // 2. Dynamite Toss Check
       if (sel && sel.item === "Dynamite") {
         if (this.player.attackCooldown <= 0) {
-          this.player.attackCooldown = 24;
+          this.player.attackCooldown = 22;
           this.player.inv.removeItem("Dynamite", 1);
-          this.projectiles.push(new Projectile(this.player.x, this.player.y, worldMx, worldMy, 150, "dynamite"));
+          this.projectiles.push(new Projectile(this.player.x + 10, this.player.y + 10, worldMx, worldMy, 150, "dynamite"));
           this.sound.play("jump");
+          return;
         }
       }
+
+      // 3. Enemy Hit & Weapon Attack Check
+      const attacked = this.performPlayerAttack(worldMx, worldMy);
+      if (attacked) return;
+
     } else if (this.state === "INVENTORY") {
       this.handleInventoryClick(mx, my, 1);
     } else if (this.state === "STAR_MAP") {
@@ -2392,12 +2509,12 @@ class AstroStrataEngine {
   }
 
   handleRightClick() {
-    if (this.state === "PLAYING") {
+    if (this.state === "PLAYING" && this.player) {
       const target = this.getAimTarget();
       if (!target) return;
 
       const pDist = Math.hypot((target.tx * TILE_SIZE + 16) - (this.player.x + this.player.w / 2), (target.ty * TILE_SIZE + 16) - (this.player.y + this.player.h / 2));
-      if (pDist > 180) return;
+      if (pDist > 190) return;
 
       const sel = this.player.inv.getSelected();
       if (sel && sel.item === "Prospecting Scanner") {
@@ -2419,12 +2536,19 @@ class AstroStrataEngine {
         return;
       }
 
-      if (sel && BLOCK_DATA[sel.item] && clickedBlock === AIR) {
+      // Check if selected item is a placeable block
+      if (sel && (BLOCK_DATA[sel.item] || typeof sel.item === "number") && clickedBlock === AIR) {
+        const bdata = BLOCK_DATA[sel.item] || {};
+        const isNonSolid = bdata.light || [TORCH, LANTERN, NEON_LAMP].includes(sel.item);
+
         const placeRect = { x: target.tx * TILE_SIZE, y: target.ty * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE };
         const pRect = { x: this.player.x, y: this.player.y, w: this.player.w, h: this.player.h };
 
-        if (!(placeRect.x < pRect.x + pRect.w && placeRect.x + placeRect.w > pRect.x &&
-              placeRect.y < pRect.y + pRect.h && placeRect.y + placeRect.h > pRect.y)) {
+        // Check body overlap only for solid blocks
+        const overlapsPlayer = (placeRect.x < pRect.x + pRect.w && placeRect.x + placeRect.w > pRect.x &&
+                                placeRect.y < pRect.y + pRect.h && placeRect.y + placeRect.h > pRect.y);
+
+        if (isNonSolid || !overlapsPlayer) {
           this.world.setTile(target.tx, target.ty, sel.item);
           this.player.inv.removeItem(sel.item, 1);
           this.sound.play("place");
@@ -2769,9 +2893,43 @@ class AstroStrataEngine {
         this.saveCurrentSector();
       }
 
+      // PROJECTILE LOGIC & ENEMY HIT TESTING
       for (let i = this.projectiles.length - 1; i >= 0; i--) {
         const p = this.projectiles[i];
         p.update();
+
+        // Check Projectile Impact against Enemies
+        let hitEnemy = false;
+        for (let j = this.enemies.length - 1; j >= 0; j--) {
+          const e = this.enemies[j];
+          if (p.x >= e.x && p.x <= e.x + e.w && p.y >= e.y && p.y <= e.y + e.h) {
+            e.hp -= p.damage;
+            e.vx = (p.vx > 0 ? 1 : -1) * 4.5;
+            e.vy = -3.2;
+            this.sound.play("hurt");
+            this.floatTexts.push(new FloatingText(e.x + e.w / 2, e.y - 12, `-${p.damage}`, COLOR_HP, 45));
+
+            for (let k = 0; k < 6; k++) {
+              this.particles.push(new Particle(p.x, p.y, (Math.random() - 0.5) * 4, -1 - Math.random() * 2, e.color, 4, 18));
+            }
+
+            if (e.hp <= 0) {
+              this.player.addXp(e.max_hp, this.floatTexts, this.sound);
+              this.floatTexts.push(new FloatingText(e.x + e.w / 2, e.y - 28, "SLAIN!", COLOR_GOLD, 60));
+              this.enemies.splice(j, 1);
+            }
+
+            hitEnemy = true;
+            break;
+          }
+        }
+
+        if (hitEnemy) {
+          this.projectiles.splice(i, 1);
+          continue;
+        }
+
+        // Dynamite Terrain Destruction
         if (p.type === "dynamite") {
           const gx = Math.floor(p.x / TILE_SIZE);
           const gy = Math.floor(p.y / TILE_SIZE);
@@ -2792,10 +2950,39 @@ class AstroStrataEngine {
             continue;
           }
         }
+
         if (p.life <= 0) this.projectiles.splice(i, 1);
       }
 
-      for (const e of this.enemies) e.update(this.world, this.player);
+      // ENEMY LOGIC & PLAYER CONTACT DAMAGE
+      for (const e of this.enemies) {
+        e.update(this.world, this.player);
+
+        // Enemy damages player on collision
+        const distToPlayer = Math.hypot((e.x + e.w / 2) - (this.player.x + this.player.w / 2), (e.y + e.h / 2) - (this.player.y + this.player.h / 2));
+        if (distToPlayer < 24) {
+          if (!this.player.invulnTimer || this.player.invulnTimer <= 0) {
+            const def = (this.player.inv.armor.helmet ? 4 : 0) + (this.player.inv.armor.chest ? 8 : 0);
+            const taken = Math.max(3, e.damage - def);
+            this.player.hp -= taken;
+            this.player.invulnTimer = 35; // 0.6s invulnerability
+            this.player.vy = -3.5;
+            this.player.vx = (this.player.x > e.x ? 1 : -1) * 4;
+            this.sound.play("hurt");
+            this.floatTexts.push(new FloatingText(this.player.x, this.player.y - 12, `-${taken}`, COLOR_HP, 45));
+          }
+        }
+      }
+
+      if (this.player.invulnTimer > 0) this.player.invulnTimer--;
+
+      // Periodic Enemy Spawner (Keeps caves populated)
+      if (this.enemies.length < 3 && Math.random() < 0.005) {
+        const spawnSide = Math.random() < 0.5 ? -250 : 250;
+        const etype = Math.floor(this.player.y / TILE_SIZE) > UPPER_MANTLE_BOTTOM ? "Mantle" : "Crust";
+        this.enemies.push(new SlimeEnemy(this.player.x + spawnSide, this.player.y - 40, etype));
+      }
+
       for (let i = this.particles.length - 1; i >= 0; i--) {
         this.particles[i].update();
         if (this.particles[i].life <= 0) this.particles.splice(i, 1);

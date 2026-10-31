@@ -3379,10 +3379,21 @@ class AstroStrataEngine {
           this.ctx.lineWidth = isActive ? 2.5 : 1.5;
           this.ctx.stroke();
 
-          // ===================================================================
-          // PASTE YOUR SNIPPET HERE (Replaces old btn.label text rendering)
-          // ===================================================================
           // Dynamically show "ATK" when holding a weapon
+          let displayLabel = btn.label;
+          if (btn.id === "place") {
+            const sel = this.player ? this.player.inv.getSelected() : null;
+            const idata = sel ? ITEM_DEFINITIONS[sel.item] : null;
+            if (idata && (idata.type === "weapon" || idata.type === "ranged" || idata.type === "magic")) {
+              displayLabel = "ATK";
+            }
+          }
+
+          this.ctx.fillStyle = isActive ? COLOR_GOLD : COLOR_WHITE;
+          this.ctx.font = (displayLabel.length > 3) ? "bold 13px system-ui, -apple-system, sans-serif" : "bold 17px system-ui, -apple-system, sans-serif";
+          this.ctx.textAlign = "center";
+          this.ctx.textBaseline = "middle";
+          this.ctx.fillText(displayLabel, btn.x + btn.w / 2, btn.y + btn.h / 2);
           let displayLabel = btn.label;
           if (btn.id === "place") {
             const sel = this.player ? this.player.inv.getSelected() : null;

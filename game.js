@@ -1699,6 +1699,34 @@ class AstroStrataEngine {
 
   // 統一圖標繪製助手（同時支持數值型方塊 ID 與字串型物品名稱）
   // Universal Combat: Handles Melee Swings, Ranged Projectiles, and Enemy Damage
+  // Safe Surface Respawn System (Prevents spawning inside underground rock)
+  respawnPlayer() {
+    this.player.hp = this.player.max_hp;
+    this.player.vx = 0;
+    this.player.vy = 0;
+    this.player.invulnTimer = 60; // 1 second invulnerability
+
+    const spawnTileX = Math.floor(WORLD_WIDTH / 2);
+    let spawnTileY = 20;
+
+    // Scan down from the atmosphere to find the true surface block
+    for (let y = 0; y < WORLD_HEIGHT; y++) {
+      const t = this.world.getTile(spawnTileX, y);
+      if (t !== AIR && t !== LAVA) {
+        spawnTileY = Math.max(2, y - 2);
+        break;
+      }
+    }
+
+    this.player.x = spawnTileX * TILE_SIZE;
+    this.player.y = spawnTileY * TILE_SIZE;
+    this.camX = Math.max(0, Math.min(this.player.x - SCREEN_WIDTH / 2, this.world.width * TILE_SIZE - SCREEN_WIDTH));
+    this.camY = Math.max(0, Math.min(this.player.y - SCREEN_HEIGHT / 2, this.world.height * TILE_SIZE - SCREEN_HEIGHT));
+    this.lockedTargetTile = null;
+
+    this.sound.play("warp");
+    this.floatTexts.push(new FloatingText(this.player.x + 10, this.player.y - 20, "SECTOR RESPAWN", COLOR_GOLD, 80));
+  }
   performPlayerAttack(targetWorldX, targetWorldY) {
     if (!this.player || this.player.attackCooldown > 0) return false;
 
@@ -1707,23 +1735,28 @@ class AstroStrataEngine {
     const pxCenter = this.player.x + this.player.w / 2;
     const pyCenter = this.player.y + this.player.h / 2;
 
-    // A. RANGED WEAPONS (Bows, Crossbows, Rifles, Wands)
+    // Auto-turn player toward the attack target
+    if (targetWorldX !== pxCenter) {
+      this.player.facingRight = targetWorldX > pxCenter;
+    }
+
+    // A. RANGED / MAGIC ATTACK
     if (idata.type === "ranged" || idata.type === "magic") {
       this.player.attackCooldown = 18;
       this.player.swingAnim = 8;
       const ptype = idata.type === "ranged" ? "arrow" : "magic";
-      const dmg = (this.player.base_damage / 2) + (idata.dmg || 12);
-      this.projectiles.push(new Projectile(pxCenter, pyCenter, targetWorldX, targetWorldY, Math.round(dmg), ptype));
+      const dmg = Math.round((this.player.base_damage / 2) + (idata.dmg || 12));
+      this.projectiles.push(new Projectile(pxCenter, pyCenter, targetWorldX, targetWorldY, dmg, ptype));
       this.sound.play(ptype === "arrow" ? "jump" : "mine_glass");
       return true;
     }
 
-    // B. MELEE WEAPONS & TOOLS (Swords, Axes, Pickaxes, Bare Hand)
+    // B. MELEE ATTACK (Swords, Axes, Pickaxes, Bare Hands)
     this.player.attackCooldown = 14;
     this.player.swingAnim = 10;
 
     let hitAny = false;
-    const reach = idata.reach || 70;
+    const reach = idata.reach || 75;
     const baseDmg = this.player.base_damage + (idata.dmg || (idata.tool_type ? 4 : 0));
 
     for (let i = this.enemies.length - 1; i >= 0; i--) {
@@ -1732,15 +1765,11 @@ class AstroStrataEngine {
       const eyCenter = e.y + e.h / 2;
       const dist = Math.hypot(exCenter - pxCenter, eyCenter - pyCenter);
 
-      // Check distance and facing direction
-      const isFacing = this.player.facingRight ? (exCenter >= pxCenter - 10) : (exCenter <= pxCenter + 10);
-
-      if (dist <= reach && isFacing) {
+      if (dist <= reach) {
         hitAny = true;
         const totalDmg = Math.round(baseDmg + (Math.random() * 4 - 2));
         e.hp -= totalDmg;
 
-        // Knockback & FX
         e.vx = (this.player.facingRight ? 1 : -1) * 5.5;
         e.vy = -3.8;
         this.sound.play("hurt");
@@ -1750,7 +1779,6 @@ class AstroStrataEngine {
           this.particles.push(new Particle(exCenter, eyCenter, (Math.random() - 0.5) * 4, -1 - Math.random() * 2, e.color, 4, 18));
         }
 
-        // Enemy Defeated
         if (e.hp <= 0) {
           this.player.addXp(e.max_hp, this.floatTexts, this.sound);
           this.floatTexts.push(new FloatingText(e.x + e.w / 2, e.y - 28, "SLAIN!", COLOR_GOLD, 60));
@@ -2275,10 +2303,13 @@ class AstroStrataEngine {
         const dist = Math.hypot(targetWorldX - (this.player.x + this.player.w / 2), targetWorldY - (this.player.y + this.player.h / 2));
 
         // 1. Direct Enemy Tap -> Attack
+        // 1. Direct Enemy Tap -> Attack with Padded Touch Target (84x78px)
         let tappedEnemy = false;
+        const enemyTouchPad = 28;
         for (const e of this.enemies) {
-          if (targetWorldX >= e.x && targetWorldX <= e.x + e.w && targetWorldY >= e.y && targetWorldY <= e.y + e.h) {
-            this.performPlayerAttack(targetWorldX, targetWorldY);
+          if (targetWorldX >= e.x - enemyTouchPad && targetWorldX <= e.x + e.w + enemyTouchPad &&
+              targetWorldY >= e.y - enemyTouchPad && targetWorldY <= e.y + e.h + enemyTouchPad) {
+            this.performPlayerAttack(e.x + e.w / 2, e.y + e.h / 2);
             tappedEnemy = true;
             break;
           }
@@ -2506,6 +2537,18 @@ class AstroStrataEngine {
 
   handleRightClick() {
     if (this.state === "PLAYING" && this.player) {
+      const sel = this.player.inv.getSelected();
+      const idata = sel ? (ITEM_DEFINITIONS[sel.item] || {}) : {};
+
+      // If holding any weapon, execute attack immediately
+      if (idata.type === "weapon" || idata.type === "ranged" || idata.type === "magic") {
+        const aim = this.getAimTarget();
+        const targetX = aim ? (aim.tx * TILE_SIZE + 16) : (this.player.x + (this.player.facingRight ? 60 : -60));
+        const targetY = aim ? (aim.ty * TILE_SIZE + 16) : (this.player.y + this.player.h / 2);
+        this.performPlayerAttack(targetX, targetY);
+        return;
+      }
+
       const target = this.getAimTarget();
       if (!target) return;
 
@@ -2515,7 +2558,6 @@ class AstroStrataEngine {
       );
       if (pDist > 195) return;
 
-      const sel = this.player.inv.getSelected();
       if (sel && sel.item === "Prospecting Scanner") {
         this.triggerRadarScanner();
         return;
@@ -2535,15 +2577,14 @@ class AstroStrataEngine {
         return;
       }
 
-      // If targeted tile is solid, place against its adjacent air tile
       let placeTx = target.tx;
       let placeTy = target.ty;
       if (clickedBlock !== AIR) {
         const offsets = [
-          { dx: 0, dy: -1 }, // Top
-          { dx: (this.player.x > target.tx * TILE_SIZE ? 1 : -1), dy: 0 }, // Player-facing side
-          { dx: 0, dy: 1 }, // Bottom
-          { dx: (this.player.x > target.tx * TILE_SIZE ? -1 : 1), dy: 0 } // Opposite side
+          { dx: 0, dy: -1 },
+          { dx: (this.player.x > target.tx * TILE_SIZE ? 1 : -1), dy: 0 },
+          { dx: 0, dy: 1 },
+          { dx: (this.player.x > target.tx * TILE_SIZE ? -1 : 1), dy: 0 }
         ];
         let foundAir = false;
         for (const off of offsets) {
@@ -2905,10 +2946,7 @@ class AstroStrataEngine {
     }
 
     if (this.player.hp <= 0) {
-      this.player.hp = this.player.max_hp;
-      this.player.x = Math.floor(WORLD_WIDTH / 2) * TILE_SIZE;
-      this.player.y = 60 * TILE_SIZE;
-      this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "CLONING RESPAWN", COLOR_HP, 80));
+      this.respawnPlayer();
     }
   }
 
@@ -3001,14 +3039,17 @@ class AstroStrataEngine {
             const def = (this.player.inv.armor.helmet ? 4 : 0) + (this.player.inv.armor.chest ? 8 : 0);
             const taken = Math.max(3, e.damage - def);
             this.player.hp -= taken;
-            this.player.invulnTimer = 35; // 0.6s invulnerability
+            this.player.invulnTimer = 35;
             this.player.vy = -3.5;
             this.player.vx = (this.player.x > e.x ? 1 : -1) * 4;
             this.sound.play("hurt");
             this.floatTexts.push(new FloatingText(this.player.x, this.player.y - 12, `-${taken}`, COLOR_HP, 45));
+
+            if (this.player.hp <= 0) {
+              this.respawnPlayer();
+            }
           }
-        }
-      }
+        }}
 
       if (this.player.invulnTimer > 0) this.player.invulnTimer--;
 
@@ -3323,6 +3364,7 @@ class AstroStrataEngine {
             if (touch.type === btn.id) { isActive = true; break; }
           }
 
+          // Background rounded rectangle
           this.ctx.fillStyle = isActive ? "rgba(255, 215, 0, 0.42)" : "rgba(16, 22, 34, 0.72)";
           this.ctx.beginPath();
           if (this.ctx.roundRect) {
@@ -3332,15 +3374,30 @@ class AstroStrataEngine {
           }
           this.ctx.fill();
 
+          // Border stroke
           this.ctx.strokeStyle = isActive ? COLOR_GOLD : "rgba(90, 220, 255, 0.55)";
           this.ctx.lineWidth = isActive ? 2.5 : 1.5;
           this.ctx.stroke();
 
+          // ===================================================================
+          // PASTE YOUR SNIPPET HERE (Replaces old btn.label text rendering)
+          // ===================================================================
+          // Dynamically show "ATK" when holding a weapon
+          let displayLabel = btn.label;
+          if (btn.id === "place") {
+            const sel = this.player ? this.player.inv.getSelected() : null;
+            const idata = sel ? ITEM_DEFINITIONS[sel.item] : null;
+            if (idata && (idata.type === "weapon" || idata.type === "ranged" || idata.type === "magic")) {
+              displayLabel = "ATK";
+            }
+          }
+
           this.ctx.fillStyle = isActive ? COLOR_GOLD : COLOR_WHITE;
-          this.ctx.font = (btn.label.length > 3) ? "bold 13px system-ui, -apple-system, sans-serif" : "bold 17px system-ui, -apple-system, sans-serif";
+          this.ctx.font = (displayLabel.length > 3) ? "bold 13px system-ui, -apple-system, sans-serif" : "bold 17px system-ui, -apple-system, sans-serif";
           this.ctx.textAlign = "center";
           this.ctx.textBaseline = "middle";
-          this.ctx.fillText(btn.label, btn.x + btn.w / 2, btn.y + btn.h / 2);
+          this.ctx.fillText(displayLabel, btn.x + btn.w / 2, btn.y + btn.h / 2);
+          // ===================================================================
         }
         this.ctx.restore();
       }

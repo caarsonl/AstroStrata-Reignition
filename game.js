@@ -3728,6 +3728,9 @@ class AstroStrataEngine {
 // ==========================================
 // 全局啟動引導器（支援手機全螢幕喚起與音訊上下文解鎖）
 // ==========================================
+// ==========================================
+// BULLETPROOF ENGINE BOOTSTRAPPER
+// ==========================================
 function startAstroStrataApp() {
   const overlay = document.getElementById("loading-overlay");
   const startBtn = document.getElementById("start-btn");
@@ -3737,49 +3740,71 @@ function startAstroStrataApp() {
     gameInstance = new AstroStrataEngine();
   } catch (err) {
     console.error("Game engine startup error:", err);
-    alert("Startup error: " + err.message);
+    alert("Engine Startup Error: " + err.message + "\nCheck browser console for stack trace.");
     return;
   }
 
   const dismissAndPlay = (e) => {
-    if (e) e.preventDefault();
-
-    // 手機端點擊時請求瀏覽器原生全螢幕以隱藏網址列
-    const container = document.documentElement;
-    if (container.requestFullscreen) {
-      container.requestFullscreen().catch(() => {});
-    } else if (container.webkitRequestFullscreen) {
-      container.webkitRequestFullscreen();
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
     }
 
-    try {
-      gameInstance.sound.init();
-    } catch (audioErr) {
-      console.warn("Audio Context init warning:", audioErr);
-    }
-
+    // 1. Immediately hide and remove overlay (prevents hanging if APIs fail)
     if (overlay) {
       overlay.classList.add("fade-out");
-      setTimeout(() => {
-        overlay.style.display = "none";
-      }, 350);
+      overlay.style.pointerEvents = "none";
+      overlay.style.display = "none";
+    }
+
+    // 2. Safe Audio Context Initialization
+    try {
+      if (gameInstance && gameInstance.sound) {
+        gameInstance.sound.init();
+      }
+    } catch (audioErr) {
+      console.warn("Audio Context init suppressed:", audioErr);
+    }
+
+    // 3. Safe Fullscreen Request (Wrapped to prevent iOS Safari crash)
+    try {
+      const docEl = document.documentElement;
+      if (docEl.requestFullscreen) {
+        docEl.requestFullscreen().catch(() => {});
+      } else if (docEl.webkitRequestFullscreen) {
+        // Only run if natively supported and allowed
+        docEl.webkitRequestFullscreen();
+      }
+    } catch (fsErr) {
+      // Ignored: iOS Safari does not allow container fullscreen
+    }
+
+    // 4. Force immediate render refresh
+    if (gameInstance) {
+      gameInstance.draw();
     }
   };
 
+  // Bind pointer and click events safely
   if (startBtn) {
-    startBtn.addEventListener("click", dismissAndPlay);
-    startBtn.addEventListener("touchend", dismissAndPlay);
+    startBtn.onclick = dismissAndPlay;
+    startBtn.ontouchend = dismissAndPlay;
   }
 
   if (overlay) {
-    overlay.addEventListener("click", (e) => {
-      if (e.target !== startBtn) dismissAndPlay(e);
-    });
+    overlay.onclick = (e) => {
+      dismissAndPlay(e);
+    };
+    overlay.ontouchend = (e) => {
+      dismissAndPlay(e);
+    };
   }
 
+  // Start the main game loop
   gameInstance.run();
 }
 
+// Auto-boot listener
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", startAstroStrataApp);
 } else {

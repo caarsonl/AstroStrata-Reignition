@@ -2529,7 +2529,7 @@ class AstroStrataEngine {
       this.world = new World(WORLD_WIDTH, WORLD_HEIGHT);
       this.world.tiles = data.world.tiles;
       this.world.current_planet = data.world.planet || sectorMeta.planet || "Earth";
-
+      if (this.world.recomputeSurfaces) this.world.recomputeSurfaces();
       const pData = data.player;
       this.player = new Player(pData.x || (WORLD_WIDTH / 2) * TILE_SIZE, pData.y || 20 * TILE_SIZE, pData.pClass || sectorMeta.pClass || "Warrior");
       this.player.hp = pData.hp || this.player.max_hp;
@@ -4099,6 +4099,7 @@ class AstroStrataEngine {
     // 4. World & Entity Render Pass
 // 4. World & Entity Render Pass
     // 4. World & Entity Render Pass
+    // 4. World & Entity Render Pass
     const skyColor = PLANET_DATA[this.world.current_planet]?.sky_color || "#87c3f5";
     this.ctx.fillStyle = skyColor;
     this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -4109,7 +4110,17 @@ class AstroStrataEngine {
     const maxTy = Math.min(this.world.height, Math.ceil((this.camY + SCREEN_HEIGHT) / TILE_SIZE));
 
     for (let x = minTx; x < maxTx; x++) {
-      const surfY = this.world.getSurfaceY(x);
+      // Find the first true ceiling/block blocking the sky in this column
+      let ceilingY = -1;
+      for (let scanY = 0; scanY < this.world.height; scanY++) {
+        const bt = this.world.getTile(x, scanY);
+        // Only solid rock/soil blocks create an underground cave ceiling
+        // Leaves, wood, lanterns, torches and transparent blocks do NOT block the sky
+        if (bt !== AIR && bt !== LEAVES && bt !== WOOD && bt !== TORCH && bt !== LANTERN && bt !== GLASS && bt !== BIO_GLASS) {
+          ceilingY = scanY;
+          break;
+        }
+      }
 
       for (let y = minTy; y < maxTy; y++) {
         const dx = Math.floor(x * TILE_SIZE - this.camX);
@@ -4117,8 +4128,8 @@ class AstroStrataEngine {
         const t = this.world.getTile(x, y);
 
         if (t === AIR) {
-          // Only draw subterranean cave walls if distinctly below the local ground line
-          if (y > surfY + 1) {
+          // If there is a solid ground ceiling above this air tile, it is inside an underground cave!
+          if (ceilingY !== -1 && y > ceilingY) {
             this.ctx.fillStyle = "#10131c";
             this.ctx.fillRect(dx, dy, TILE_SIZE, TILE_SIZE);
           }

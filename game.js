@@ -1,9 +1,10 @@
 // =============================================================================
-// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 1 / 4)
-// Core Constants, Complete Geolith Registry, Planetary Matrix & Item Catalog
+// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 1 / 5)
+// Core Constants, Comprehensive Geolith Registry (0-84), Planetary Matrix,
+// Character Classes, Full Item Catalog & Balanced Crafting Recipes
 // =============================================================================
 
-const VERSION_STRING = "v0.3.3-stable";
+const VERSION_STRING = "v0.4.0-expanded";
 const SCREEN_WIDTH = 1280;
 const SCREEN_HEIGHT = 720;
 const TILE_SIZE = 32;
@@ -37,7 +38,7 @@ const OUTER_CORE_BOTTOM = 140;
 const INNER_CORE_BOTTOM = WORLD_HEIGHT;
 
 // =============================================================================
-// TILE & BLOCK IDENTIFIERS (0 - 68)
+// TILE & BLOCK IDENTIFIERS (0 - 84)
 // =============================================================================
 const AIR = 0;
 const DIRT = 1;
@@ -72,6 +73,7 @@ const LAUNCHPAD = 28;
 const ASSEMBLER = 29;
 const PARTICLE_COLLIDER = 30;
 
+// Extraterrestrial Substrates & Ores (31 - 60)
 const MOON_REGOLITH = 31;
 const HELIUM3_ORE = 32;
 const MARTIAN_SOIL = 33;
@@ -103,6 +105,7 @@ const CHRONOS_ORE = 58;
 const OMEGA_SINGULARITY_MATRIX = 59;
 const SINGULARITY_ORE = 60;
 
+// Architectural & Structural Blocks (61 - 68)
 const STONE_PILLAR = 61;
 const MARBLE_BLOCK = 62;
 const NEON_LAMP = 63;
@@ -111,6 +114,26 @@ const WOOD_TABLE = 65;
 const WOOD_CHAIR = 66;
 const CRYSTAL_GLASS = 67;
 const CHEST = 68;
+
+// Expanded Ores & Luminescent Veins (69 - 73)
+const COBALT_ORE = 69;
+const URANIUM_ORE = 70;
+const AMETHYST_CLUSTER = 71;
+const AETHERIUM_ORE = 72;
+const BIOLUME_MOSS = 73;
+
+// Expanded Sci-Fi & Base Architecture Blocks (74 - 84)
+const COPPER_PLATING = 74;
+const HOLO_TERMINAL = 75;
+const RUNIC_OBELISK = 76;
+const BIO_GLASS = 77;
+const PLASMA_SCONCE = 78;
+const GILDED_MARBLE = 79;
+const STEEL_GRATE = 80;
+const CRYO_TUBE = 81;
+const VOID_BRICKS = 82;
+const LASER_BARRIER = 83;
+const CHISELED_BASALT = 84;
 
 const TIER_NAMES = {
   0: "Hand / Any",
@@ -122,9 +145,10 @@ const TIER_NAMES = {
 };
 
 // =============================================================================
-// COMPREHENSIVE BLOCK DATABASE (ALL 68 BLOCKS REGISTERED)
+// COMPREHENSIVE BLOCK DATABASE (ALL 85 BLOCKS REGISTERED)
 // =============================================================================
 const BLOCK_DATA = {
+  [AIR]: { name: "Air", hardness: 0, mohs: 0, color: "#000000", drop: null, req_tier: 0, req_tool: "Any", desc: "Atmospheric vacuum." },
   [CHEST]: { name: "Loot Cache", hardness: 1.2, mohs: 2.5, color: "#a56e2d", drop: CHEST, req_tier: 0, req_tool: "Axe", desc: "Subterranean cache with survival supplies." },
   [DIRT]: { name: "Dirt", hardness: 0.7, mohs: 1.5, color: "#734b2d", drop: DIRT, req_tier: 0, req_tool: "Shovel", desc: "Soft organic topsoil." },
   [GRASS]: { name: "Grass Block", hardness: 0.7, mohs: 1.5, color: "#4b9128", drop: DIRT, req_tier: 0, req_tool: "Shovel", desc: "Root-bound surface humus layer." },
@@ -136,7 +160,7 @@ const BLOCK_DATA = {
   [WOOD]: { name: "Wood Log", hardness: 1.2, mohs: 2.5, color: "#825532", drop: WOOD, req_tier: 0, req_tool: "Axe", desc: "Combustible timber log." },
   [LEAVES]: { name: "Leaves", hardness: 0.25, mohs: 1.0, color: "#289632", drop: null, req_tier: 0, req_tool: "Any", desc: "Soft solar-capture canopy." },
   [PLANKS]: { name: "Wood Planks", hardness: 1.0, mohs: 2.5, color: "#af7d46", drop: PLANKS, req_tier: 0, req_tool: "Axe", desc: "Processed building lumber." },
-  [TORCH]: { name: "Torch", hardness: 0.1, mohs: 1.0, color: "#ffb428", drop: TORCH, req_tier: 0, req_tool: "Any", desc: "Illuminates dark subterranean caverns.", light: 140 },
+  [TORCH]: { name: "Torch", hardness: 0.1, mohs: 1.0, color: "#ffb428", drop: TORCH, req_tier: 0, req_tool: "Any", desc: "Illuminates dark caverns.", light: 140 },
   [WORKBENCH]: { name: "Workbench", hardness: 1.4, mohs: 2.5, color: "#966437", drop: WORKBENCH, req_tier: 0, req_tool: "Axe", desc: "Workshop station for tools & gear." },
   [FURNACE]: { name: "Stone Furnace", hardness: 2.0, mohs: 5.5, color: "#64646e", drop: FURNACE, req_tier: 2, req_tool: "Pickaxe", desc: "Thermal forge station for smelting ingots.", light: 110 },
   [STONE_BRICKS]: { name: "Stone Bricks", hardness: 2.0, mohs: 5.5, color: "#828287", drop: STONE_BRICKS, req_tier: 1, req_tool: "Pickaxe", desc: "Chiseled load-bearing masonry." },
@@ -148,20 +172,20 @@ const BLOCK_DATA = {
   [PERIDOTITE]: { name: "Peridotite", hardness: 3.2, mohs: 6.5, color: "#415f3c", drop: PERIDOTITE, req_tier: 3, req_tool: "Pickaxe", desc: "Dense coarse Upper Mantle rock.", xp: 25 },
   [BASALT]: { name: "Dense Basalt", hardness: 3.8, mohs: 6.0, color: "#2d2d37", drop: BASALT, req_tier: 3, req_tool: "Pickaxe", desc: "Aphanitic mafic volcanic rock.", xp: 30 },
   [OBSIDIAN]: { name: "Mantle Obsidian", hardness: 5.0, mohs: 6.0, color: "#1c1428", drop: "Obsidian", req_tier: 4, req_tool: "Pickaxe", desc: "Conchoidal volcanic glass.", xp: 60 },
-  [MAGMA_STONE]: { name: "Magma Stone", hardness: 4.2, mohs: 7.0, color: "#9b3719", drop: MAGMA_STONE, req_tier: 4, req_tool: "Pickaxe", desc: "Superheated Lower Mantle thermal block.", xp: 45, light: 70 },
+  [MAGMA_STONE]: { name: "Magma Stone", hardness: 4.2, mohs: 7.0, color: "#9b3719", drop: MAGMA_STONE, req_tier: 4, req_tool: "Pickaxe", desc: "Superheated Lower Mantle block.", xp: 45, light: 70 },
   [MOLTEN_CORE]: { name: "Molten Iron Slag", hardness: 5.5, mohs: 7.5, color: "#eb6914", drop: "Core Metal", req_tier: 5, req_tool: "Drill", desc: "Superpressured molten iron-nickel.", xp: 80, light: 120 },
   [INNER_CORE_METAL]: { name: "Solid Core Alloy", hardness: 6.5, mohs: 8.5, color: "#e1e1f5", drop: "Core Metal", req_tier: 5, req_tool: "Drill", desc: "Crystalline iron-nickel under 330 GPa.", xp: 140, light: 80 },
   [CORE_CRYSTAL]: { name: "Inner Core Shard", hardness: 8.0, mohs: 9.5, color: "#fff096", drop: "Core Shard", req_tier: 5, req_tool: "Drill", desc: "Harmonic energy crystal from Earth's core.", xp: 250, light: 150 },
   [LAVA]: { name: "Liquid Lava", hardness: 999, mohs: 0.0, color: "#ff550a", drop: null, req_tier: 0, req_tool: "Bucket", desc: "Viscous molten silicate melt.", light: 145, liquid: true },
 
-  [LAUNCHPAD]: { name: "Aerospace Launchpad", hardness: 3.2, mohs: 6.5, color: "#4b5064", drop: LAUNCHPAD, req_tier: 3, req_tool: "Pickaxe", desc: "Station for assembling & launching Rockets.", light: 100 },
+  [LAUNCHPAD]: { name: "Aerospace Launchpad", hardness: 3.2, mohs: 6.5, color: "#4b5064", drop: LAUNCHPAD, req_tier: 3, req_tool: "Pickaxe", desc: "Station for assembling & launching rockets.", light: 100 },
   [ASSEMBLER]: { name: "Circuit Assembler", hardness: 2.5, mohs: 5.5, color: "#237387", drop: ASSEMBLER, req_tier: 2, req_tool: "Pickaxe", desc: "Precision fabricator for electronics." },
-  [PARTICLE_COLLIDER]: { name: "Particle Collider", hardness: 4.5, mohs: 7.5, color: "#9632d2", drop: PARTICLE_COLLIDER, req_tier: 4, req_tool: "Pickaxe", desc: "Synchrotron for antimatter synthesis.", light: 130 },
+  [PARTICLE_COLLIDER]: { name: "Particle Collider", hardness: 4.5, mohs: 7.5, color: "#9632d2", drop: PARTICLE_COLLIDER, req_tier: 4, req_tool: "Pickaxe", desc: "Synchrotron for advanced synthesis.", light: 130 },
 
   [MOON_REGOLITH]: { name: "Lunar Regolith", hardness: 1.4, mohs: 4.0, color: "#9a9aa6", drop: MOON_REGOLITH, req_tier: 1, req_tool: "Pickaxe", desc: "Fine meteoritic lunar dust." },
-  [HELIUM3_ORE]: { name: "Helium-3 Ore", hardness: 2.8, mohs: 5.5, color: "#70d6ff", drop: "Helium-3", req_tier: 2, req_tool: "Pickaxe", desc: "Regolith saturated with solar fusion isotopes.", xp: 45 },
+  [HELIUM3_ORE]: { name: "Helium-3 Ore", hardness: 2.8, mohs: 5.5, color: "#70d6ff", drop: "Helium-3", req_tier: 2, req_tool: "Pickaxe", desc: "Regolith saturated with fusion isotopes.", xp: 45 },
   [MARTIAN_SOIL]: { name: "Martian Soil", hardness: 1.6, mohs: 4.5, color: "#c2593f", drop: MARTIAN_SOIL, req_tier: 1, req_tool: "Pickaxe", desc: "Iron-oxide rich planetary regolith." },
-  [TITANIUM_ORE]: { name: "Titanium Ore", hardness: 3.4, mohs: 6.0, color: "#b8cce0", drop: "Titanium Ore", req_tier: 3, req_tool: "Pickaxe", desc: "High-grade aerospace rutile vein.", xp: 60 },
+  [TITANIUM_ORE]: { name: "Titanium Ore", hardness: 3.4, mohs: 6.0, color: "#b8cce0", drop: "Titanium Ore", req_tier: 3, req_tool: "Pickaxe", desc: "Aerospace-grade rutile vein.", xp: 60 },
   [VENUS_ACID_STONE]: { name: "Venusian Acid Stone", hardness: 2.4, mohs: 5.5, color: "#9e9444", drop: VENUS_ACID_STONE, req_tier: 2, req_tool: "Pickaxe", desc: "Sulfuric-etched volcanic rock." },
   [SULFUR_ORE]: { name: "Sulfur Ore", hardness: 3.6, mohs: 6.0, color: "#f5e027", drop: "Sulfur", req_tier: 3, req_tool: "Pickaxe", desc: "Bright crystalline brimstone deposit.", xp: 75 },
   [SOLAR_BASALT]: { name: "Solar Basalt", hardness: 3.0, mohs: 6.0, color: "#3d3142", drop: SOLAR_BASALT, req_tier: 3, req_tool: "Pickaxe", desc: "Radiation-baked Hermian crust." },
@@ -175,19 +199,19 @@ const BLOCK_DATA = {
   [ENCELADUS_CRUST]: { name: "Enceladan Ice", hardness: 3.2, mohs: 6.0, color: "#6899bd", drop: ENCELADUS_CRUST, req_tier: 3, req_tool: "Pickaxe", desc: "Plume-compacted cryo-silicate." },
   [DEUTERIUM_ORE]: { name: "Deuterium Ore", hardness: 5.4, mohs: 7.5, color: "#4ff0ff", drop: "Deuterium", req_tier: 4, req_tool: "Pickaxe", desc: "Heavy hydrogen fusion lattice.", xp: 180, light: 80 },
   [CERES_MATRIX]: { name: "Cerean Regolith", hardness: 3.8, mohs: 6.5, color: "#545663", drop: CERES_MATRIX, req_tier: 4, req_tool: "Pickaxe", desc: "Carbonaceous chondrite asteroid matrix." },
-  [PALLADIUM_ORE]: { name: "Palladium Ore", hardness: 5.8, mohs: 8.0, color: "#e3d6f5", drop: "Palladium", req_tier: 5, req_tool: "Drill", desc: "Rare platinum-group asteroid metal.", xp: 210 },
+  [PALLADIUM_ORE]: { name: "Palladium Ore", hardness: 5.8, mohs: 8.0, color: "#e3d6f5", drop: "Palladium", req_tier: 5, req_tool: "Drill", desc: "Platinum-group catalytic metal.", xp: 210 },
   [TRITON_NITROGEN_ICE]: { name: "Nitrogen Ice", hardness: 4.0, mohs: 7.0, color: "#3b6285", drop: TRITON_NITROGEN_ICE, req_tier: 4, req_tool: "Pickaxe", desc: "Super-cooled solid nitrogen sheet." },
   [NEODYMIUM_ORE]: { name: "Neodymium Ore", hardness: 6.2, mohs: 8.0, color: "#c264ff", drop: "Neodymium", req_tier: 5, req_tool: "Drill", desc: "Ferromagnetic rare-earth crystal.", xp: 240, light: 90 },
-  [PLUTO_THOLIN_STONE]: { name: "Tholin Stone", hardness: 4.5, mohs: 7.5, color: "#4d2f4a", drop: PLUTO_THOLIN_STONE, req_tier: 4, req_tool: "Pickaxe", desc: "UV-irradiated Kuiper belt bedrock." },
+  [PLUTO_THOLIN_STONE]: { name: "Tholin Stone", hardness: 4.5, mohs: 7.5, color: "#4d2f4a", drop: PLUTO_THOLIN_STONE, req_tier: 4, req_tool: "Pickaxe", desc: "UV-irradiated Kuiper bedrock." },
   [DARK_MATTER_ORE]: { name: "Dark Matter Ore", hardness: 6.8, mohs: 8.5, color: "#8c3bff", drop: "Dark Matter", req_tier: 5, req_tool: "Drill", desc: "Baryonic lattice trapping WIMPs.", xp: 290, light: 110 },
   [SEDNA_OORT_SLATE]: { name: "Oort Slate", hardness: 4.8, mohs: 7.5, color: "#5c1f38", drop: SEDNA_OORT_SLATE, req_tier: 4, req_tool: "Pickaxe", desc: "Deep-space crimson sedimentary rock." },
   [TACHYON_ORE]: { name: "Tachyon Ore", hardness: 7.2, mohs: 9.0, color: "#00ffcc", drop: "Tachyon Shard", req_tier: 5, req_tool: "Drill", desc: "Cherenkov-glowing superluminal vein.", xp: 340, light: 130 },
   [PROXIMA_STELLAR_STONE]: { name: "Stellar Stone", hardness: 5.2, mohs: 8.0, color: "#7d2429", drop: PROXIMA_STELLAR_STONE, req_tier: 5, req_tool: "Drill", desc: "Flare-scorched exoplanetary crust." },
-  [ANTIMATTER_ORE]: { name: "Antimatter Geode", hardness: 7.8, mohs: 9.2, color: "#ff2e93", drop: "Antimatter", req_tier: 5, req_tool: "Drill", desc: "Magnetically suspended positron cluster.", xp: 400, light: 150 },
+  [ANTIMATTER_ORE]: { name: "Antimatter Geode", hardness: 7.8, mohs: 9.2, color: "#ff2e93", drop: "Antimatter", req_tier: 5, req_tool: "Drill", desc: "Suspended positron cluster.", xp: 400, light: 150 },
   [GLIESE_CHRONO_ROCK]: { name: "Chrono Rock", hardness: 5.6, mohs: 8.5, color: "#432c7a", drop: GLIESE_CHRONO_ROCK, req_tier: 5, req_tool: "Drill", desc: "Tidally warped metamorphic rock." },
   [CHRONOS_ORE]: { name: "Chronos Crystal", hardness: 8.4, mohs: 9.5, color: "#ffe657", drop: "Chronos Crystal", req_tier: 5, req_tool: "Drill", desc: "Time-dilated harmonic quartz.", xp: 480, light: 160 },
   [OMEGA_SINGULARITY_MATRIX]: { name: "Singularity Matrix", hardness: 6.0, mohs: 9.0, color: "#1c355e", drop: OMEGA_SINGULARITY_MATRIX, req_tier: 5, req_tool: "Drill", desc: "Hyper-compressed event horizon alloy." },
-  [SINGULARITY_ORE]: { name: "Singularity Core", hardness: 9.2, mohs: 10.0, color: "#ffffff", drop: "Singularity Core", req_tier: 5, req_tool: "Drill", desc: "Stabilized micro-black-hole.", xp: 650, light: 180 },
+  [SINGULARITY_ORE]: { name: "Singularity Core", hardness: 9.2, mohs: 10.0, color: "#ffffff", drop: "Singularity Core", req_tier: 5, req_tool: "Drill", desc: "Stabilized micro-singularity.", xp: 650, light: 180 },
 
   [STONE_PILLAR]: { name: "Stone Pillar", hardness: 1.8, mohs: 5.5, color: "#a0a0a8", drop: STONE_PILLAR, req_tier: 1, req_tool: "Pickaxe", desc: "Classical carved architectural pillar." },
   [MARBLE_BLOCK]: { name: "Marble Block", hardness: 1.6, mohs: 4.5, color: "#ebf0f5", drop: MARBLE_BLOCK, req_tier: 1, req_tool: "Pickaxe", desc: "Pristine calcitic metamorphic rock." },
@@ -195,11 +219,31 @@ const BLOCK_DATA = {
   [TECH_PLATING]: { name: "Hull Plating", hardness: 3.6, mohs: 6.5, color: "#373c4b", drop: TECH_PLATING, req_tier: 3, req_tool: "Pickaxe", desc: "Titanium alloy structural plating." },
   [WOOD_TABLE]: { name: "Oak Table", hardness: 1.0, mohs: 2.5, color: "#9b6941", drop: WOOD_TABLE, req_tier: 0, req_tool: "Axe", desc: "Rustic domestic timber table." },
   [WOOD_CHAIR]: { name: "Oak Chair", hardness: 0.7, mohs: 2.5, color: "#915f37", drop: WOOD_CHAIR, req_tier: 0, req_tool: "Axe", desc: "Sturdy carved wooden chair." },
-  [CRYSTAL_GLASS]: { name: "Crystal Glass", hardness: 1.0, mohs: 6.5, color: "#bef0ff", drop: CRYSTAL_GLASS, req_tier: 1, req_tool: "Pickaxe", desc: "Diamond-reinforced blast glass." }
+  [CRYSTAL_GLASS]: { name: "Crystal Glass", hardness: 1.0, mohs: 6.5, color: "#bef0ff", drop: CRYSTAL_GLASS, req_tier: 1, req_tool: "Pickaxe", desc: "Diamond-reinforced blast glass." },
+
+  // Expanded Ores (69 - 73)
+  [COBALT_ORE]: { name: "Cobalt Ore", hardness: 3.0, mohs: 5.8, color: "#2b6eff", drop: "Cobalt Ore", req_tier: 2, req_tool: "Pickaxe", desc: "Magnetic blue transition metal vein.", xp: 30 },
+  [URANIUM_ORE]: { name: "Uranium Ore", hardness: 4.0, mohs: 6.5, color: "#55ff38", drop: "Uranium Ore", req_tier: 3, req_tool: "Pickaxe", desc: "Radioactive fissile isotope deposit.", xp: 55, light: 85 },
+  [AMETHYST_CLUSTER]: { name: "Amethyst Geode", hardness: 3.4, mohs: 7.0, color: "#b84dff", drop: "Amethyst", req_tier: 3, req_tool: "Pickaxe", desc: "Resonant violet quartz crystal formation.", xp: 50, light: 75 },
+  [AETHERIUM_ORE]: { name: "Aetherium Vein", hardness: 5.2, mohs: 8.2, color: "#00f7ff", drop: "Aetherium Shard", req_tier: 4, req_tool: "Pickaxe", desc: "Zero-point luminescent mantle crystal.", xp: 120, light: 130 },
+  [BIOLUME_MOSS]: { name: "Biolume Mycelium", hardness: 1.0, mohs: 2.0, color: "#26f7b2", drop: BIOLUME_MOSS, req_tier: 0, req_tool: "Shovel", desc: "Glowing subterranean fungal turf.", xp: 15, light: 115 },
+
+  // Expanded Sci-Fi Base Decorators (74 - 84)
+  [COPPER_PLATING]: { name: "Copper Hull", hardness: 2.2, mohs: 4.5, color: "#d4753b", drop: COPPER_PLATING, req_tier: 1, req_tool: "Pickaxe", desc: "Riveted industrial copper-bronze bulkhead." },
+  [HOLO_TERMINAL]: { name: "Holo-Terminal", hardness: 1.8, mohs: 5.0, color: "#1cd8ff", drop: HOLO_TERMINAL, req_tier: 1, req_tool: "Pickaxe", desc: "Animated holographic command console.", light: 155 },
+  [RUNIC_OBELISK]: { name: "Runic Monolith", hardness: 3.5, mohs: 6.5, color: "#2a243b", drop: RUNIC_OBELISK, req_tier: 2, req_tool: "Pickaxe", desc: "Carved obsidian etched with glowing glyphs.", light: 125 },
+  [BIO_GLASS]: { name: "Biodome Hex-Glass", hardness: 1.5, mohs: 6.0, color: "#78ffd6", drop: BIO_GLASS, req_tier: 1, req_tool: "Pickaxe", desc: "Honeycomb-reinforced habitat glass." },
+  [PLASMA_SCONCE]: { name: "Plasma Sconce", hardness: 0.5, mohs: 3.0, color: "#ff47b5", drop: PLASMA_SCONCE, req_tier: 0, req_tool: "Any", desc: "Wall-mounted magenta plasma luminary.", light: 195 },
+  [GILDED_MARBLE]: { name: "Gilded Marble", hardness: 2.0, mohs: 5.0, color: "#f2f4fa", drop: GILDED_MARBLE, req_tier: 1, req_tool: "Pickaxe", desc: "Polished white marble with gold filigree." },
+  [STEEL_GRATE]: { name: "Steel Catwalk Grate", hardness: 2.2, mohs: 5.5, color: "#7d8799", drop: STEEL_GRATE, req_tier: 1, req_tool: "Pickaxe", desc: "Perforated industrial walkway mesh." },
+  [CRYO_TUBE]: { name: "Cryo-Stasis Chamber", hardness: 2.8, mohs: 6.0, color: "#38b6ff", drop: CRYO_TUBE, req_tier: 2, req_tool: "Pickaxe", desc: "Bioluminescent suspension pod for bases.", light: 140 },
+  [VOID_BRICKS]: { name: "Voidstone Bricks", hardness: 4.8, mohs: 8.0, color: "#1e1333", drop: VOID_BRICKS, req_tier: 4, req_tool: "Pickaxe", desc: "Graviton-infused dark matter masonry." },
+  [LASER_BARRIER]: { name: "Forcefield Emitter", hardness: 2.5, mohs: 6.0, color: "#ff2a55", drop: LASER_BARRIER, req_tier: 2, req_tool: "Pickaxe", desc: "Passable plasma containment grid.", light: 150 },
+  [CHISELED_BASALT]: { name: "Chiseled Basalt", hardness: 3.5, mohs: 6.5, color: "#363342", drop: CHISELED_BASALT, req_tier: 2, req_tool: "Pickaxe", desc: "Volcanic temple stone with geometric relief." }
 };
 
 // =============================================================================
-// PLANETARY CONFIGURATION & ORDER
+// PLANETARY CONFIGURATION & EXPLORATION MATRIX
 // =============================================================================
 const PLANET_DATA = {
   "Earth": { tier: 0, name: "Earth", gravity: 0.42, sky_color: "#87c3f5", hazard: "None", req_rocket: null, base_block: STONE, surface_block: GRASS, ore_block: COAL_ORE, desc: "Cradle of humanity." },
@@ -240,31 +284,38 @@ const CLASSES = {
 // COMPLETE ITEM DEFINITIONS
 // =============================================================================
 const ITEM_DEFINITIONS = {
+  // Standard & Advanced Melee Weapons
   "Wood Sword": { type: "weapon", dmg: 8, desc: "Carved wooden blade. 8 damage." },
   "Stone Sword": { type: "weapon", dmg: 12, desc: "Granite broadsword. 12 damage." },
   "Iron Dagger": { type: "weapon", dmg: 14, speed: 12, desc: "Swift stabbing blade. High speed." },
   "Iron Sword": { type: "weapon", dmg: 18, desc: "Tempered steel blade. 18 damage." },
   "Iron Halberd": { type: "weapon", dmg: 22, reach: 58, desc: "Long thrust polearm. Great reach." },
   "Gold Sword": { type: "weapon", dmg: 24, desc: "Gilded royal longsword. 24 damage." },
+  "Cobalt Glaive": { type: "weapon", dmg: 30, reach: 68, desc: "Sweeping magnetic polearm. 30 dmg, long reach." },
   "Obsidian Blade": { type: "weapon", dmg: 28, desc: "Vitreous obsidian cleaver. 28 damage." },
   "Diamond Blade": { type: "weapon", dmg: 34, desc: "Flawless diamond broadsword. 34 damage." },
   "Core Blade": { type: "weapon", dmg: 42, desc: "Crystalline Inner Core Greatsword. 42 dmg." },
-  "Core Hammer": { type: "weapon", dmg: 48, tool_type: "hammer", tier: 5, mult: 2.2, desc: "Tier 5: Crushing seismic hammer." },
+  "Core Hammer": { type: "weapon", dmg: 48, tool_type: "hammer", tier: 5, mult: 2.2, aoe: 1, desc: "Tier 5: Crushing seismic maul with 3x3 blast." },
   "Titanium Battleaxe": { type: "weapon", dmg: 50, desc: "Heavy Martian dual-bladed war axe." },
   "Magma Claymore": { type: "weapon", dmg: 58, desc: "Infused with Ionian heat. Blasts targets." },
+  "Aetherium Scythe": { type: "weapon", dmg: 95, reach: 75, desc: "Reaps targets with zero-point plasma arcs." },
   "Dark Matter Blade": { type: "weapon", dmg: 85, desc: "Plutonian blade tearing molecular bonds." },
   "Infinity Singularity Blade": { type: "weapon", dmg: 220, desc: "The apex weapon of Omega Prime." },
 
+  // Ranged & Magic Weapons
   "Wood Shortbow": { type: "ranged", dmg: 10, desc: "Handcrafted bow. Fires arrows." },
   "Iron Crossbow": { type: "ranged", dmg: 20, desc: "Mechanical iron crossbow. High velocity." },
   "Titanium Repeater": { type: "ranged", dmg: 45, desc: "Rapid-fire aerospace alloy repeater." },
+  "Uranium Railgun": { type: "ranged", dmg: 78, desc: "Depleted-uranium hypervelocity slug thrower." },
   "Thermal Pulse Rifle": { type: "ranged", dmg: 65, desc: "Ionian geothermal beam launcher." },
   "Tachyon Bow": { type: "ranged", dmg: 110, desc: "Bow firing faster-than-light beams." },
   "Antimatter Annihilator": { type: "ranged", dmg: 150, desc: "Proximan cataclysmic blaster." },
   "Arcane Flame Wand": { type: "magic", dmg: 16, desc: "Fires fiery magic sparks." },
   "Frost Scepter": { type: "magic", dmg: 30, desc: "Europan cryo bolt projector." },
+  "Amethyst Star-Staff": { type: "magic", dmg: 44, desc: "Projects crystalline homing resonance bolts." },
   "Helium Plasma Wand": { type: "magic", dmg: 52, desc: "Lunar fusion-charged arcane caster." },
 
+  // Standard Harvesting Tools
   "Wood Pickaxe": { type: "tool", tool_type: "pickaxe", tier: 1, mult: 1.3, desc: "Tier 1: 1.3x speed on Stone & Coal." },
   "Wood Axe": { type: "tool", tool_type: "axe", tier: 0, mult: 1.4, desc: "Tier 0: 1.4x wood speed." },
   "Wood Shovel": { type: "tool", tool_type: "shovel", tier: 0, mult: 1.6, desc: "Tier 0: 1.6x dirt speed." },
@@ -284,30 +335,45 @@ const ITEM_DEFINITIONS = {
   "Cryo Breaker": { type: "tool", tool_type: "drill", tier: 5, mult: 6.0, desc: "Tier 5 Drill: 6.0x speed. Ultrasonic pick." },
   "Core Drill": { type: "tool", tool_type: "drill", tier: 5, mult: 7.5, desc: "Tier 5 Drill: 7.5x speed. Ultra-pressure drill." },
 
+  // Special Multi-Function Architectural & Excavation Tools
+  "Seismic Maul": { type: "tool", tool_type: "hammer", tier: 3, mult: 2.4, aoe: 1, dmg: 26, desc: "Special Tool: Pulverizes a 3x3 rock area at once!" },
+  "Aetherium Excavator": { type: "tool", tool_type: "drill", tier: 5, mult: 6.8, aoe: 1, desc: "Special Drill: High-speed 3x3 laser excavation!" },
+  "Plasma Vein-Cutter": { type: "tool", tool_type: "drill", tier: 5, mult: 5.8, veinMiner: true, desc: "Special Tool: Automatically chains and mines connected ore veins!" },
+  "Warp Grapple": { type: "special", desc: "Special Gadget: Right-click/Use to blink-teleport to cursor position!" },
+  "Terra-Shaper": { type: "special", desc: "Architect Tool: Instantly constructs a 5-block bridge of Stone Bricks." },
+
+  // Gadgets, Relics & Accessories
   "Dynamite": { type: "explosive", desc: "High explosive stick. Blasts 3x3 tiles on click." },
   "Prospecting Scanner": { type: "scanner", desc: "Geological pulse detector. Pings ore veins." },
-
   "Oxygen Tank": { type: "accessory", desc: "Provides life support in planetary vacuum." },
   "Gravity Stabilizer": { type: "accessory", desc: "Normalizes planetary gravity to 1.0g." },
   "Mining Charm": { type: "accessory", desc: "Grants +35% mining speed bonus." },
+  "Magnetosphere Ring": { type: "accessory", desc: "Relic: Boosts mining reach by +65px and XP gain by +25%." },
 
+  // Wearable Armor Sets
   "Iron Helmet": { type: "armor", slot: "helmet", defense: 4, desc: "Hardened headgear. +4 Defense." },
   "Thermal Suit": { type: "armor", slot: "chest", defense: 8, desc: "Nullifies Mantle thermal radiation. +8 Defense." },
   "Acid-Resistant Suit": { type: "armor", slot: "chest", defense: 14, desc: "Venusian suit. Immune to acid & heat. +14 Defense." },
   "Core Exosuit": { type: "armor", slot: "chest", defense: 24, desc: "Withstands 330+ GPa pressure & all hazards. +24 Defense." },
   "Core Striders": { type: "armor", slot: "boots", defense: 6, desc: "Reinforced boots. +6 Defense & Lava Mobility." },
 
+  // Consumables
   "Health Potion": { type: "consumable", heal: 50, desc: "Restores 50 HP immediately." },
   "Swiftness Elixir": { type: "consumable", buff: "speed", desc: "Increases sprint velocity by 50% for 30s." },
   "Hyper-Shield Flask": { type: "consumable", heal: 120, desc: "Nanotech emergency repair. Heals 120 HP." },
 
+  // End-Game Victory Artifact & Technology Cores
   "Planetary Dynamo": { type: "victory", desc: "THE REIGNITION CORE! Restores Earth's magnetic dynamo!" },
   "Micro Circuit": { type: "material", desc: "Printed semiconductor board for electronics." },
   "Quantum Processor": { type: "material", desc: "Superconducting quantum computing matrix." },
   "Warp Drive Coil": { type: "material", desc: "Spacetime magnetic confinement coil." },
+
+  // Refined Ingots & Smelted Fuel
   "Iron Ingot": { type: "material", desc: "Refined ferric bar smelted from iron ore." },
   "Gold Ingot": { type: "material", desc: "Gleaming pure gold bullion." },
   "Titanium Ingot": { type: "material", desc: "High-tensile rocket hull plating ingot." },
+  "Cobalt Ingot": { type: "material", desc: "Magnetic cobalt superalloy ingot." },
+  "Uranium Fuel Rod": { type: "material", desc: "Enriched nuclear power reactor cell." },
   "Coal": { type: "material", desc: "Fossil fuel for torches & furnaces." },
   "Iron Ore": { type: "material", desc: "Raw unrefined ferric mineral." },
   "Gold Ore": { type: "material", desc: "Valuable conductive metallic element." },
@@ -316,6 +382,7 @@ const ITEM_DEFINITIONS = {
   "Core Metal": { type: "material", desc: "Inner core iron-nickel alloy." },
   "Core Shard": { type: "material", desc: "Harmonic energy crystal from Earth's center." },
 
+  // Extraterrestrial & Exotic Resources
   "Helium-3": { type: "material", desc: "Lunar fusion propellant isotope." },
   "Titanium Ore": { type: "material", desc: "Martian aerospace metal ore." },
   "Sulfur": { type: "material", desc: "Venusian reactive chemical reagent." },
@@ -330,22 +397,28 @@ const ITEM_DEFINITIONS = {
   "Tachyon Shard": { type: "material", desc: "Sednan superluminal crystal." },
   "Antimatter": { type: "material", desc: "Proximan annihilation cluster." },
   "Chronos Crystal": { type: "material", desc: "Gliesian temporal shard." },
-  "Singularity Core": { type: "material", desc: "Omega Prime micro-engine core." }
+  "Singularity Core": { type: "material", desc: "Omega Prime micro-engine core." },
+  "Cobalt Ore": { type: "material", desc: "Raw blue magnetic mineral." },
+  "Uranium Ore": { type: "material", desc: "Unrefined radioactive fissile ore." },
+  "Amethyst": { type: "material", desc: "Faceted violet piezoelectric quartz." },
+  "Aetherium Shard": { type: "material", desc: "Hyper-dense zero-point crystal." }
 };
 
+// Procedurally Register Rockets (Tiers 1 - 15)
 for (let t = 1; t <= 15; t++) {
   ITEM_DEFINITIONS[`Tier ${t} Rocket`] = {
     type: "rocket",
     dest: PLANET_ORDER[t],
     tier: t,
-    desc: `Tier ${t} Interplanetary Vessel. Travels to ${PLANET_ORDER[t]}.`
+    desc: `Tier ${t} Interplanetary Vessel. Capable of navigating to ${PLANET_ORDER[t]}.`
   };
 }
 
 // =============================================================================
-// COMPREHENSIVE RECIPES DATABASE
+// COMPREHENSIVE RECIPES DATABASE (BALANCED & SOFTLOCK-FREE)
 // =============================================================================
 const RECIPES = [
+  // Hand Crafting (Basic Survival & Timber)
   { result: CHEST, count: 1, req: { [PLANKS]: 8 }, station: "workbench" },
   { result: PLANKS, count: 4, req: { [WOOD]: 1 }, station: "hand" },
   { result: TORCH, count: 4, req: { [WOOD]: 1, "Coal": 1 }, station: "hand" },
@@ -362,11 +435,15 @@ const RECIPES = [
   { result: "Stone Sword", count: 1, req: { [STONE]: 3, [PLANKS]: 2 }, station: "hand" },
   { result: "Dynamite", count: 2, req: { "Coal": 2, [STONE]: 4 }, station: "hand" },
 
+  // Furnace Smelting
   { result: "Iron Ingot", count: 1, req: { "Iron Ore": 1, "Coal": 1 }, station: "furnace" },
   { result: "Gold Ingot", count: 1, req: { "Gold Ore": 1, "Coal": 1 }, station: "furnace" },
   { result: "Titanium Ingot", count: 1, req: { "Titanium Ore": 1, "Coal": 2 }, station: "furnace" },
+  { result: "Cobalt Ingot", count: 1, req: { "Cobalt Ore": 1, "Coal": 1 }, station: "furnace" },
+  { result: "Uranium Fuel Rod", count: 1, req: { "Uranium Ore": 2, "Iron Ingot": 1 }, station: "furnace" },
   { result: GLASS, count: 2, req: { [STONE]: 2, "Coal": 1 }, station: "furnace" },
 
+  // Workbench Equipment, Tools & Classic Architecture
   { result: "Iron Pickaxe", count: 1, req: { "Iron Ingot": 3, [PLANKS]: 2 }, station: "workbench" },
   { result: "Iron Axe", count: 1, req: { "Iron Ingot": 3, [PLANKS]: 2 }, station: "workbench" },
   { result: "Iron Shovel", count: 1, req: { "Iron Ingot": 1, [PLANKS]: 2 }, station: "workbench" },
@@ -377,19 +454,38 @@ const RECIPES = [
   { result: "Iron Helmet", count: 1, req: { "Iron Ingot": 5 }, station: "workbench" },
   { result: "Gold Pickaxe", count: 1, req: { "Gold Ingot": 3, [PLANKS]: 2 }, station: "workbench" },
   { result: "Gold Sword", count: 1, req: { "Gold Ingot": 2, [PLANKS]: 1 }, station: "workbench" },
+  { result: "Cobalt Glaive", count: 1, req: { "Cobalt Ingot": 4, [PLANKS]: 2 }, station: "workbench" },
+  { result: "Amethyst Star-Staff", count: 1, req: { "Amethyst": 5, "Gold Ingot": 3 }, station: "workbench" },
   { result: "Obsidian Pickaxe", count: 1, req: { "Obsidian": 4, [PLANKS]: 2 }, station: "workbench" },
   { result: "Obsidian Blade", count: 1, req: { "Obsidian": 4, "Iron Ingot": 2 }, station: "workbench" },
   { result: "Diamond Pickaxe", count: 1, req: { "Diamond": 3, "Gold Ingot": 2 }, station: "workbench" },
   { result: "Diamond Blade", count: 1, req: { "Diamond": 2, "Gold Ingot": 1 }, station: "workbench" },
   { result: "Mining Charm", count: 1, req: { "Gold Ingot": 2, "Diamond": 1 }, station: "workbench" },
+  { result: "Magnetosphere Ring", count: 1, req: { "Cobalt Ingot": 4, "Gold Ingot": 2, "Amethyst": 2 }, station: "workbench" },
   { result: "Health Potion", count: 1, req: { [WOOD]: 1, "Coal": 1 }, station: "workbench" },
 
+  // Special Multi-Function Tools
+  { result: "Seismic Maul", count: 1, req: { "Cobalt Ingot": 4, "Iron Ingot": 4, [PLANKS]: 2 }, station: "workbench" },
+  { result: "Terra-Shaper", count: 1, req: { "Cobalt Ingot": 2, "Amethyst": 2, [STONE_BRICKS]: 10 }, station: "workbench" },
+  { result: "Titanium Pickaxe", count: 1, req: { "Titanium Ingot": 8, "Diamond": 2 }, station: "workbench" },
+  { result: "Titanium Battleaxe", count: 1, req: { "Titanium Ingot": 10, [PLANKS]: 4 }, station: "workbench" },
+  { result: "Magma Claymore", count: 1, req: { "Pyroclastic Ore": 8, "Obsidian": 6 }, station: "workbench" },
+
+  // Structural & Architectural Masonry
   { result: STONE_BRICKS, count: 4, req: { [STONE]: 4 }, station: "workbench" },
   { result: BASALT_BRICKS, count: 4, req: { [BASALT]: 4 }, station: "workbench" },
   { result: STONE_PILLAR, count: 2, req: { [STONE_BRICKS]: 2 }, station: "workbench" },
   { result: MARBLE_BLOCK, count: 4, req: { [STONE]: 4, [GLASS]: 1 }, station: "workbench" },
+  { result: GILDED_MARBLE, count: 4, req: { [MARBLE_BLOCK]: 4, "Gold Ingot": 1 }, station: "workbench" },
+  { result: CHISELED_BASALT, count: 4, req: { [BASALT_BRICKS]: 4 }, station: "workbench" },
   { result: NEON_LAMP, count: 2, req: { [GLASS]: 2, "Gold Ingot": 1 }, station: "workbench" },
   { result: TECH_PLATING, count: 4, req: { "Iron Ingot": 2, "Titanium Ingot": 1 }, station: "workbench" },
+  { result: COPPER_PLATING, count: 6, req: { "Iron Ingot": 1, [STONE]: 4 }, station: "workbench" },
+  { result: STEEL_GRATE, count: 6, req: { "Iron Ingot": 2 }, station: "workbench" },
+  { result: BIO_GLASS, count: 6, req: { [GLASS]: 4, "Cobalt Ingot": 1 }, station: "workbench" },
+  { result: PLASMA_SCONCE, count: 4, req: { "Amethyst": 1, "Iron Ingot": 1 }, station: "workbench" },
+  { result: RUNIC_OBELISK, count: 2, req: { "Obsidian": 2, "Amethyst": 1 }, station: "workbench" },
+  { result: VOID_BRICKS, count: 6, req: { [BASALT_BRICKS]: 6, "Aetherium Shard": 1 }, station: "workbench" },
   { result: WOOD_TABLE, count: 1, req: { [PLANKS]: 4 }, station: "workbench" },
   { result: WOOD_CHAIR, count: 2, req: { [PLANKS]: 3 }, station: "workbench" },
   { result: CRYSTAL_GLASS, count: 2, req: { [GLASS]: 2, "Diamond": 1 }, station: "workbench" },
@@ -397,19 +493,34 @@ const RECIPES = [
   { result: BOOKSHELF, count: 1, req: { [PLANKS]: 6 }, station: "workbench" },
   { result: IRON_BARS, count: 4, req: { "Iron Ingot": 2 }, station: "workbench" },
 
+  // Manufacturing Stations
   { result: ASSEMBLER, count: 1, req: { "Iron Ingot": 6, "Gold Ingot": 2, [GLASS]: 2 }, station: "workbench" },
   { result: LAUNCHPAD, count: 1, req: { "Iron Ingot": 12, "Gold Ingot": 4, "Diamond": 2 }, station: "workbench" },
-  { result: PARTICLE_COLLIDER, count: 1, req: { "Core Metal": 8, "Dark Matter": 4, "Quantum Processor": 2 }, station: "assembler" },
 
+  // Circuit Assembler Products & High-Tech Electronics
   { result: "Micro Circuit", count: 2, req: { "Gold Ingot": 1, "Iron Ingot": 1, [GLASS]: 1 }, station: "assembler" },
   { result: "Quantum Processor", count: 1, req: { "Micro Circuit": 2, "Diamond": 1, "Helium-3": 2 }, station: "assembler" },
   { result: "Prospecting Scanner", count: 1, req: { "Micro Circuit": 1, "Iron Ingot": 2, [GLASS]: 1 }, station: "assembler" },
   { result: "Oxygen Tank", count: 1, req: { "Iron Ingot": 4, [GLASS]: 2, "Micro Circuit": 1 }, station: "assembler" },
   { result: "Gravity Stabilizer", count: 1, req: { "Quantum Processor": 1, "Titanium Ingot": 4 }, station: "assembler" },
+  { result: "Warp Grapple", count: 1, req: { "Cobalt Ingot": 4, "Amethyst": 3, "Micro Circuit": 1 }, station: "assembler" },
+  { result: "Aetherium Excavator", count: 1, req: { "Aetherium Shard": 4, "Titanium Ingot": 4, "Uranium Fuel Rod": 2 }, station: "assembler" },
+  { result: "Plasma Vein-Cutter", count: 1, req: { "Aetherium Shard": 3, "Uranium Fuel Rod": 2, "Micro Circuit": 2 }, station: "assembler" },
+  { result: "Uranium Railgun", count: 1, req: { "Uranium Fuel Rod": 3, "Titanium Ingot": 6, "Micro Circuit": 2 }, station: "assembler" },
   { result: "Arcane Flame Wand", count: 1, req: { "Gold Ingot": 3, "Coal": 4, "Micro Circuit": 1 }, station: "assembler" },
+  { result: "Helium Plasma Wand", count: 1, req: { "Helium-3": 6, "Gold Ingot": 4, "Diamond": 2 }, station: "assembler" },
   { result: "Swiftness Elixir", count: 2, req: { "Lithium Brine": 1, "Health Potion": 2 }, station: "assembler" },
   { result: "Hyper-Shield Flask", count: 1, req: { "Helium-3": 2, "Health Potion": 2 }, station: "assembler" },
+  { result: "Acid-Resistant Suit", count: 1, req: { "Sulfur": 8, "Titanium Ingot": 6 }, station: "assembler" },
+  { result: "Cryo Breaker", count: 1, req: { "Lithium Brine": 6, "Titanium Ingot": 8 }, station: "assembler" },
+  { result: "Frost Scepter", count: 1, req: { "Lithium Brine": 8, "Quantum Processor": 1 }, station: "assembler" },
+  { result: "Thermal Pulse Rifle", count: 1, req: { "Pyroclastic Ore": 6, "Quantum Processor": 2 }, station: "assembler" },
+  { result: "Aetherium Scythe", count: 1, req: { "Aetherium Shard": 6, "Cobalt Ingot": 4, "Quantum Processor": 1 }, station: "assembler" },
+  { result: HOLO_TERMINAL, count: 1, req: { "Micro Circuit": 1, [GLASS]: 2, "Iron Ingot": 2 }, station: "assembler" },
+  { result: CRYO_TUBE, count: 1, req: { [BIO_GLASS]: 4, "Cobalt Ingot": 2, "Micro Circuit": 1 }, station: "assembler" },
+  { result: LASER_BARRIER, count: 4, req: { "Uranium Fuel Rod": 1, "Iron Ingot": 2 }, station: "assembler" },
 
+  // Inner Core Gear & Planetary Dynamo
   { result: "Core Drill", count: 1, req: { [BASALT]: 8, "Iron Ingot": 6, "Diamond": 2 }, station: "workbench" },
   { result: "Thermal Suit", count: 1, req: { [BASALT]: 12, "Obsidian": 6 }, station: "workbench" },
   { result: "Core Striders", count: 1, req: { [BASALT]: 8, "Obsidian": 4 }, station: "workbench" },
@@ -418,6 +529,7 @@ const RECIPES = [
   { result: "Core Hammer", count: 1, req: { "Core Metal": 6, "Core Shard": 2, [PLANKS]: 2 }, station: "workbench" },
   { result: "Planetary Dynamo", count: 1, req: { "Core Metal": 10, "Core Shard": 4, "Diamond": 4, "Obsidian": 8 }, station: "workbench" },
 
+  // Interplanetary Aerospace Rocket Upgrades (Tiers 1 - 15)
   { result: "Tier 1 Rocket", count: 1, req: { "Iron Ingot": 16, "Gold Ingot": 6, "Micro Circuit": 2 }, station: "launchpad" },
   { result: "Tier 2 Rocket", count: 1, req: { "Tier 1 Rocket": 1, "Helium-3": 8, "Iron Ingot": 12 }, station: "launchpad" },
   { result: "Tier 3 Rocket", count: 1, req: { "Tier 2 Rocket": 1, "Titanium Ingot": 10, "Micro Circuit": 4 }, station: "launchpad" },
@@ -434,23 +546,18 @@ const RECIPES = [
   { result: "Tier 14 Rocket", count: 1, req: { "Tier 13 Rocket": 1, "Antimatter": 8, "Warp Drive Coil": 2 }, station: "launchpad" },
   { result: "Tier 15 Rocket", count: 1, req: { "Tier 14 Rocket": 1, "Chronos Crystal": 8, "Warp Drive Coil": 3 }, station: "launchpad" },
 
-  { result: "Warp Drive Coil", count: 1, req: { "Neodymium": 4, "Antimatter": 2, "Quantum Processor": 1 }, station: "particle_collider" },
-  { result: "Helium Plasma Wand", count: 1, req: { "Helium-3": 6, "Gold Ingot": 4, "Diamond": 2 }, station: "assembler" },
-  { result: "Titanium Pickaxe", count: 1, req: { "Titanium Ingot": 8, "Diamond": 2 }, station: "workbench" },
-  { result: "Titanium Battleaxe", count: 1, req: { "Titanium Ingot": 10, [PLANKS]: 4 }, station: "workbench" },
-  { result: "Acid-Resistant Suit", count: 1, req: { "Sulfur": 8, "Titanium Ingot": 6 }, station: "assembler" },
-  { result: "Cryo Breaker", count: 1, req: { "Lithium Brine": 6, "Titanium Ingot": 8 }, station: "assembler" },
-  { result: "Frost Scepter", count: 1, req: { "Lithium Brine": 8, "Quantum Processor": 1 }, station: "assembler" },
-  { result: "Magma Claymore", count: 1, req: { "Pyroclastic Ore": 8, "Obsidian": 6 }, station: "workbench" },
-  { result: "Thermal Pulse Rifle", count: 1, req: { "Pyroclastic Ore": 6, "Quantum Processor": 2 }, station: "assembler" },
+  // Particle Collider Exotic Fabrication (Softlock-Free Spacetime Engineering)
+  { result: PARTICLE_COLLIDER, count: 1, req: { "Core Metal": 8, "Dark Matter": 4, "Quantum Processor": 2 }, station: "assembler" },
+  { result: "Warp Drive Coil", count: 1, req: { "Neodymium": 4, "Tachyon Shard": 4, "Dark Matter": 2, "Quantum Processor": 1 }, station: "particle_collider" },
   { result: "Dark Matter Blade", count: 1, req: { "Dark Matter": 8, "Titanium Ingot": 8 }, station: "particle_collider" },
   { result: "Tachyon Bow", count: 1, req: { "Tachyon Shard": 6, "Quantum Processor": 2 }, station: "particle_collider" },
   { result: "Antimatter Annihilator", count: 1, req: { "Antimatter": 8, "Warp Drive Coil": 1 }, station: "particle_collider" },
   { result: "Infinity Singularity Blade", count: 1, req: { "Singularity Core": 4, "Chronos Crystal": 4, "Warp Drive Coil": 2 }, station: "particle_collider" }
 ];
 // =============================================================================
-// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 2 / 4)
-// UI Helpers, Mobile/Tablet Controls, Texture Atlas & Audio/Lighting Engines
+// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 2 / 5)
+// UI Geometry Helpers, Adaptive Touch Controls, 1024x1024 High-Detail
+// Procedural Pixel-Art Atlas, Procedural Web Audio Synth & Radial Lighting
 // =============================================================================
 
 // UI Coordinate Helpers
@@ -471,14 +578,18 @@ function getArmorRect(slotName) {
 }
 
 function getBlockMaterial(bid) {
-  if ([DIRT, GRASS, MOON_REGOLITH, MARTIAN_SOIL, TITAN_METHANE_CRUST].includes(bid)) return "dirt";
+  if ([DIRT, GRASS, MOON_REGOLITH, MARTIAN_SOIL, TITAN_METHANE_CRUST, BIOLUME_MOSS].includes(bid)) return "dirt";
   if ([WOOD, PLANKS, WORKBENCH, BOOKSHELF, WOOD_TABLE, WOOD_CHAIR].includes(bid)) return "wood";
   if ([LEAVES].includes(bid)) return "leaves";
-  if ([GLASS, CRYSTAL_GLASS].includes(bid)) return "glass";
-  if ([INNER_CORE_METAL, CORE_CRYSTAL, OBSIDIAN, IRON_BARS, LANTERN, DIAMOND_ORE, HELIUM3_ORE,
-       TITANIUM_ORE, SULFUR_ORE, CINNABAR_ORE, LITHIUM_BRINE_ORE, HYDROCARBON_ORE, PYROCLASTIC_ORE,
-       DEUTERIUM_ORE, PALLADIUM_ORE, NEODYMIUM_ORE, DARK_MATTER_ORE, TACHYON_ORE, ANTIMATTER_ORE,
-       CHRONOS_ORE, SINGULARITY_ORE, LAUNCHPAD, ASSEMBLER, PARTICLE_COLLIDER, TECH_PLATING, NEON_LAMP].includes(bid)) return "metal";
+  if ([GLASS, CRYSTAL_GLASS, BIO_GLASS, LASER_BARRIER].includes(bid)) return "glass";
+  if ([
+    INNER_CORE_METAL, CORE_CRYSTAL, OBSIDIAN, IRON_BARS, LANTERN, DIAMOND_ORE, HELIUM3_ORE,
+    TITANIUM_ORE, SULFUR_ORE, CINNABAR_ORE, LITHIUM_BRINE_ORE, HYDROCARBON_ORE, PYROCLASTIC_ORE,
+    DEUTERIUM_ORE, PALLADIUM_ORE, NEODYMIUM_ORE, DARK_MATTER_ORE, TACHYON_ORE, ANTIMATTER_ORE,
+    CHRONOS_ORE, SINGULARITY_ORE, LAUNCHPAD, ASSEMBLER, PARTICLE_COLLIDER, TECH_PLATING, NEON_LAMP,
+    COBALT_ORE, URANIUM_ORE, AMETHYST_CLUSTER, AETHERIUM_ORE, COPPER_PLATING, HOLO_TERMINAL,
+    RUNIC_OBELISK, STEEL_GRATE, CRYO_TUBE, PLASMA_SCONCE
+  ].includes(bid)) return "metal";
   if ([MAGMA_STONE, MOLTEN_CORE].includes(bid)) return "magma";
   return "stone";
 }
@@ -531,7 +642,7 @@ function evaluateMiningInteraction(player, tileId) {
   return { canDamage: true, canDrop: true, effMult: cap.mult, msg: "Harvestable" };
 }
 
-// Adaptive Phone & Tablet Touch Layout Detection
+// Adaptive Phone & Tablet Touch Layout Configuration
 const isPhoneDevice = (('ontouchstart' in window) || navigator.maxTouchPoints > 0) &&
                       Math.min(window.screen.width, window.screen.height) < 520;
 
@@ -607,15 +718,16 @@ const TOUCH_CONTROLS = {
 };
 
 // =============================================================================
-// UNIFIED SPRITE & TEXTURE ATLAS (SINGLE CANVAS)
-// Prevents Mobile WebKit Context Crashes & High-Memory Pressure
+// HIGH-DETAIL PROCEDURAL PIXEL-ART TEXTURE ATLAS (1024x1024)
+// Deterministic Multi-Layer Shaders for Blocks (0-84), Tools, Weapons & Items
 // =============================================================================
 class UnifiedTextureAtlas {
   constructor() {
     this.atlas = document.createElement("canvas");
-    this.atlas.width = 512;
-    this.atlas.height = 512;
+    this.atlas.width = 1024;
+    this.atlas.height = 1024;
     this.ctx = this.atlas.getContext("2d");
+    this.ctx.imageSmoothingEnabled = false;
     this.coords = new Map();
     this.nextIndex = 0;
     this._bakeAll();
@@ -623,8 +735,8 @@ class UnifiedTextureAtlas {
 
   _allocSlot(key) {
     const idx = this.nextIndex++;
-    const col = idx % 16;
-    const row = Math.floor(idx / 16);
+    const col = idx % 32;
+    const row = Math.floor(idx / 32);
     const pos = { sx: col * 32, sy: row * 32 };
     this.coords.set(key, pos);
     return pos;
@@ -640,6 +752,12 @@ class UnifiedTextureAtlas {
     targetCtx.drawImage(this.atlas, pos.sx, pos.sy, 32, 32, dx, dy, dw, dh);
   }
 
+  _hash(x, y, seed = 1) {
+    let h = (x * 374761393 + y * 668265263 + seed * 1442695041) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+  }
+
   _hexToRgb(hex) {
     const c = (hex || "#787880").replace("#", "");
     return {
@@ -649,212 +767,388 @@ class UnifiedTextureAtlas {
     };
   }
 
+  _shade(rgb, factor) {
+    return `rgb(${Math.min(255, Math.max(0, Math.floor(rgb.r * factor)))}, ${Math.min(255, Math.max(0, Math.floor(rgb.g * factor)))}, ${Math.min(255, Math.max(0, Math.floor(rgb.b * factor)))})`;
+  }
+
+  _bakeRockMatrix(ctx, baseRgb, seed, isStratified = true) {
+    for (let px = 0; px < 16; px++) {
+      for (let py = 0; py < 16; py++) {
+        const n = this._hash(px, py, seed);
+        const wave = isStratified ? Math.sin(py * 0.7 + Math.sin(px * 0.5)) * 0.08 : 0;
+        let f = 0.88 + n * 0.24 + wave;
+        if ((px + py * 3) % 7 === 0 && n < 0.35) f = 0.62;
+        if (n > 0.88) f = 1.18;
+        ctx.fillStyle = this._shade(baseRgb, f);
+        ctx.fillRect(px * 2, py * 2, 2, 2);
+      }
+    }
+  }
+
   _bakeAll() {
     const ctx = this.ctx;
 
-    // 1. Bake Blocks into Atlas
+    // 1. Bake Blocks (0 - 84) with Procedural Pixel Shaders
     for (const [bidStr, data] of Object.entries(BLOCK_DATA)) {
       const bid = Number(bidStr);
+      if (bid === AIR) continue;
+
       const { sx, sy } = this._allocSlot("b_" + bid);
       const base = this._hexToRgb(data.color);
-      const hi = `rgb(${Math.min(255, base.r + 45)}, ${Math.min(255, base.g + 45)}, ${Math.min(255, base.b + 45)})`;
-      const dark = `rgb(${Math.floor(base.r * 0.58)}, ${Math.floor(base.g * 0.58)}, ${Math.floor(base.b * 0.58)})`;
+      const hi = this._shade(base, 1.38);
+      const midHi = this._shade(base, 1.15);
+      const dark = this._shade(base, 0.58);
+      const deepDark = this._shade(base, 0.38);
 
       ctx.save();
       ctx.translate(sx, sy);
-      ctx.fillStyle = data.color;
-      ctx.fillRect(0, 0, 32, 32);
 
-      if (bid === GRASS) {
-        ctx.fillStyle = "#6e4628";
-        ctx.fillRect(0, 8, 32, 24);
-        for (let x = 0; x < 32; x++) {
-          const rootLen = 7 + (x * 7 % 6);
-          for (let y = 0; y < rootLen; y++) {
-            ctx.fillStyle = (y < 2) ? "#8ae63c" : (y < 5) ? "#4b9128" : "#2d6e14";
-            ctx.fillRect(x, y, 1, 1);
+      // Deterministic Base Rock / Soil Shader
+      this._bakeRockMatrix(ctx, base, bid * 17, bid !== DIRT && bid !== GRASS);
+
+      if (bid === GRASS || bid === BIOLUME_MOSS) {
+        const dirtRgb = this._hexToRgb(bid === BIOLUME_MOSS ? "#1b2838" : "#734b2d");
+        this._bakeRockMatrix(ctx, dirtRgb, bid * 31, false);
+        const topColor = (bid === BIOLUME_MOSS) ? "#26f7b2" : "#58b832";
+        const topHi = (bid === BIOLUME_MOSS) ? "#a8ffea" : "#8ae63c";
+        const topDark = (bid === BIOLUME_MOSS) ? "#118a62" : "#2d6e14";
+        for (let x = 0; x < 16; x++) {
+          const bladeH = 4 + Math.floor(this._hash(x, 0, bid) * 4);
+          for (let y = 0; y < bladeH; y++) {
+            ctx.fillStyle = (y === 0) ? topHi : (y < bladeH - 1) ? topColor : topDark;
+            ctx.fillRect(x * 2, y * 2, 2, 2);
           }
         }
+        ctx.fillStyle = topHi;
+        ctx.fillRect(6, 2, 2, 2);
+        ctx.fillRect(22, 2, 2, 2);
       } else if (bid === CHEST) {
-        ctx.fillStyle = "#8c5a2d";
-        ctx.fillRect(2, 2, 28, 28);
-        ctx.strokeStyle = "#462814";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(2, 2, 28, 28);
-        ctx.beginPath(); ctx.moveTo(2, 13); ctx.lineTo(29, 13); ctx.stroke();
-        ctx.fillStyle = "#ffd700";
-        ctx.fillRect(14, 10, 4, 6);
-      } else if (data.name.includes("Ore") || data.name.includes("Crystal") || data.name.includes("Shard") || data.name.includes("Core")) {
-        ctx.fillStyle = "#6e6e76";
-        ctx.fillRect(0, 0, 32, 32);
-        const gems = [[8, 8, 5], [22, 10, 4], [11, 22, 6], [23, 23, 5]];
-        for (const [gx, gy, gr] of gems) {
-          ctx.fillStyle = dark;
-          ctx.beginPath(); ctx.arc(gx, gy, gr + 1, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = data.color;
-          ctx.beginPath(); ctx.arc(gx, gy, gr, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = hi; ctx.fillRect(gx - 1, gy - 2, 2, 2);
-          ctx.fillStyle = "#ffffff"; ctx.fillRect(gx, gy - 1, 1, 1);
+        ctx.fillStyle = "#5e3618"; ctx.fillRect(2, 4, 28, 26);
+        ctx.fillStyle = "#9c5e2b"; ctx.fillRect(4, 6, 24, 22);
+        ctx.fillStyle = "#3b200c"; ctx.fillRect(4, 14, 24, 3);
+        ctx.fillStyle = "#8c96a8"; ctx.fillRect(6, 4, 4, 26); ctx.fillRect(22, 4, 4, 26);
+        ctx.fillStyle = "#ffd700"; ctx.fillRect(13, 11, 6, 8);
+        ctx.fillStyle = "#ff3b56"; ctx.fillRect(15, 13, 2, 4);
+      } else if (
+        data.name.includes("Ore") || data.name.includes("Crystal") || data.name.includes("Shard") ||
+        data.name.includes("Core") || data.name.includes("Geode") || data.name.includes("Vein")
+      ) {
+        const pMatch = PLANET_ORDER.find(p => PLANET_DATA[p]?.ore_block === bid);
+        const hostColor = (bid > 30 && pMatch)
+          ? this._hexToRgb(BLOCK_DATA[PLANET_DATA[pMatch].base_block]?.color)
+          : this._hexToRgb("#686a75");
+        this._bakeRockMatrix(ctx, hostColor, bid * 13, true);
+
+        // Faceted Crystalline Nodules
+        const clusters = [[6, 6, 7, 7], [18, 5, 8, 6], [7, 18, 9, 7], [19, 17, 7, 8], [13, 12, 6, 6]];
+        for (const [cx, cy, cw, ch] of clusters) {
+          ctx.fillStyle = deepDark; ctx.fillRect(cx - 1, cy - 1, cw + 2, ch + 2);
+          ctx.fillStyle = data.color; ctx.fillRect(cx, cy, cw, ch);
+          ctx.fillStyle = dark; ctx.fillRect(cx + 2, cy + ch - 2, cw - 2, 2); ctx.fillRect(cx + cw - 2, cy + 2, 2, ch - 2);
+          ctx.fillStyle = hi; ctx.fillRect(cx, cy, cw - 2, 2); ctx.fillRect(cx, cy, 2, ch - 2);
+          ctx.fillStyle = "#ffffff"; ctx.fillRect(cx + 1, cy + 1, 2, 2);
         }
       } else if (bid === WOOD) {
-        ctx.fillStyle = "#784b28";
-        ctx.fillRect(0, 0, 32, 32);
-        for (let x = 0; x < 32; x += 4) {
-          ctx.fillStyle = (x % 8 === 0) ? "#553219" : "#8c5a32";
-          ctx.fillRect(x, 0, 2, 32);
+        for (let x = 0; x < 16; x++) {
+          for (let y = 0; y < 16; y++) {
+            const ridge = Math.sin(x * 1.1 + this._hash(x, y, 9) * 0.8);
+            ctx.fillStyle = ridge > 0.3 ? "#8c5830" : ridge > -0.3 ? "#6e4220" : "#4d2c14";
+            ctx.fillRect(x * 2, y * 2, 2, 2);
+          }
         }
-      } else if (bid === PLANKS) {
-        ctx.fillStyle = "#af7d46";
-        ctx.fillRect(0, 0, 32, 32);
-        for (const py of [10, 21]) {
-          ctx.fillStyle = "#5a3c1e"; ctx.fillRect(0, py, 32, 2);
-          ctx.fillStyle = "#d7a569"; ctx.fillRect(0, py + 2, 32, 1);
+      } else if (bid === PLANKS || bid === BOOKSHELF || bid === WORKBENCH || bid === WOOD_TABLE || bid === WOOD_CHAIR) {
+        for (let y = 0; y < 32; y++) {
+          const row = Math.floor(y / 8);
+          const grain = this._hash(row, y, 44) * 0.16;
+          ctx.fillStyle = this._shade(base, 0.92 + grain);
+          ctx.fillRect(0, y, 32, 1);
         }
-      } else if (bid === WORKBENCH) {
-        ctx.fillStyle = "#9b6941"; ctx.fillRect(0, 0, 32, 32);
-        ctx.fillStyle = "#5a371e"; ctx.fillRect(0, 0, 32, 6);
-        ctx.fillStyle = "#e1b478"; ctx.fillRect(0, 6, 32, 2);
-        ctx.fillStyle = "#3c2314"; ctx.fillRect(4, 12, 10, 8); ctx.fillRect(18, 12, 10, 8);
+        for (const py of [0, 8, 16, 24]) {
+          ctx.fillStyle = "#4d2e16"; ctx.fillRect(0, py, 32, 2);
+          ctx.fillStyle = "#d9a76c"; ctx.fillRect(0, py + 2, 32, 1);
+          const jointX = ((py * 3) % 20) + 6;
+          ctx.fillStyle = "#4d2e16"; ctx.fillRect(jointX, py, 2, 8);
+        }
+        if (bid === WORKBENCH) {
+          ctx.fillStyle = "#3c2314"; ctx.fillRect(4, 12, 10, 8); ctx.fillRect(18, 12, 10, 8);
+          ctx.fillStyle = "#ffd700"; ctx.fillRect(6, 14, 6, 4);
+        } else if (bid === BOOKSHELF) {
+          ctx.fillStyle = "#26160c"; ctx.fillRect(3, 4, 26, 10); ctx.fillRect(3, 18, 26, 10);
+          const bColors = ["#e63c3c", "#3c8ce6", "#46c864", "#ffd700", "#b450f0", "#ff8c28"];
+          for (let bx = 4; bx < 27; bx += 4) {
+            ctx.fillStyle = bColors[(bx * 3) % bColors.length]; ctx.fillRect(bx, 5, 3, 9);
+            ctx.fillStyle = bColors[(bx * 7 + 2) % bColors.length]; ctx.fillRect(bx, 19, 3, 9);
+            ctx.fillStyle = "#ffffff"; ctx.fillRect(bx, 7, 3, 1); ctx.fillRect(bx, 21, 3, 1);
+          }
+        }
+      } else if ([STONE_BRICKS, BASALT_BRICKS, VOID_BRICKS, GILDED_MARBLE, MARBLE_BLOCK, CHISELED_BASALT].includes(bid)) {
+        if (bid === CHISELED_BASALT || bid === GILDED_MARBLE) {
+          ctx.fillStyle = dark; ctx.fillRect(0, 0, 32, 32);
+          ctx.fillStyle = data.color; ctx.fillRect(2, 2, 28, 28);
+          ctx.strokeStyle = (bid === GILDED_MARBLE) ? "#ffd700" : hi;
+          ctx.lineWidth = 2;
+          ctx.strokeRect(5, 5, 22, 22);
+          ctx.strokeRect(10, 10, 12, 12);
+          ctx.fillStyle = (bid === GILDED_MARBLE) ? "#ffd700" : deepDark;
+          ctx.fillRect(14, 14, 4, 4);
+        } else {
+          ctx.fillStyle = deepDark; ctx.fillRect(0, 0, 32, 32);
+          const rows = [
+            { y: 1, h: 9, offsets: [1, 17] },
+            { y: 12, h: 8, offsets: [-7, 9, 25] },
+            { y: 22, h: 9, offsets: [1, 17] }
+          ];
+          for (const r of rows) {
+            for (const ox of r.offsets) {
+              const sVar = 0.92 + this._hash(ox, r.y, bid) * 0.18;
+              ctx.fillStyle = this._shade(base, sVar); ctx.fillRect(ox, r.y, 14, r.h);
+              ctx.fillStyle = hi; ctx.fillRect(ox, r.y, 14, 1); ctx.fillRect(ox, r.y, 1, r.h);
+              ctx.fillStyle = dark; ctx.fillRect(ox, r.y + r.h - 1, 14, 1);
+            }
+          }
+        }
+      } else if (bid === STONE_PILLAR) {
+        ctx.fillStyle = dark; ctx.fillRect(0, 0, 32, 32);
+        for (const px of [3, 10, 17, 24]) {
+          ctx.fillStyle = data.color; ctx.fillRect(px, 0, 5, 32);
+          ctx.fillStyle = hi; ctx.fillRect(px, 0, 2, 32);
+        }
+      } else if ([TECH_PLATING, COPPER_PLATING, ASSEMBLER, LAUNCHPAD, PARTICLE_COLLIDER, HOLO_TERMINAL, CRYO_TUBE, RUNIC_OBELISK, STEEL_GRATE].includes(bid)) {
+        ctx.fillStyle = deepDark; ctx.fillRect(0, 0, 32, 32);
+        ctx.fillStyle = data.color; ctx.fillRect(2, 2, 28, 28);
+        ctx.fillStyle = midHi; ctx.fillRect(3, 3, 26, 2); ctx.fillRect(3, 3, 2, 26);
+        ctx.fillStyle = dark; ctx.fillRect(5, 27, 24, 2); ctx.fillRect(27, 5, 2, 24);
+        ctx.fillStyle = hi;
+        for (const [rx, ry] of [[5, 5], [25, 5], [5, 25], [25, 25]]) ctx.fillRect(rx, ry, 2, 2);
+
+        if (bid === HOLO_TERMINAL) {
+          ctx.fillStyle = "#081826"; ctx.fillRect(5, 5, 22, 16);
+          ctx.fillStyle = "#1cd8ff"; ctx.fillRect(7, 8, 12, 2); ctx.fillRect(7, 12, 18, 2); ctx.fillRect(7, 16, 9, 2);
+          ctx.fillStyle = "#ffd700"; ctx.fillRect(8, 24, 16, 3);
+        } else if (bid === CRYO_TUBE) {
+          ctx.fillStyle = "#0d2b45"; ctx.fillRect(6, 3, 20, 26);
+          ctx.fillStyle = "#38b6ff"; ctx.fillRect(8, 5, 16, 22);
+          ctx.fillStyle = "#b8ecff"; ctx.fillRect(10, 7, 4, 18);
+        } else if (bid === RUNIC_OBELISK) {
+          ctx.fillStyle = "#b84dff"; ctx.fillRect(14, 5, 4, 22); ctx.fillRect(9, 10, 14, 3); ctx.fillRect(10, 18, 12, 3);
+          ctx.fillStyle = "#f0d4ff"; ctx.fillRect(15, 7, 2, 18);
+        } else if (bid === PARTICLE_COLLIDER || bid === ASSEMBLER) {
+          ctx.fillStyle = "#12151f"; ctx.fillRect(7, 7, 18, 18);
+          ctx.strokeStyle = (bid === PARTICLE_COLLIDER) ? "#ff2e93" : "#50ffdc"; ctx.lineWidth = 2;
+          ctx.strokeRect(9, 9, 14, 14);
+          ctx.fillStyle = "#ffffff"; ctx.fillRect(14, 14, 4, 4);
+        } else if (bid === LAUNCHPAD) {
+          ctx.fillStyle = "#ffd700"; ctx.fillRect(3, 3, 26, 6);
+          ctx.fillStyle = "#14161f";
+          for (let hx = 4; hx < 28; hx += 6) ctx.fillRect(hx, 3, 3, 6);
+        } else if (bid === STEEL_GRATE) {
+          ctx.clearRect(4, 4, 24, 24);
+          ctx.strokeStyle = midHi; ctx.lineWidth = 2;
+          for (let i = 4; i <= 28; i += 6) {
+            ctx.beginPath(); ctx.moveTo(i, 2); ctx.lineTo(i, 30); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(2, i); ctx.lineTo(30, i); ctx.stroke();
+          }
+        }
+      } else if ([GLASS, CRYSTAL_GLASS, BIO_GLASS, LASER_BARRIER].includes(bid)) {
+        ctx.clearRect(0, 0, 32, 32);
+        ctx.fillStyle = (bid === LASER_BARRIER) ? "rgba(255, 42, 85, 0.28)" : (bid === BIO_GLASS) ? "rgba(120, 255, 214, 0.25)" : "rgba(180, 235, 255, 0.25)";
+        ctx.fillRect(0, 0, 32, 32);
+        ctx.strokeStyle = data.color; ctx.lineWidth = 2;
+        ctx.strokeRect(1, 1, 30, 30);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+        ctx.beginPath();
+        ctx.moveTo(6, 20); ctx.lineTo(20, 6);
+        ctx.moveTo(12, 24); ctx.lineTo(24, 12);
+        ctx.stroke();
+      } else if ([TORCH, LANTERN, NEON_LAMP, PLASMA_SCONCE].includes(bid)) {
+        ctx.clearRect(0, 0, 32, 32);
+        if (bid === TORCH) {
+          ctx.fillStyle = "#6e4220"; ctx.fillRect(14, 13, 4, 16);
+          ctx.fillStyle = "#ff4600"; ctx.fillRect(12, 6, 8, 8);
+          ctx.fillStyle = "#ffd700"; ctx.fillRect(13, 8, 6, 5);
+          ctx.fillStyle = "#ffffff"; ctx.fillRect(15, 9, 2, 3);
+        } else {
+          ctx.fillStyle = "#2b3240"; ctx.fillRect(9, 4, 14, 24);
+          ctx.fillStyle = data.color; ctx.fillRect(11, 7, 10, 18);
+          ctx.fillStyle = "#ffffff"; ctx.fillRect(14, 9, 4, 14);
+        }
       } else if (bid === FURNACE) {
         ctx.fillStyle = "#64646e"; ctx.fillRect(0, 0, 32, 32);
         ctx.fillStyle = "#323237"; ctx.fillRect(6, 12, 20, 16);
         ctx.fillStyle = "#ff550a"; ctx.fillRect(9, 16, 14, 10);
         ctx.fillStyle = "#ffdd4b"; ctx.fillRect(12, 19, 8, 5);
-      } else if (bid === STONE_BRICKS || bid === BASALT_BRICKS) {
-        ctx.fillStyle = (bid === STONE_BRICKS) ? "#828287" : "#32323c";
-        ctx.fillRect(0, 0, 32, 32);
-        ctx.strokeStyle = (bid === STONE_BRICKS) ? "#46464b" : "#191923";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(0, 0, 16, 10); ctx.strokeRect(16, 0, 16, 10);
-        ctx.strokeRect(8, 10, 16, 11);
-        ctx.strokeRect(0, 21, 16, 11); ctx.strokeRect(16, 21, 16, 11);
-      } else if (bid === GLASS || bid === CRYSTAL_GLASS) {
-        ctx.fillStyle = (bid === CRYSTAL_GLASS) ? "rgba(190, 240, 255, 0.45)" : "rgba(175, 225, 240, 0.35)";
-        ctx.fillRect(0, 0, 32, 32);
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.85)"; ctx.lineWidth = 2;
-        ctx.strokeRect(1, 1, 30, 30);
-      } else if (bid === TORCH) {
-        ctx.clearRect(0, 0, 32, 32);
-        ctx.fillStyle = "#7d502d"; ctx.fillRect(14, 12, 5, 17);
-        ctx.fillStyle = "#ffb428"; ctx.beginPath(); ctx.arc(16, 9, 6, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#ff4600"; ctx.beginPath(); ctx.arc(16, 9, 3, 0, Math.PI * 2); ctx.fill();
-      } else if (bid === LANTERN) {
-        ctx.clearRect(0, 0, 32, 32);
-        ctx.fillStyle = "#2d323c"; ctx.fillRect(10, 8, 12, 18);
-        ctx.fillStyle = "#ffd24b"; ctx.fillRect(12, 11, 8, 12);
       } else if (bid === LAVA) {
         ctx.fillStyle = "#eb460a"; ctx.fillRect(0, 0, 32, 32);
         ctx.fillStyle = "#ffaf1e"; ctx.fillRect(0, 0, 32, 8);
       }
 
-      if (![AIR, LAVA, TORCH, LANTERN, GLASS, CRYSTAL_GLASS].includes(bid)) {
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.28)"; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(0, 31); ctx.lineTo(0, 0); ctx.lineTo(31, 0); ctx.stroke();
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.45)";
-        ctx.beginPath(); ctx.moveTo(31, 0); ctx.lineTo(31, 31); ctx.lineTo(0, 31); ctx.stroke();
+      // 3D Inner Bevel
+      if (![AIR, LAVA, TORCH, LANTERN, NEON_LAMP, PLASMA_SCONCE, GLASS, CRYSTAL_GLASS, BIO_GLASS, LASER_BARRIER, STEEL_GRATE].includes(bid)) {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.22)";
+        ctx.fillRect(0, 0, 32, 2); ctx.fillRect(0, 0, 2, 32);
+        ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
+        ctx.fillRect(0, 30, 32, 2); ctx.fillRect(30, 0, 2, 32);
       }
       ctx.restore();
     }
 
-    // 2. Bake Items, Weapons, Tools, & Armor into Atlas
+    // 2. Bake Weapons, Tools, Armor & Special Gadgets
     for (const [name, idata] of Object.entries(ITEM_DEFINITIONS)) {
       const { sx, sy } = this._allocSlot("i_" + name);
-      const tColor = name.includes("Wood") ? "#966432" :
-                     name.includes("Stone") ? "#9696a0" :
-                     name.includes("Iron") ? "#dce1ec" :
+      const tColor = name.includes("Wood") ? "#b57c43" :
+                     name.includes("Stone") ? "#9ea4b0" :
+                     name.includes("Iron") ? "#e1e8f5" :
                      name.includes("Gold") ? "#ffd700" :
+                     name.includes("Cobalt") || name.includes("Seismic") ? "#3b82ff" :
+                     name.includes("Uranium") ? "#55ff38" :
+                     name.includes("Amethyst") || name.includes("Warp") ? "#c864ff" :
+                     name.includes("Aetherium") || name.includes("Plasma") ? "#00f7ff" :
                      name.includes("Diamond") ? "#50e1ff" :
-                     name.includes("Obsidian") ? "#6e37b4" :
-                     name.includes("Titanium") ? "#78a0c8" :
-                     name.includes("Cryo") || name.includes("Frost") ? "#a0f0ff" :
-                     name.includes("Core") || name.includes("Magma") || name.includes("Thermal") ? "#ff461e" :
-                     name.includes("Singularity") || name.includes("Dark Matter") ? "#b432ff" : "#5adcff";
+                     name.includes("Obsidian") ? "#8c46e6" :
+                     name.includes("Titanium") ? "#9ab8d9" :
+                     name.includes("Core") || name.includes("Magma") || name.includes("Thermal") ? "#ff551e" :
+                     name.includes("Singularity") || name.includes("Dark Matter") ? "#d24dff" : "#5adcff";
+
+      const rgb = this._hexToRgb(tColor);
+      const hi = this._shade(rgb, 1.4);
+      const dark = this._shade(rgb, 0.55);
 
       ctx.save();
       ctx.translate(sx, sy);
 
       if (idata.tool_type === "drill") {
-        ctx.fillStyle = "#464c5e"; ctx.fillRect(6, 14, 12, 10);
+        ctx.fillStyle = "#2a303d"; ctx.fillRect(3, 11, 13, 12);
+        ctx.fillStyle = tColor; ctx.fillRect(5, 13, 9, 8);
+        ctx.fillStyle = "#181c24"; ctx.fillRect(6, 23, 5, 5);
+        ctx.fillStyle = dark;
+        ctx.beginPath(); ctx.moveTo(16, 9); ctx.lineTo(30, 17); ctx.lineTo(16, 25); ctx.closePath(); ctx.fill();
         ctx.fillStyle = tColor;
-        ctx.beginPath(); ctx.moveTo(18, 12); ctx.lineTo(29, 19); ctx.lineTo(18, 26); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(16, 11); ctx.lineTo(28, 17); ctx.lineTo(16, 23); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(18, 15, 6, 2);
       } else if (idata.tool_type === "hammer") {
-        ctx.strokeStyle = "#643c1e"; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(22, 10); ctx.stroke();
-        ctx.fillStyle = tColor; ctx.fillRect(15, 4, 12, 10);
-      } else if (idata.tool_type === "pickaxe" || name.includes("Pickaxe")) {
-        ctx.strokeStyle = "#643c1e"; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(21, 11); ctx.stroke();
-        ctx.strokeStyle = tColor; ctx.lineWidth = 4;
-        ctx.beginPath(); ctx.arc(23, 9, 9, Math.PI * 0.75, Math.PI * 1.6); ctx.stroke();
-      } else if (idata.tool_type === "axe" || name.includes("Axe")) {
-        ctx.strokeStyle = "#643c1e"; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(22, 10); ctx.stroke();
+        ctx.strokeStyle = "#5c3818"; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(5, 27); ctx.lineTo(22, 10); ctx.stroke();
+        ctx.save();
+        ctx.translate(20, 12);
+        ctx.rotate(-Math.PI / 4);
+        ctx.fillStyle = dark; ctx.fillRect(-9, -7, 18, 14);
+        ctx.fillStyle = tColor; ctx.fillRect(-7, -5, 14, 10);
+        ctx.fillStyle = hi; ctx.fillRect(-7, -5, 14, 3);
+        ctx.fillStyle = "#ffd700"; ctx.fillRect(-2, -7, 4, 14);
+        ctx.restore();
+      } else if (idata.tool_type === "pickaxe") {
+        ctx.strokeStyle = "#422610"; ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(6, 26); ctx.lineTo(22, 10); ctx.stroke();
+        ctx.strokeStyle = "#8c5828"; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(6, 26); ctx.lineTo(22, 10); ctx.stroke();
+        ctx.strokeStyle = dark; ctx.lineWidth = 6;
+        ctx.beginPath(); ctx.arc(21, 11, 9, Math.PI * 0.8, Math.PI * 1.65); ctx.stroke();
+        ctx.strokeStyle = tColor; ctx.lineWidth = 3.5;
+        ctx.beginPath(); ctx.arc(21, 11, 9, Math.PI * 0.82, Math.PI * 1.63); ctx.stroke();
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(19, 3, 4, 2);
+      } else if (idata.tool_type === "axe" || name.includes("Battleaxe")) {
+        ctx.strokeStyle = "#5c3818"; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(6, 26); ctx.lineTo(23, 9); ctx.stroke();
+        ctx.fillStyle = dark;
+        ctx.beginPath(); ctx.moveTo(15, 4); ctx.lineTo(29, 7); ctx.lineTo(25, 21); ctx.lineTo(14, 14); ctx.closePath(); ctx.fill();
         ctx.fillStyle = tColor;
-        ctx.beginPath(); ctx.moveTo(18, 5); ctx.lineTo(27, 8); ctx.lineTo(23, 17); ctx.lineTo(16, 12); ctx.fill();
-      } else if (idata.tool_type === "shovel" || name.includes("Shovel")) {
-        ctx.strokeStyle = "#643c1e"; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(21, 11); ctx.stroke();
-        ctx.fillStyle = tColor; ctx.beginPath(); ctx.arc(23, 9, 6, 0, Math.PI * 2); ctx.fill();
-      } else if (idata.type === "ranged") {
-        ctx.strokeStyle = tColor; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.arc(14, 16, 10, -Math.PI * 0.45, Math.PI * 0.45); ctx.stroke();
-        ctx.strokeStyle = "#e6e6f0"; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(15, 6); ctx.lineTo(15, 26); ctx.stroke();
-      } else if (idata.type === "magic") {
-        ctx.strokeStyle = "#643c1e"; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(22, 10); ctx.stroke();
-        ctx.fillStyle = tColor; ctx.beginPath(); ctx.arc(23, 9, 5, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(22, 8, 2, 2);
-      } else if (idata.type === "weapon" || name.includes("Blade") || name.includes("Sword") || name.includes("Dagger")) {
-        ctx.strokeStyle = "#ffd700"; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(8, 18); ctx.lineTo(14, 24); ctx.stroke();
-        ctx.strokeStyle = "#503219"; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(6, 26); ctx.lineTo(10, 22); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(16, 6); ctx.lineTo(27, 8); ctx.lineTo(24, 19); ctx.lineTo(15, 13); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(23, 8, 2, 8);
+      } else if (idata.tool_type === "shovel") {
+        ctx.strokeStyle = "#5c3818"; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(6, 26); ctx.lineTo(20, 12); ctx.stroke();
+        ctx.fillStyle = dark; ctx.beginPath(); ctx.arc(23, 9, 7, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = tColor; ctx.beginPath(); ctx.arc(23, 9, 5.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = hi; ctx.fillRect(21, 5, 4, 2);
+      } else if (idata.type === "weapon") {
+        ctx.fillStyle = "#ffd700"; ctx.fillRect(4, 25, 4, 4);
+        ctx.strokeStyle = "#6e3b1e"; ctx.lineWidth = 3.5;
+        ctx.beginPath(); ctx.moveTo(6, 26); ctx.lineTo(12, 20); ctx.stroke();
+        ctx.strokeStyle = "#ffd700"; ctx.lineWidth = 3.5;
+        ctx.beginPath(); ctx.moveTo(8, 15); ctx.lineTo(17, 24); ctx.stroke();
+        ctx.strokeStyle = dark; ctx.lineWidth = 6.5;
+        ctx.beginPath(); ctx.moveTo(13, 19); ctx.lineTo(28, 4); ctx.stroke();
         ctx.strokeStyle = tColor; ctx.lineWidth = 4;
-        ctx.beginPath(); ctx.moveTo(11, 21); ctx.lineTo(26, 6); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(13, 19); ctx.lineTo(27, 5); ctx.stroke();
+        ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(14, 18); ctx.lineTo(27, 5); ctx.stroke();
+      } else if (idata.type === "ranged") {
+        ctx.strokeStyle = dark; ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.arc(13, 16, 11, -Math.PI * 0.45, Math.PI * 0.45); ctx.stroke();
+        ctx.strokeStyle = tColor; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(13, 16, 11, -Math.PI * 0.45, Math.PI * 0.45); ctx.stroke();
+        ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(14, 5); ctx.lineTo(14, 27); ctx.stroke();
+      } else if (idata.type === "magic" || idata.type === "special") {
+        ctx.strokeStyle = "#4a2c6b"; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(6, 26); ctx.lineTo(21, 11); ctx.stroke();
+        ctx.fillStyle = tColor; ctx.beginPath(); ctx.arc(23, 9, 6.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.arc(22, 8, 3, 0, Math.PI * 2); ctx.fill();
       } else if (idata.type === "armor") {
+        ctx.fillStyle = dark; ctx.fillRect(5, 5, 22, 22);
         ctx.fillStyle = tColor;
         if (idata.slot === "helmet") {
-          ctx.fillRect(7, 8, 18, 14); ctx.clearRect(11, 15, 10, 4);
+          ctx.fillRect(7, 7, 18, 16);
+          ctx.fillStyle = "#121621"; ctx.fillRect(10, 14, 12, 5);
+          ctx.fillStyle = hi; ctx.fillRect(9, 8, 14, 3);
         } else if (idata.slot === "boots") {
-          ctx.fillRect(6, 14, 8, 12); ctx.fillRect(18, 14, 8, 12);
+          ctx.clearRect(0, 0, 32, 32);
+          ctx.fillStyle = dark; ctx.fillRect(5, 11, 9, 16); ctx.fillRect(18, 11, 9, 16);
+          ctx.fillStyle = tColor; ctx.fillRect(6, 12, 7, 13); ctx.fillRect(19, 12, 7, 13);
         } else {
-          ctx.fillRect(6, 6, 20, 18); ctx.clearRect(12, 6, 8, 5);
+          ctx.fillRect(6, 6, 20, 20);
+          ctx.fillStyle = "#ffd700"; ctx.fillRect(13, 11, 6, 8);
+          ctx.fillStyle = hi; ctx.fillRect(8, 8, 5, 14);
         }
-      } else if (idata.type === "consumable" || name.includes("Potion") || name.includes("Flask")) {
-        ctx.fillStyle = "#b48c50"; ctx.fillRect(14, 5, 4, 3);
-        ctx.fillStyle = name.includes("Health") ? "#e62828" : name.includes("Swift") ? "#ffd700" : "#50dcff";
-        ctx.beginPath(); ctx.arc(16, 20, 8, 0, Math.PI * 2); ctx.fill();
+      } else if (idata.type === "consumable") {
+        const liq = name.includes("Health") ? "#ff2e4c" : name.includes("Swift") ? "#ffd700" : "#00f7ff";
+        ctx.fillStyle = "#a87e51"; ctx.fillRect(13, 3, 6, 4);
+        ctx.fillStyle = "rgba(210, 240, 255, 0.85)"; ctx.beginPath(); ctx.arc(16, 19, 10, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = liq; ctx.beginPath(); ctx.arc(16, 20, 8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(11, 15, 3, 5);
       } else if (idata.type === "explosive") {
         ctx.fillStyle = "#dc2828"; ctx.fillRect(11, 10, 10, 16);
         ctx.strokeStyle = "#ffd700"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(16, 10); ctx.lineTo(20, 4); ctx.stroke();
       } else if (idata.type === "rocket") {
-        ctx.fillStyle = "#ffffff";
-        ctx.beginPath(); ctx.moveTo(16, 3); ctx.lineTo(23, 23); ctx.lineTo(9, 23); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = tColor; ctx.fillRect(10, 15, 12, 4);
-      } else if (name.includes("Ingot")) {
+        ctx.fillStyle = "#d8e2f0";
+        ctx.beginPath(); ctx.moveTo(16, 2); ctx.lineTo(24, 22); ctx.lineTo(8, 22); ctx.closePath(); ctx.fill();
         ctx.fillStyle = tColor;
-        ctx.beginPath(); ctx.moveTo(6, 20); ctx.lineTo(11, 11); ctx.lineTo(25, 11); ctx.lineTo(22, 20); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(16, 2); ctx.lineTo(20, 10); ctx.lineTo(12, 10); ctx.closePath(); ctx.fill();
+        ctx.fillRect(10, 16, 12, 4);
+        ctx.fillStyle = "#50e1ff"; ctx.beginPath(); ctx.arc(16, 13, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#ff550a"; ctx.fillRect(12, 22, 8, 6);
+      } else if (name.includes("Ingot")) {
+        ctx.fillStyle = dark;
+        ctx.beginPath(); ctx.moveTo(4, 22); ctx.lineTo(9, 10); ctx.lineTo(27, 10); ctx.lineTo(23, 22); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = tColor;
+        ctx.beginPath(); ctx.moveTo(6, 20); ctx.lineTo(10, 11); ctx.lineTo(25, 11); ctx.lineTo(22, 20); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(11, 12, 11, 2);
       } else {
-        ctx.fillStyle = tColor; ctx.beginPath(); ctx.arc(16, 16, 7, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = dark;
+        ctx.beginPath(); ctx.moveTo(16, 4); ctx.lineTo(27, 12); ctx.lineTo(23, 26); ctx.lineTo(9, 26); ctx.lineTo(5, 12); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = tColor;
+        ctx.beginPath(); ctx.moveTo(16, 6); ctx.lineTo(25, 13); ctx.lineTo(21, 24); ctx.lineTo(11, 24); ctx.lineTo(7, 13); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = hi;
+        ctx.beginPath(); ctx.moveTo(16, 8); ctx.lineTo(21, 13); ctx.lineTo(16, 19); ctx.lineTo(11, 13); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(13, 10, 3, 3);
       }
       ctx.restore();
     }
 
-    // 3. Bake Crack Overlays into Atlas
+    // 3. Bake Crack Overlays (0 - 9)
     for (let stage = 0; stage < 10; stage++) {
       const { sx, sy } = this._allocSlot("crack_" + stage);
       ctx.save();
       ctx.translate(sx, sy);
-      ctx.strokeStyle = `rgba(0, 0, 0, ${0.48 + stage * 0.05})`;
+      ctx.strokeStyle = `rgba(10, 12, 18, ${0.55 + stage * 0.045})`;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(16, 16); ctx.lineTo(16 - stage * 1.5, 16 + stage * 1.4);
       ctx.moveTo(16, 16); ctx.lineTo(16 + stage * 1.5, 16 - stage * 1.3);
-      if (stage > 4) {
-        ctx.moveTo(16, 16); ctx.lineTo(16 - stage, 16 - stage * 1.4);
-        ctx.moveTo(16, 16); ctx.lineTo(16 + stage * 1.4, 16 + stage);
+      if (stage > 3) {
+        ctx.moveTo(16, 16); ctx.lineTo(16 - stage * 1.2, 16 - stage * 1.4);
+        ctx.moveTo(16, 16); ctx.lineTo(16 + stage * 1.4, 16 + stage * 1.2);
       }
       ctx.stroke();
       ctx.restore();
@@ -863,7 +1157,8 @@ class UnifiedTextureAtlas {
 }
 
 // =============================================================================
-// PROCEDURAL AUDIO SYNTHESIZER
+// PROCEDURAL AUDIO SYNTHESIZER (WEB AUDIO API)
+// Pure Mathematical Sound Buffers: Zero 404s, Zero External Asset Overhead
 // =============================================================================
 class SoundEngine {
   constructor() {
@@ -956,6 +1251,7 @@ class SoundEngine {
 
 // =============================================================================
 // PRE-BAKED RADIAL LIGHTING ENGINE
+// Quarter-Resolution Multiply Compositing: Smooth Cave Shadows Without FPS Drops
 // =============================================================================
 class OptimizedLighting {
   constructor() {
@@ -1038,12 +1334,13 @@ class OptimizedLighting {
   }
 }
 // =============================================================================
-// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 3 / 4)
-// Entities, Particle Dynamics, Physics System & World Generation
+// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 3 / 5)
+// Entity Dynamics, Type-Safe Inventory System, World Generation (Ores 0-84),
+// Cellular Fluid Physics, Slime AI, Projectile Systems & Kinematic Player
 // =============================================================================
 
 // =============================================================================
-// PARTICLES & FLOATING TEXTS
+// PARTICLES & FLOATING TELEMETRY TEXTS
 // =============================================================================
 class Particle {
   constructor(x, y, vx, vy, color, size, life) {
@@ -1099,7 +1396,7 @@ class FloatingText {
 }
 
 // =============================================================================
-// INVENTORY MANAGER (WITH SPLIT-STACK FIX & OVERFLOW PROTECTION)
+// INVENTORY MANAGER (WITH NUMERIC/STRING NORMALIZATION & OVERFLOW GUARDS)
 // =============================================================================
 class InventoryManager {
   constructor() {
@@ -1108,23 +1405,29 @@ class InventoryManager {
     this.selectedHotbar = 0;
   }
 
+  _match(a, b) {
+    if (a === null || a === undefined || b === null || b === undefined) return false;
+    return String(a) === String(b);
+  }
+
   canAddItem(item) {
     for (let i = 0; i < 30; i++) {
-      if (this.slots[i] === null || this.slots[i].item === item) return true;
+      if (this.slots[i] === null || this._match(this.slots[i].item, item)) return true;
     }
     return false;
   }
 
   addItem(item, count = 1) {
+    const cleanItem = (!isNaN(item) && BLOCK_DATA[Number(item)]) ? Number(item) : item;
     for (let i = 0; i < 30; i++) {
-      if (this.slots[i] && this.slots[i].item === item) {
+      if (this.slots[i] && this._match(this.slots[i].item, cleanItem)) {
         this.slots[i].count += count;
         return true;
       }
     }
     for (let i = 0; i < 30; i++) {
       if (this.slots[i] === null) {
-        this.slots[i] = { item, count };
+        this.slots[i] = { item: cleanItem, count };
         return true;
       }
     }
@@ -1135,7 +1438,7 @@ class InventoryManager {
     if (this.countItem(item) < count) return false;
     let remaining = count;
     for (let i = 0; i < 30; i++) {
-      if (this.slots[i] && this.slots[i].item === item) {
+      if (this.slots[i] && this._match(this.slots[i].item, item)) {
         const take = Math.min(remaining, this.slots[i].count);
         this.slots[i].count -= take;
         remaining -= take;
@@ -1149,7 +1452,7 @@ class InventoryManager {
   countItem(item) {
     let sum = 0;
     for (const s of this.slots) {
-      if (s && s.item === item) sum += s.count;
+      if (s && this._match(s.item, item)) sum += s.count;
     }
     return sum;
   }
@@ -1160,7 +1463,7 @@ class InventoryManager {
 }
 
 // =============================================================================
-// WORLD GENERATOR & LIQUIDS
+// WORLD GENERATOR & FLUID CELLULAR AUTOMATA
 // =============================================================================
 class World {
   constructor(width, height) {
@@ -1287,12 +1590,22 @@ class World {
     }
 
     this._carveCaves(16, 55, 35, 135);
+
+    // Standard Veins
     this._spawnVein(COAL_ORE, 30, 80, 45, 10, [STONE, DIRT]);
     this._spawnVein(IRON_ORE, 35, 90, 36, 8, [STONE, BASALT]);
     this._spawnVein(GOLD_ORE, 45, 105, 24, 7, [STONE, PERIDOTITE]);
     this._spawnVein(DIAMOND_ORE, 55, 115, 18, 6, [PERIDOTITE, BASALT]);
     this._spawnVein(OBSIDIAN, 70, 130, 20, 9, [BASALT, MAGMA_STONE]);
     this._spawnVein(LAVA, 85, 140, 15, 11, [MAGMA_STONE, MOLTEN_CORE, AIR]);
+
+    // Expanded Biome Veins & Deep Earth Ores
+    this._spawnVein(BIOLUME_MOSS, 30, 58, 28, 8, [DIRT, STONE]);
+    this._spawnVein(COBALT_ORE, 38, 88, 30, 8, [STONE, PERIDOTITE, BASALT]);
+    this._spawnVein(AMETHYST_CLUSTER, 48, 105, 22, 7, [STONE, PERIDOTITE]);
+    this._spawnVein(URANIUM_ORE, 62, 120, 20, 7, [PERIDOTITE, BASALT, MAGMA_STONE]);
+    this._spawnVein(AETHERIUM_ORE, 85, 145, 16, 6, [BASALT, MAGMA_STONE, MOLTEN_CORE]);
+
     this._spawnStructures(9, 38, 115);
 
     for (let x = 2; x < this.width - 3; x++) {
@@ -1333,6 +1646,7 @@ class World {
     this._carveCaves(14, 45, 35, 140);
     this._spawnVein(oreBid, 35, 140, 40, 9, [baseBid, surfBid]);
     this._spawnVein(DIAMOND_ORE, 55, 145, 16, 6, [baseBid]);
+    this._spawnVein(URANIUM_ORE, 75, 150, 14, 6, [baseBid]);
     this._spawnStructures(6, 36, 120);
   }
 
@@ -1429,7 +1743,7 @@ class SlimeEnemy {
   }
 
   _isSolid(world, tx, ty) {
-    return ![AIR, TORCH, LAVA, LANTERN, NEON_LAMP, WOOD_TABLE, WOOD_CHAIR].includes(world.getTile(tx, ty));
+    return ![AIR, TORCH, LAVA, LANTERN, NEON_LAMP, WOOD_TABLE, WOOD_CHAIR, PLASMA_SCONCE, LASER_BARRIER].includes(world.getTile(tx, ty));
   }
 
   update(world, player) {
@@ -1443,7 +1757,6 @@ class SlimeEnemy {
 
     if (this.onGround) this.vx *= 0.82;
 
-    // Horizontal collision preventing phase-through on cliffs and blocks
     this.x += this.vx;
     this.x = Math.max(TILE_SIZE, Math.min(this.x, (world.width - 2) * TILE_SIZE));
     const left = Math.floor(this.x / TILE_SIZE);
@@ -1461,7 +1774,6 @@ class SlimeEnemy {
       }
     }
 
-    // Vertical collision
     this.y += this.vy;
     this.onGround = false;
     const vLeft = Math.floor(this.x / TILE_SIZE);
@@ -1496,7 +1808,6 @@ class SlimeEnemy {
     ctx.fillRect(dx + 8, dy + 6, 3, 3);
     ctx.fillRect(dx + 16, dy + 6, 3, 3);
 
-    // Floating HP bar displayed when damaged
     if (this.hp < this.max_hp) {
       const pct = Math.max(0, this.hp / this.max_hp);
       ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
@@ -1541,7 +1852,7 @@ class Projectile {
       ctx.lineTo(px, py);
       ctx.stroke();
     } else {
-      ctx.fillStyle = (this.type === "ice") ? "#82e1ff" : COLOR_CYAN;
+      ctx.fillStyle = (this.type === "ice") ? "#82e1ff" : (this.type === "homing") ? "#c864ff" : COLOR_CYAN;
       ctx.beginPath();
       ctx.arc(px, py, 5, 0, Math.PI * 2);
       ctx.fill();
@@ -1661,7 +1972,7 @@ class Player {
 
     for (let ty = top; ty <= bottom; ty++) {
       for (let tx = left; tx <= right; tx++) {
-        if (![AIR, TORCH, LAVA, LANTERN, NEON_LAMP, WOOD_TABLE, WOOD_CHAIR].includes(world.getTile(tx, ty))) {
+        if (![AIR, TORCH, LAVA, LANTERN, NEON_LAMP, WOOD_TABLE, WOOD_CHAIR, PLASMA_SCONCE, LASER_BARRIER].includes(world.getTile(tx, ty))) {
           if (this.vx > 0) this.x = tx * TILE_SIZE - this.w;
           else if (this.vx < 0) this.x = (tx + 1) * TILE_SIZE;
           this.vx = 0;
@@ -1679,7 +1990,7 @@ class Player {
 
     for (let ty = top; ty <= bottom; ty++) {
       for (let tx = left; tx <= right; tx++) {
-        if (![AIR, TORCH, LAVA, LANTERN, NEON_LAMP, WOOD_TABLE, WOOD_CHAIR].includes(world.getTile(tx, ty))) {
+        if (![AIR, TORCH, LAVA, LANTERN, NEON_LAMP, WOOD_TABLE, WOOD_CHAIR, PLASMA_SCONCE, LASER_BARRIER].includes(world.getTile(tx, ty))) {
           if (this.vy > 0) {
             this.y = ty * TILE_SIZE - this.h;
             this.onGround = true;
@@ -1757,8 +2068,9 @@ class Player {
   }
 }
 // =============================================================================
-// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 4 / 4)
-// Main Engine Controller, Unified Draw, Inspector Card & Mobile Bootstrap
+// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 4 / 5)
+// Main Engine Controller (AstroStrataEngine), Rarity Shader System,
+// Glassmorphism UI Renderer, 3x3/Vein Excavation Logic & Input Matrix
 // =============================================================================
 
 class AstroStrataEngine {
@@ -1766,7 +2078,7 @@ class AstroStrataEngine {
     this.canvas = document.getElementById("gameCanvas");
     this.ctx = this.canvas.getContext("2d");
 
-    // Crisp high-DPI scaling for Retina and mobile displays
+    // Crisp high-DPI scaling for Retina, mobile and desktop displays
     this.dpr = Math.min(window.devicePixelRatio || 1, 2.5);
     this.canvas.width = Math.floor(SCREEN_WIDTH * this.dpr);
     this.canvas.height = Math.floor(SCREEN_HEIGHT * this.dpr);
@@ -1817,6 +2129,256 @@ class AstroStrataEngine {
     this.setupListeners();
   }
 
+  // ===========================================================================
+  // SCI-FI UI & RARITY HELPER METHODS
+  // ===========================================================================
+
+  _getItemRarity(itemKey) {
+    if (itemKey === null || itemKey === undefined) {
+      return { border: "#344056", bg: "rgba(18, 24, 38, 0.78)", label: "EMPTY" };
+    }
+    const name = BLOCK_DATA[itemKey]?.name || String(itemKey);
+    const idata = ITEM_DEFINITIONS[itemKey] || {};
+    const bdata = BLOCK_DATA[itemKey] || {};
+
+    // Mythic / Cosmic Tier
+    if (
+      idata.type === "victory" ||
+      name.includes("Singularity") || name.includes("Antimatter") ||
+      name.includes("Chronos") || name.includes("Tachyon") ||
+      name.includes("Dark Matter") || (idata.tier && idata.tier >= 11)
+    ) {
+      return { border: "#ff2e93", bg: "rgba(72, 14, 48, 0.82)", glow: "#ff2e93", label: "COSMIC" };
+    }
+
+    // Epic / Core & Aetherium Tier
+    if (
+      idata.type === "rocket" || idata.type === "special" ||
+      name.includes("Aetherium") || name.includes("Core") ||
+      name.includes("Quantum") || name.includes("Warp") ||
+      (idata.tier && idata.tier >= 5) || (bdata.req_tier && bdata.req_tier >= 5)
+    ) {
+      return { border: "#ffd700", bg: "rgba(64, 48, 12, 0.82)", glow: "#ffd700", label: "EPIC" };
+    }
+
+    // Rare / Advanced Planetary Tier
+    if (
+      name.includes("Diamond") || name.includes("Obsidian") ||
+      name.includes("Titanium") || name.includes("Uranium") ||
+      name.includes("Amethyst") || name.includes("Plasma") ||
+      name.includes("Cryo") || name.includes("Magma") ||
+      (idata.tier && idata.tier === 4) || (bdata.req_tier && bdata.req_tier === 4)
+    ) {
+      return { border: "#b84dff", bg: "rgba(44, 20, 74, 0.82)", glow: "#b84dff", label: "RARE" };
+    }
+
+    // Uncommon / Refined Metals & Mid-Tier
+    if (
+      name.includes("Iron") || name.includes("Gold") ||
+      name.includes("Cobalt") || name.includes("Helium") ||
+      name.includes("Circuit") || idata.type === "consumable" ||
+      idata.type === "armor" || idata.type === "accessory" ||
+      (idata.tier && idata.tier >= 2) || (bdata.req_tier && bdata.req_tier >= 2)
+    ) {
+      return { border: "#38b6ff", bg: "rgba(16, 42, 68, 0.82)", glow: "#38b6ff", label: "UNCOMMON" };
+    }
+
+    // Common / Basic Blocks & Early Tools
+    return { border: "#52607a", bg: "rgba(22, 28, 42, 0.82)", glow: null, label: "COMMON" };
+  }
+
+  _drawGlassPanel(x, y, w, h, borderColor = COLOR_GOLD, cut = 10, headerH = 0) {
+    const ctx = this.ctx;
+    ctx.save();
+
+    // Chamfered octagon path
+    ctx.beginPath();
+    ctx.moveTo(x + cut, y);
+    ctx.lineTo(x + w - cut, y);
+    ctx.lineTo(x + w, y + cut);
+    ctx.lineTo(x + w, y + h - cut);
+    ctx.lineTo(x + w - cut, y + h);
+    ctx.lineTo(x + cut, y + h);
+    ctx.lineTo(x, y + h - cut);
+    ctx.lineTo(x, y + cut);
+    ctx.closePath();
+
+    // Glassmorphism gradient fill
+    const grad = ctx.createLinearGradient(x, y, x, y + h);
+    grad.addColorStop(0, "rgba(20, 27, 44, 0.92)");
+    grad.addColorStop(0.5, "rgba(12, 16, 28, 0.95)");
+    grad.addColorStop(1, "rgba(8, 10, 18, 0.98)");
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Optional translucent header band
+    if (headerH > 0) {
+      ctx.save();
+      ctx.clip();
+      const hGrad = ctx.createLinearGradient(x, y, x + w, y);
+      hGrad.addColorStop(0, "rgba(90, 220, 255, 0.16)");
+      hGrad.addColorStop(0.5, "rgba(255, 215, 0, 0.12)");
+      hGrad.addColorStop(1, "rgba(90, 220, 255, 0.04)");
+      ctx.fillStyle = hGrad;
+      ctx.fillRect(x, y, w, headerH);
+      ctx.strokeStyle = "rgba(90, 220, 255, 0.3)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, y + headerH);
+      ctx.lineTo(x + w, y + headerH);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Outer frame border
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+
+    // Specular top highlight line
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x + cut + 2, y + 2);
+    ctx.lineTo(x + w - cut - 2, y + 2);
+    ctx.stroke();
+
+    // Sci-Fi Corner Brackets
+    ctx.strokeStyle = COLOR_CYAN;
+    ctx.lineWidth = 2;
+    const bLen = Math.min(14, cut + 4);
+    ctx.beginPath();
+    ctx.moveTo(x, y + cut + bLen); ctx.lineTo(x, y + cut); ctx.lineTo(x + cut, y); ctx.lineTo(x + cut + bLen, y);
+    ctx.moveTo(x + w, y + h - cut - bLen); ctx.lineTo(x + w, y + h - cut); ctx.lineTo(x + w - cut, y + h); ctx.lineTo(x + w - cut - bLen, y + h);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  _drawSegmentedBar(x, y, w, h, ratio, colorStart, colorEnd, segments = 10, label = "") {
+    const ctx = this.ctx;
+    const clamped = Math.max(0, Math.min(1, ratio));
+    ctx.save();
+
+    // Recessed dark track
+    ctx.fillStyle = "rgba(8, 10, 16, 0.9)";
+    ctx.fillRect(x, y, w, h);
+
+    // Glowing gradient fill
+    const fillW = Math.floor(w * clamped);
+    if (fillW > 0) {
+      const g = ctx.createLinearGradient(x, y, x, y + h);
+      g.addColorStop(0, colorStart);
+      g.addColorStop(1, colorEnd);
+      ctx.fillStyle = g;
+      ctx.fillRect(x, y, fillW, h);
+
+      // Top gloss strip
+      ctx.fillStyle = "rgba(255, 255, 255, 0.28)";
+      ctx.fillRect(x, y, fillW, Math.max(2, Math.floor(h * 0.28)));
+    }
+
+    // Segment dividers
+    ctx.fillStyle = "rgba(10, 12, 18, 0.75)";
+    const segW = w / segments;
+    for (let i = 1; i < segments; i++) {
+      ctx.fillRect(Math.floor(x + i * segW), y, 2, h);
+    }
+
+    // Outer metallic border
+    ctx.strokeStyle = "rgba(220, 235, 255, 0.75)";
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(x, y, w, h);
+
+    if (label) {
+      ctx.fillStyle = COLOR_WHITE;
+      ctx.font = "bold 10px system-ui, -apple-system, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(label, x + 6, y + h - 3);
+    }
+    ctx.restore();
+  }
+
+  _drawRaritySlot(x, y, w, h, slotObj, isSelected = false, hotkeyLabel = "") {
+    const ctx = this.ctx;
+    const rarity = this._getItemRarity(slotObj ? slotObj.item : null);
+    ctx.save();
+
+    // Slot background
+    ctx.fillStyle = isSelected ? "rgba(255, 215, 0, 0.28)" : rarity.bg;
+    ctx.fillRect(x, y, w, h);
+
+    // Subtle inner diagonal sheen for non-empty slots
+    if (slotObj) {
+      const grad = ctx.createLinearGradient(x, y, x + w, y + h);
+      grad.addColorStop(0, "rgba(255, 255, 255, 0.12)");
+      grad.addColorStop(1, "rgba(0, 0, 0, 0.25)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
+    }
+
+    // Border
+    ctx.strokeStyle = isSelected ? COLOR_GOLD : rarity.border;
+    ctx.lineWidth = isSelected ? 2.4 : 1.3;
+    ctx.strokeRect(x, y, w, h);
+
+    // Corner rarity ticks on rare+ items
+    if (slotObj && rarity.glow) {
+      ctx.fillStyle = rarity.border;
+      ctx.fillRect(x, y, 4, 2); ctx.fillRect(x, y, 2, 4);
+      ctx.fillRect(x + w - 4, y + h - 2, 4, 2); ctx.fillRect(x + w - 2, y + h - 4, 2, 4);
+    }
+
+    // Hotkey number badge
+    if (hotkeyLabel) {
+      ctx.fillStyle = isSelected ? COLOR_GOLD : "rgba(160, 175, 205, 0.65)";
+      ctx.font = "bold 9px system-ui, -apple-system, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(hotkeyLabel, x + 3, y + 10);
+    }
+
+    // Item icon & count
+    if (slotObj) {
+      const iconSz = Math.min(32, w - 12);
+      const off = Math.floor((w - iconSz) / 2);
+      this.drawItemIcon(ctx, slotObj.item, x + off, y + off, iconSz, iconSz);
+
+      if (slotObj.count > 1) {
+        ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+        ctx.fillText(`${slotObj.count}`, x + w - 2, y + h - 3);
+        ctx.fillStyle = COLOR_GOLD;
+        ctx.fillText(`${slotObj.count}`, x + w - 3, y + h - 4);
+      }
+    }
+    ctx.restore();
+  }
+
+  drawItemIcon(ctx, key, x, y, w = 32, h = 32) {
+    if (typeof key === "number" || this.atlas.get("b_" + key)) {
+      this.atlas.draw(ctx, "b_" + key, x, y, w, h);
+    } else {
+      this.atlas.draw(ctx, "i_" + key, x, y, w, h);
+    }
+  }
+
+  // ===========================================================================
+  // WORKSHOP & STATION PROXIMITY
+  // ===========================================================================
+
+  isNearStation(targetBlock) {
+    if (!this.player) return false;
+    const px = Math.floor((this.player.x + this.player.w / 2) / TILE_SIZE);
+    const py = Math.floor((this.player.y + this.player.h / 2) / TILE_SIZE);
+    for (let dx = -5; dx <= 5; dx++) {
+      for (let dy = -5; dy <= 5; dy++) {
+        if (this.world.getTile(px + dx, py + dy) === targetBlock) return true;
+      }
+    }
+    return false;
+  }
+
   checkStationOk(reqStation) {
     if (!reqStation || reqStation === "hand") return true;
     const map = {
@@ -1829,100 +2391,9 @@ class AstroStrataEngine {
     return this.isNearStation(map[reqStation] || WORKBENCH);
   }
 
-  respawnPlayer() {
-    this.player.hp = this.player.max_hp;
-    this.player.vx = 0;
-    this.player.vy = 0;
-    this.player.invulnTimer = 60;
-
-    const spawnTileX = Math.floor(WORLD_WIDTH / 2);
-    let spawnTileY = 20;
-
-    for (let y = 0; y < WORLD_HEIGHT; y++) {
-      const t = this.world.getTile(spawnTileX, y);
-      if (t !== AIR && t !== LAVA) {
-        spawnTileY = Math.max(2, y - 2);
-        break;
-      }
-    }
-
-    this.player.x = spawnTileX * TILE_SIZE;
-    this.player.y = spawnTileY * TILE_SIZE;
-    this.camX = Math.max(0, Math.min(this.player.x - SCREEN_WIDTH / 2, this.world.width * TILE_SIZE - SCREEN_WIDTH));
-    this.camY = Math.max(0, Math.min(this.player.y - SCREEN_HEIGHT / 2, this.world.height * TILE_SIZE - SCREEN_HEIGHT));
-    this.lockedTargetTile = null;
-
-    this.sound.play("warp");
-    this.floatTexts.push(new FloatingText(this.player.x + 10, this.player.y - 20, "SECTOR RESPAWN", COLOR_GOLD, 80));
-  }
-
-  performPlayerAttack(targetWorldX, targetWorldY) {
-    if (!this.player || this.player.attackCooldown > 0) return false;
-
-    const sel = this.player.inv.getSelected();
-    const idata = sel ? (ITEM_DEFINITIONS[sel.item] || {}) : {};
-    const pxCenter = this.player.x + this.player.w / 2;
-    const pyCenter = this.player.y + this.player.h / 2;
-
-    if (targetWorldX !== pxCenter) {
-      this.player.facingRight = targetWorldX > pxCenter;
-    }
-
-    if (idata.type === "ranged" || idata.type === "magic") {
-      this.player.attackCooldown = 18;
-      this.player.swingAnim = 8;
-      const ptype = idata.type === "ranged" ? "arrow" : "magic";
-      const dmg = Math.round((this.player.base_damage / 2) + (idata.dmg || 12));
-      this.projectiles.push(new Projectile(pxCenter, pyCenter, targetWorldX, targetWorldY, dmg, ptype));
-      this.sound.play(ptype === "arrow" ? "jump" : "mine_glass");
-      return true;
-    }
-
-    this.player.attackCooldown = 14;
-    this.player.swingAnim = 10;
-
-    let hitAny = false;
-    const reach = idata.reach || 75;
-    const baseDmg = this.player.base_damage + (idata.dmg || (idata.tool_type ? 4 : 0));
-
-    for (let i = this.enemies.length - 1; i >= 0; i--) {
-      const e = this.enemies[i];
-      const exCenter = e.x + e.w / 2;
-      const eyCenter = e.y + e.h / 2;
-      const dist = Math.hypot(exCenter - pxCenter, eyCenter - pyCenter);
-
-      if (dist <= reach) {
-        hitAny = true;
-        const totalDmg = Math.round(baseDmg + (Math.random() * 4 - 2));
-        e.hp -= totalDmg;
-
-        e.vx = (this.player.facingRight ? 1 : -1) * 5.5;
-        e.vy = -3.8;
-        this.sound.play("hurt");
-        this.floatTexts.push(new FloatingText(e.x + e.w / 2, e.y - 12, `-${totalDmg}`, COLOR_HP, 45));
-
-        for (let p = 0; p < 6; p++) {
-          this.particles.push(new Particle(exCenter, eyCenter, (Math.random() - 0.5) * 4, -1 - Math.random() * 2, e.color, 4, 18));
-        }
-
-        if (e.hp <= 0) {
-          this.player.addXp(e.max_hp, this.floatTexts, this.sound);
-          this.floatTexts.push(new FloatingText(e.x + e.w / 2, e.y - 28, "SLAIN!", COLOR_GOLD, 60));
-          this.enemies.splice(i, 1);
-        }
-      }
-    }
-
-    return hitAny;
-  }
-
-  drawItemIcon(ctx, key, x, y, w = 32, h = 32) {
-    if (typeof key === "number" || this.atlas.get("b_" + key)) {
-      this.atlas.draw(ctx, "b_" + key, x, y, w, h);
-    } else {
-      this.atlas.draw(ctx, "i_" + key, x, y, w, h);
-    }
-  }
+  // ===========================================================================
+  // PERSISTENCE & SECTOR DATA
+  // ===========================================================================
 
   loadSectorIndex() {
     try {
@@ -2044,18 +2515,6 @@ class AstroStrataEngine {
     return true;
   }
 
-  isNearStation(targetBlock) {
-    if (!this.player) return false;
-    const px = Math.floor((this.player.x + this.player.w / 2) / TILE_SIZE);
-    const py = Math.floor((this.player.y + this.player.h / 2) / TILE_SIZE);
-    for (let dx = -5; dx <= 5; dx++) {
-      for (let dy = -5; dy <= 5; dy++) {
-        if (this.world.getTile(px + dx, py + dy) === targetBlock) return true;
-      }
-    }
-    return false;
-  }
-
   newWorldGame(name, chosenClass) {
     try {
       const cleanName = (name && name.trim()) ? name.trim() : `Sector ${this.worldsList.length + 1}`;
@@ -2123,10 +2582,18 @@ class AstroStrataEngine {
   travelToPlanet(targetPlanet) {
     if (targetPlanet === this.world.current_planet) return;
     const pdata = PLANET_DATA[targetPlanet];
-    const reqRocket = pdata.req_rocket;
+    const targetTier = pdata.tier;
 
-    if (reqRocket && this.player.inv.countItem(reqRocket) === 0) {
-      this.floatTexts.push(new FloatingText(this.player.x, this.player.y - 30, `Requires ${reqRocket}!`, COLOR_HP));
+    // Check if player possesses a rocket of equal or greater tier
+    let maxRocketTier = 0;
+    for (let t = 1; t <= 15; t++) {
+      if (this.player.inv.countItem(`Tier ${t} Rocket`) > 0) {
+        maxRocketTier = Math.max(maxRocketTier, t);
+      }
+    }
+
+    if (targetTier > 0 && maxRocketTier < targetTier) {
+      this.floatTexts.push(new FloatingText(this.player.x, this.player.y - 30, `Requires Tier ${targetTier} Rocket (or higher)!`, COLOR_HP));
       this.sound.play("click");
       return;
     }
@@ -2152,6 +2619,33 @@ class AstroStrataEngine {
     this.saveCurrentSector();
   }
 
+  respawnPlayer() {
+    this.player.hp = this.player.max_hp;
+    this.player.vx = 0;
+    this.player.vy = 0;
+    this.player.invulnTimer = 60;
+
+    const spawnTileX = Math.floor(WORLD_WIDTH / 2);
+    let spawnTileY = 20;
+
+    for (let y = 0; y < WORLD_HEIGHT; y++) {
+      const t = this.world.getTile(spawnTileX, y);
+      if (t !== AIR && t !== LAVA) {
+        spawnTileY = Math.max(2, y - 2);
+        break;
+      }
+    }
+
+    this.player.x = spawnTileX * TILE_SIZE;
+    this.player.y = spawnTileY * TILE_SIZE;
+    this.camX = Math.max(0, Math.min(this.player.x - SCREEN_WIDTH / 2, this.world.width * TILE_SIZE - SCREEN_WIDTH));
+    this.camY = Math.max(0, Math.min(this.player.y - SCREEN_HEIGHT / 2, this.world.height * TILE_SIZE - SCREEN_HEIGHT));
+    this.lockedTargetTile = null;
+
+    this.sound.play("warp");
+    this.floatTexts.push(new FloatingText(this.player.x + 10, this.player.y - 20, "SECTOR RESPAWN", COLOR_GOLD, 80));
+  }
+
   lootChest(gx, gy) {
     this.sound.play("craft");
     const lootPool = [
@@ -2161,7 +2655,9 @@ class AstroStrataEngine {
       ["Health Potion", 1],
       [PLANKS, 8],
       ["Dynamite", 1],
-      ["Gold Ingot", 1]
+      ["Gold Ingot", 1],
+      ["Cobalt Ore", 3],
+      ["Amethyst", 2]
     ];
     const reward = lootPool[Math.floor(Math.random() * lootPool.length)];
     this.player.inv.addItem(reward[0], reward[1]);
@@ -2179,14 +2675,265 @@ class AstroStrataEngine {
     for (let dx = -14; dx <= 14; dx++) {
       for (let dy = -14; dy <= 14; dy++) {
         const t = this.world.getTile(px + dx, py + dy);
-        if (BLOCK_DATA[t]?.name?.includes("Ore") || BLOCK_DATA[t]?.name?.includes("Crystal")) {
+        if (BLOCK_DATA[t]?.name?.includes("Ore") || BLOCK_DATA[t]?.name?.includes("Crystal") || BLOCK_DATA[t]?.name?.includes("Geode")) {
           count++;
           this.particles.push(new Particle((px + dx) * TILE_SIZE + 16, (py + dy) * TILE_SIZE + 16, 0, 0, BLOCK_DATA[t].color, 4, 30));
         }
       }
     }
-    this.floatTexts.push(new FloatingText(this.player.x, this.player.y - 25, `Sonar: ${count} Ores Found`, COLOR_CYAN, 60));
+    this.floatTexts.push(new FloatingText(this.player.x, this.player.y - 25, `Sonar: ${count} Ores Located`, COLOR_CYAN, 60));
   }
+
+  // ===========================================================================
+  // COMBAT & EXCAVATION DYNAMICS
+  // ===========================================================================
+
+  performPlayerAttack(targetWorldX, targetWorldY) {
+    if (!this.player || this.player.attackCooldown > 0) return false;
+
+    const sel = this.player.inv.getSelected();
+    const idata = sel ? (ITEM_DEFINITIONS[sel.item] || {}) : {};
+    const pxCenter = this.player.x + this.player.w / 2;
+    const pyCenter = this.player.y + this.player.h / 2;
+
+    if (targetWorldX !== pxCenter) {
+      this.player.facingRight = targetWorldX > pxCenter;
+    }
+
+    if (idata.type === "ranged" || idata.type === "magic") {
+      this.player.attackCooldown = 18;
+      this.player.swingAnim = 8;
+      const ptype = idata.type === "ranged" ? "arrow" : "magic";
+      const dmg = Math.round((this.player.base_damage / 2) + (idata.dmg || 12));
+      this.projectiles.push(new Projectile(pxCenter, pyCenter, targetWorldX, targetWorldY, dmg, ptype));
+      this.sound.play(ptype === "arrow" ? "jump" : "mine_glass");
+      return true;
+    }
+
+    this.player.attackCooldown = 14;
+    this.player.swingAnim = 10;
+
+    let hitAny = false;
+    const reach = idata.reach || 75;
+    const baseDmg = this.player.base_damage + (idata.dmg || (idata.tool_type ? 4 : 0));
+
+    for (let i = this.enemies.length - 1; i >= 0; i--) {
+      const e = this.enemies[i];
+      const exCenter = e.x + e.w / 2;
+      const eyCenter = e.y + e.h / 2;
+      const dist = Math.hypot(exCenter - pxCenter, eyCenter - pyCenter);
+
+      if (dist <= reach) {
+        hitAny = true;
+        const totalDmg = Math.round(baseDmg + (Math.random() * 4 - 2));
+        e.hp -= totalDmg;
+
+        e.vx = (this.player.facingRight ? 1 : -1) * 5.5;
+        e.vy = -3.8;
+        this.sound.play("hurt");
+        this.floatTexts.push(new FloatingText(e.x + e.w / 2, e.y - 12, `-${totalDmg}`, COLOR_HP, 45));
+
+        for (let p = 0; p < 6; p++) {
+          this.particles.push(new Particle(exCenter, eyCenter, (Math.random() - 0.5) * 4, -1 - Math.random() * 2, e.color, 4, 18));
+        }
+
+        if (e.hp <= 0) {
+          this.player.addXp(e.max_hp, this.floatTexts, this.sound);
+          this.floatTexts.push(new FloatingText(e.x + e.w / 2, e.y - 28, "SLAIN!", COLOR_GOLD, 60));
+          this.enemies.splice(i, 1);
+        }
+      }
+    }
+
+    return hitAny;
+  }
+
+  getAimTarget() {
+    if (this.lockedTargetTile && this.player) {
+      const dist = Math.hypot(
+        (this.lockedTargetTile.tx * TILE_SIZE + 16) - (this.player.x + this.player.w / 2),
+        (this.lockedTargetTile.ty * TILE_SIZE + 16) - (this.player.y + this.player.h / 2)
+      );
+      if (dist <= 220) {
+        return this.lockedTargetTile;
+      } else {
+        this.lockedTargetTile = null;
+      }
+    }
+
+    if (!this.player) return null;
+    const aheadX = this.player.x + (this.player.facingRight ? this.player.w + 14 : -14);
+    return {
+      tx: Math.floor(aheadX / TILE_SIZE),
+      ty: Math.floor((this.player.y + this.player.h / 2) / TILE_SIZE)
+    };
+  }
+
+  processContinuousDigging() {
+    if (!this.mouse.down || this.state !== "PLAYING" || !this.player) return;
+
+    const target = this.getAimTarget();
+    if (!target) return;
+
+    const tgx = target.tx;
+    const tgy = target.ty;
+    const maxReach = (this.player.inv.countItem("Magnetosphere Ring") > 0) ? 245 : 180;
+    const pDist = Math.hypot((tgx * TILE_SIZE + 16) - (this.player.x + this.player.w / 2), (tgy * TILE_SIZE + 16) - (this.player.y + this.player.h / 2));
+    if (pDist > maxReach) return;
+
+    const t = this.world.getTile(tgx, tgy);
+    if (t === AIR || t === LAVA || !BLOCK_DATA[t]) return;
+
+    const evalMine = evaluateMiningInteraction(this.player, t);
+    const key = `${tgx},${tgy}`;
+
+    if (!evalMine.canDamage) {
+      this.soundTimer++;
+      if (this.soundTimer % 18 === 0) {
+        this.sound.play("mine_metal");
+        this.floatTexts.push(new FloatingText(tgx * TILE_SIZE, tgy * TILE_SIZE, evalMine.msg, COLOR_HP, 30));
+      }
+      return;
+    }
+
+    const hardness = BLOCK_DATA[t].hardness || 1.0;
+    const progressInc = (1.0 / 60.0) * this.player.mine_mult * evalMine.effMult;
+    const cur = (this.world.damage_map.get(key) || 0.0) + progressInc;
+    this.world.damage_map.set(key, cur);
+
+    this.player.swingAnim = 6;
+    this.soundTimer++;
+
+    if (this.soundTimer % 10 === 0) {
+      this.sound.play(`mine_${getBlockMaterial(t)}`);
+      this.particles.push(new Particle(tgx * TILE_SIZE + 16, tgy * TILE_SIZE + 16, (Math.random() - 0.5) * 3, -1 - Math.random() * 2, BLOCK_DATA[t].color, 4, 18));
+    }
+
+    if (cur >= hardness) {
+      this.sound.play(`break_${getBlockMaterial(t)}`);
+      const sel = this.player.inv.getSelected();
+      const idata = sel ? (ITEM_DEFINITIONS[sel.item] || {}) : {};
+      const xpMult = (this.player.inv.countItem("Magnetosphere Ring") > 0) ? 1.25 : 1.0;
+
+      const harvestTile = (hx, hy) => {
+        const ht = this.world.getTile(hx, hy);
+        if (ht === AIR || ht === LAVA || !BLOCK_DATA[ht]) return;
+        const hEval = evaluateMiningInteraction(this.player, ht);
+        if (!hEval.canDamage) return;
+        if (hEval.canDrop && BLOCK_DATA[ht].drop) {
+          this.player.inv.addItem(BLOCK_DATA[ht].drop, 1);
+          this.player.addXp(Math.round((BLOCK_DATA[ht].xp || 4) * xpMult), this.floatTexts, this.sound);
+        }
+        this.world.setTile(hx, hy, AIR);
+        this.world.damage_map.delete(`${hx},${hy}`);
+        for (let i = 0; i < 4; i++) {
+          this.particles.push(new Particle(hx * TILE_SIZE + 16, hy * TILE_SIZE + 16, (Math.random() - 0.5) * 4, -2 * Math.random(), BLOCK_DATA[ht].color, 4, 20));
+        }
+      };
+
+      // 3x3 AOE Mining (Seismic Maul & Aetherium Excavator)
+      if (idata.aoe) {
+        for (let dx = -idata.aoe; dx <= idata.aoe; dx++) {
+          for (let dy = -idata.aoe; dy <= idata.aoe; dy++) {
+            harvestTile(tgx + dx, tgy + dy);
+          }
+        }
+      }
+      // Vein-Miner Chain Harvesting (Plasma Vein-Cutter)
+      else if (idata.veinMiner && BLOCK_DATA[t].xp) {
+        const targetId = t;
+        const queue = [[tgx, tgy]];
+        const visited = new Set([`${tgx},${tgy}`]);
+        let minedCount = 0;
+        while (queue.length > 0 && minedCount < 16) {
+          const [cx, cy] = queue.shift();
+          harvestTile(cx, cy);
+          minedCount++;
+          for (const [nx, ny] of [[cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]]) {
+            const k = `${nx},${ny}`;
+            if (!visited.has(k) && this.world.getTile(nx, ny) === targetId) {
+              visited.add(k);
+              queue.push([nx, ny]);
+            }
+          }
+        }
+      } else {
+        harvestTile(tgx, tgy);
+      }
+    }
+  }
+
+  processEnvironmentalHazards() {
+    const pTy = Math.floor(this.player.y / TILE_SIZE);
+    const chest = this.player.inv.armor.chest;
+    const boots = this.player.inv.armor.boots;
+
+    const hasExosuit = (chest === "Core Exosuit");
+    const hasAcidSuit = (chest === "Acid-Resistant Suit") || hasExosuit;
+    const hasThermal = (chest === "Thermal Suit") || hasAcidSuit;
+    const hasStriders = (boots === "Core Striders") || hasExosuit;
+    const hasOxygen = (this.player.inv.countItem("Oxygen Tank") > 0) || hasExosuit;
+
+    if (this.world.current_planet !== "Earth") {
+      const haz = PLANET_DATA[this.world.current_planet]?.hazard || "";
+      if (haz.includes("Vacuum") && !hasOxygen && Math.random() < 0.08) {
+        this.player.hp -= 1.2;
+        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "OXYGEN DEPRIVATION!", COLOR_CYAN));
+      } else if ((haz.includes("Acid") || haz.includes("Toxic")) && !hasAcidSuit && Math.random() < 0.08) {
+        this.player.hp -= 1.5;
+        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "CORROSIVE ATMOSPHERE!", COLOR_EXP));
+      } else if ((haz.includes("Radiation") || haz.includes("Volcanic") || haz.includes("Flares")) && !hasThermal && Math.random() < 0.08) {
+        this.player.hp -= 1.8;
+        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "THERMAL RADIATION!", COLOR_HEAT));
+      } else if (haz.includes("Crush") && !hasExosuit && Math.random() < 0.1) {
+        this.player.hp -= 3.5;
+        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "GRAVITY CRUSH!", COLOR_PRESSURE));
+      }
+    } else {
+      if (pTy >= OUTER_CORE_BOTTOM && !hasExosuit && Math.random() < 0.15) {
+        this.player.hp -= 4.0;
+        this.sound.play("hurt");
+        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "PRESSURE CRUSH!", COLOR_PRESSURE));
+      } else if (pTy >= UPPER_MANTLE_BOTTOM && !hasThermal && Math.random() < 0.15) {
+        this.player.hp -= 1.5;
+        this.sound.play("hurt");
+        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "EXTREME HEAT!", COLOR_HEAT));
+      }
+    }
+
+    if (this.player.inLava && !hasStriders) {
+      this.player.hp -= 1.5;
+      if (Math.random() < 0.2) this.sound.play("hurt");
+    }
+
+    if (this.player.hp <= 0) {
+      this.respawnPlayer();
+    }
+  }
+
+  // ===========================================================================
+  // RECIPE FILTERING
+  // ===========================================================================
+
+  getFilteredRecipes() {
+    return RECIPES.filter((r) => {
+      const resName = BLOCK_DATA[r.result]?.name || String(r.result);
+      if (this.searchQuery.trim() && !resName.toLowerCase().includes(this.searchQuery.toLowerCase())) return false;
+      if (this.craftCategory !== "ALL") {
+        const idata = ITEM_DEFINITIONS[r.result] || {};
+        if (this.craftCategory === "TOOLS" && !["tool", "scanner", "explosive", "accessory", "special"].includes(idata.type)) return false;
+        if (this.craftCategory === "WEAPONS" && !["weapon", "ranged", "magic"].includes(idata.type)) return false;
+        if (this.craftCategory === "ARMOR" && idata.type !== "armor") return false;
+        if (this.craftCategory === "ROCKETS" && idata.type !== "rocket") return false;
+        if (this.craftCategory === "BLOCKS" && typeof r.result !== "number") return false;
+      }
+      return true;
+    });
+  }
+
+  // ===========================================================================
+  // INPUT LISTENERS & DISPATCHERS
+  // ===========================================================================
 
   setupListeners() {
     window.addEventListener("keydown", (e) => {
@@ -2338,6 +3085,7 @@ class AstroStrataEngine {
       }
     });
 
+    // Touch Event Handling with Gesture Buffering
     this.canvas.addEventListener("touchstart", (e) => {
       e.preventDefault();
       try { this.sound.init(); } catch (err) {}
@@ -2524,6 +3272,10 @@ class AstroStrataEngine {
     this.canvas.addEventListener("touchcancel", handleTouchEnd, { passive: false });
   }
 
+  // ===========================================================================
+  // CLICK LOGIC
+  // ===========================================================================
+
   handleLeftClick() {
     const mx = this.mouse.x;
     const my = this.mouse.y;
@@ -2664,6 +3416,37 @@ class AstroStrataEngine {
       const target = this.getAimTarget();
       if (!target) return;
 
+      // Special Gadgets: Warp Grapple (Blink) & Terra-Shaper (Instant Bridge)
+      if (sel && sel.item === "Warp Grapple") {
+        if (this.world.getTile(target.tx, target.ty) === AIR && this.world.getTile(target.tx, target.ty - 1) === AIR) {
+          this.player.x = target.tx * TILE_SIZE + 6;
+          this.player.y = (target.ty - 1) * TILE_SIZE;
+          this.player.vy = 0;
+          this.sound.play("warp");
+          for (let i = 0; i < 14; i++) {
+            this.particles.push(new Particle(this.player.x + 10, this.player.y + 20, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6, "#c864ff", 5, 25));
+          }
+        }
+        return;
+      }
+
+      if (sel && sel.item === "Terra-Shaper") {
+        if (this.player.inv.countItem(STONE_BRICKS) >= 1) {
+          let placedAny = false;
+          for (let dx = -2; dx <= 2; dx++) {
+            if (this.world.getTile(target.tx + dx, target.ty) === AIR && this.player.inv.countItem(STONE_BRICKS) > 0) {
+              this.world.setTile(target.tx + dx, target.ty, STONE_BRICKS);
+              this.player.inv.removeItem(STONE_BRICKS, 1);
+              placedAny = true;
+            }
+          }
+          if (placedAny) this.sound.play("place");
+        } else {
+          this.floatTexts.push(new FloatingText(this.player.x, this.player.y - 20, "Needs Stone Bricks!", COLOR_HP));
+        }
+        return;
+      }
+
       const pDist = Math.hypot(
         (target.tx * TILE_SIZE + 16) - (this.player.x + this.player.w / 2),
         (target.ty * TILE_SIZE + 16) - (this.player.y + this.player.h / 2)
@@ -2716,7 +3499,7 @@ class AstroStrataEngine {
 
       if (blockIdToPlace !== null && this.world.getTile(placeTx, placeTy) === AIR) {
         const bdata = BLOCK_DATA[blockIdToPlace] || {};
-        const isNonSolid = bdata.light || [TORCH, LANTERN, NEON_LAMP].includes(blockIdToPlace);
+        const isNonSolid = bdata.light || [TORCH, LANTERN, NEON_LAMP, PLASMA_SCONCE, LASER_BARRIER].includes(blockIdToPlace);
 
         const placeRect = { x: placeTx * TILE_SIZE, y: placeTy * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE };
         const pRect = { x: this.player.x, y: this.player.y, w: this.player.w, h: this.player.h };
@@ -2951,147 +3734,9 @@ class AstroStrataEngine {
     }
   }
 
-  getFilteredRecipes() {
-    return RECIPES.filter((r) => {
-      const resName = BLOCK_DATA[r.result]?.name || String(r.result);
-      if (this.searchQuery.trim() && !resName.toLowerCase().includes(this.searchQuery.toLowerCase())) return false;
-      if (this.craftCategory !== "ALL") {
-        const idata = ITEM_DEFINITIONS[r.result] || {};
-        if (this.craftCategory === "TOOLS" && !["tool", "scanner", "explosive", "accessory"].includes(idata.type)) return false;
-        if (this.craftCategory === "WEAPONS" && !["weapon", "ranged", "magic"].includes(idata.type)) return false;
-        if (this.craftCategory === "ARMOR" && idata.type !== "armor") return false;
-        if (this.craftCategory === "ROCKETS" && idata.type !== "rocket") return false;
-        if (this.craftCategory === "BLOCKS" && typeof r.result !== "number") return false;
-      }
-      return true;
-    });
-  }
-
-  getAimTarget() {
-    if (this.lockedTargetTile && this.player) {
-      const dist = Math.hypot(
-        (this.lockedTargetTile.tx * TILE_SIZE + 16) - (this.player.x + this.player.w / 2),
-        (this.lockedTargetTile.ty * TILE_SIZE + 16) - (this.player.y + this.player.h / 2)
-      );
-      if (dist <= 220) {
-        return this.lockedTargetTile;
-      } else {
-        this.lockedTargetTile = null;
-      }
-    }
-
-    if (!this.player) return null;
-    const aheadX = this.player.x + (this.player.facingRight ? this.player.w + 14 : -14);
-    return {
-      tx: Math.floor(aheadX / TILE_SIZE),
-      ty: Math.floor((this.player.y + this.player.h / 2) / TILE_SIZE)
-    };
-  }
-
-  processContinuousDigging() {
-    if (!this.mouse.down || this.state !== "PLAYING" || !this.player) return;
-
-    const target = this.getAimTarget();
-    if (!target) return;
-
-    const tgx = target.tx;
-    const tgy = target.ty;
-
-    const pDist = Math.hypot((tgx * TILE_SIZE + 16) - (this.player.x + this.player.w / 2), (tgy * TILE_SIZE + 16) - (this.player.y + this.player.h / 2));
-    if (pDist > 180) return;
-
-    const t = this.world.getTile(tgx, tgy);
-    if (t === AIR || t === LAVA || !BLOCK_DATA[t]) return;
-
-    const evalMine = evaluateMiningInteraction(this.player, t);
-    const key = `${tgx},${tgy}`;
-
-    if (!evalMine.canDamage) {
-      this.soundTimer++;
-      if (this.soundTimer % 18 === 0) {
-        this.sound.play("mine_metal");
-        this.floatTexts.push(new FloatingText(tgx * TILE_SIZE, tgy * TILE_SIZE, evalMine.msg, COLOR_HP, 30));
-      }
-      return;
-    }
-
-    const hardness = BLOCK_DATA[t].hardness || 1.0;
-    const dt = 1.0 / 60.0;
-    const progressInc = dt * this.player.mine_mult * evalMine.effMult;
-
-    let cur = this.world.damage_map.get(key) || 0.0;
-    cur += progressInc;
-    this.world.damage_map.set(key, cur);
-
-    this.player.swingAnim = 6;
-    this.soundTimer++;
-
-    if (this.soundTimer % 12 === 0) {
-      const mat = getBlockMaterial(t);
-      this.sound.play(`mine_${mat}`);
-      this.particles.push(new Particle(tgx * TILE_SIZE + 16, tgy * TILE_SIZE + 16, (Math.random() - 0.5) * 3, -1 - Math.random() * 2, BLOCK_DATA[t].color, 4, 18));
-    }
-
-    if (cur >= hardness) {
-      const mat = getBlockMaterial(t);
-      this.sound.play(`break_${mat}`);
-      const drop = BLOCK_DATA[t].drop;
-      if (evalMine.canDrop && drop) {
-        this.player.inv.addItem(drop, 1);
-        this.player.addXp(BLOCK_DATA[t].xp || 4, this.floatTexts, this.sound);
-      }
-      this.world.setTile(tgx, tgy, AIR);
-      this.world.damage_map.delete(key);
-    }
-  }
-
-  processEnvironmentalHazards() {
-    const pTy = Math.floor(this.player.y / TILE_SIZE);
-    const chest = this.player.inv.armor.chest;
-    const boots = this.player.inv.armor.boots;
-
-    const hasExosuit = (chest === "Core Exosuit");
-    const hasAcidSuit = (chest === "Acid-Resistant Suit") || hasExosuit;
-    const hasThermal = (chest === "Thermal Suit") || hasAcidSuit;
-    const hasStriders = (boots === "Core Striders") || hasExosuit;
-    const hasOxygen = (this.player.inv.countItem("Oxygen Tank") > 0) || hasExosuit;
-
-    if (this.world.current_planet !== "Earth") {
-      const haz = PLANET_DATA[this.world.current_planet]?.hazard || "";
-      if (haz.includes("Vacuum") && !hasOxygen && Math.random() < 0.08) {
-        this.player.hp -= 1.2;
-        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "OXYGEN DEPRIVATION!", COLOR_CYAN));
-      } else if ((haz.includes("Acid") || haz.includes("Toxic")) && !hasAcidSuit && Math.random() < 0.08) {
-        this.player.hp -= 1.5;
-        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "CORROSIVE ATMOSPHERE!", COLOR_EXP));
-      } else if ((haz.includes("Radiation") || haz.includes("Volcanic") || haz.includes("Flares")) && !hasThermal && Math.random() < 0.08) {
-        this.player.hp -= 1.8;
-        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "THERMAL RADIATION!", COLOR_HEAT));
-      } else if (haz.includes("Crush") && !hasExosuit && Math.random() < 0.1) {
-        this.player.hp -= 3.5;
-        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "GRAVITY CRUSH!", COLOR_PRESSURE));
-      }
-    } else {
-      if (pTy >= OUTER_CORE_BOTTOM && !hasExosuit && Math.random() < 0.15) {
-        this.player.hp -= 4.0;
-        this.sound.play("hurt");
-        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "PRESSURE CRUSH!", COLOR_PRESSURE));
-      } else if (pTy >= UPPER_MANTLE_BOTTOM && !hasThermal && Math.random() < 0.15) {
-        this.player.hp -= 1.5;
-        this.sound.play("hurt");
-        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "EXTREME HEAT!", COLOR_HEAT));
-      }
-    }
-
-    if (this.player.inLava && !hasStriders) {
-      this.player.hp -= 1.5;
-      if (Math.random() < 0.2) this.sound.play("hurt");
-    }
-
-    if (this.player.hp <= 0) {
-      this.respawnPlayer();
-    }
-  }
+  // ===========================================================================
+  // GAME UPDATE LOOP
+  // ===========================================================================
 
   update() {
     if (this.state === "PLAYING" && this.player) {
@@ -3164,7 +3809,7 @@ class AstroStrataEngine {
             this.projectiles.splice(i, 1);
             continue;
           }
-        } else if (![AIR, TORCH, LAVA, LANTERN, NEON_LAMP].includes(this.world.getTile(pgx, pgy))) {
+        } else if (![AIR, TORCH, LAVA, LANTERN, NEON_LAMP, PLASMA_SCONCE, LASER_BARRIER].includes(this.world.getTile(pgx, pgy))) {
           this.projectiles.splice(i, 1);
           continue;
         }
@@ -3230,6 +3875,10 @@ class AstroStrataEngine {
     }
   }
 
+  // ===========================================================================
+  // COMPLETE SCI-FI GLASSMORPHISM DRAW PASS
+  // ===========================================================================
+
   draw() {
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     this.ctx.textBaseline = "alphabetic";
@@ -3237,23 +3886,30 @@ class AstroStrataEngine {
     this.ctx.fillStyle = COLOR_BG_DARK;
     this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
+    // 1. Menu State
     if (this.state === "MENU") {
+      this.ctx.strokeStyle = "rgba(90, 220, 255, 0.05)";
+      this.ctx.lineWidth = 1;
+      for (let gx = 0; gx < SCREEN_WIDTH; gx += 64) {
+        this.ctx.beginPath(); this.ctx.moveTo(gx, 0); this.ctx.lineTo(gx, SCREEN_HEIGHT); this.ctx.stroke();
+      }
+      for (let gy = 0; gy < SCREEN_HEIGHT; gy += 64) {
+        this.ctx.beginPath(); this.ctx.moveTo(0, gy); this.ctx.lineTo(SCREEN_WIDTH, gy); this.ctx.stroke();
+      }
+
+      this._drawGlassPanel(SCREEN_WIDTH / 2 - 310, 145, 620, 260, COLOR_GOLD, 16, 54);
+
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 34px system-ui, -apple-system, sans-serif";
+      this.ctx.font = "bold 32px system-ui, -apple-system, sans-serif";
       this.ctx.textAlign = "center";
-      this.ctx.fillText("ASTROSTRATA: REIGNITION", SCREEN_WIDTH / 2, 220);
+      this.ctx.fillText("ASTROSTRATA: REIGNITION", SCREEN_WIDTH / 2, 184);
 
       this.ctx.fillStyle = COLOR_CYAN;
       this.ctx.font = "14px system-ui, -apple-system, sans-serif";
-      this.ctx.fillText("Stratum Geology | Planetary Dynamos | Interplanetary Aerospace", SCREEN_WIDTH / 2, 255);
+      this.ctx.fillText("Stratum Geology  ·  Planetary Dynamos  ·  Interplanetary Aerospace", SCREEN_WIDTH / 2, 245);
 
       const b1 = { x: SCREEN_WIDTH / 2 - 160, y: 310, w: 320, h: 48 };
-      this.ctx.fillStyle = "#1e2436";
-      this.ctx.fillRect(b1.x, b1.y, b1.w, b1.h);
-      this.ctx.strokeStyle = COLOR_GOLD;
-      this.ctx.lineWidth = 2;
-      this.ctx.strokeRect(b1.x, b1.y, b1.w, b1.h);
-
+      this._drawGlassPanel(b1.x, b1.y, b1.w, b1.h, COLOR_GOLD, 8);
       this.ctx.fillStyle = COLOR_WHITE;
       this.ctx.font = "bold 15px system-ui, -apple-system, sans-serif";
       this.ctx.fillText("ENTER EXPEDITION / SECTORS", SCREEN_WIDTH / 2, 340);
@@ -3265,11 +3921,14 @@ class AstroStrataEngine {
       return;
     }
 
+    // 2. World Select State
     if (this.state === "WORLD_SELECT") {
+      this._drawGlassPanel(SCREEN_WIDTH / 2 - 360, 24, 720, SCREEN_HEIGHT - 48, COLOR_CYAN, 14, 52);
+
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 28px system-ui, -apple-system, sans-serif";
+      this.ctx.font = "bold 24px system-ui, -apple-system, sans-serif";
       this.ctx.textAlign = "center";
-      this.ctx.fillText("EXPEDITION SECTOR ARCHIVE", SCREEN_WIDTH / 2, 60);
+      this.ctx.fillText("EXPEDITION SECTOR ARCHIVE", SCREEN_WIDTH / 2, 58);
 
       if (this.worldsList.length === 0) {
         this.ctx.fillStyle = "#8892b0";
@@ -3281,36 +3940,37 @@ class AstroStrataEngine {
           const cardY = 110 + i * 72;
           const isSelected = (i === this.selectedWorldIdx);
 
-          this.ctx.fillStyle = isSelected ? "#28344e" : "#192030";
-          this.ctx.fillRect(SCREEN_WIDTH / 2 - 320, cardY, 640, 62);
-          this.ctx.strokeStyle = isSelected ? COLOR_GOLD : "#404c64";
-          this.ctx.lineWidth = isSelected ? 2 : 1;
-          this.ctx.strokeRect(SCREEN_WIDTH / 2 - 320, cardY, 640, 62);
+          this._drawGlassPanel(SCREEN_WIDTH / 2 - 320, cardY, 640, 62, isSelected ? COLOR_GOLD : "#3b4966", 8);
 
-          this.ctx.fillStyle = COLOR_WHITE;
+          this.ctx.fillStyle = isSelected ? COLOR_GOLD : COLOR_WHITE;
           this.ctx.font = "bold 16px system-ui, -apple-system, sans-serif";
           this.ctx.textAlign = "left";
           this.ctx.fillText(w.name, SCREEN_WIDTH / 2 - 300, cardY + 26);
+
           this.ctx.fillStyle = COLOR_CYAN;
           this.ctx.font = "12px system-ui, -apple-system, sans-serif";
-          this.ctx.fillText(`Class: ${w.pClass} | Location: ${w.planet} | Date: ${w.savedAt}`, SCREEN_WIDTH / 2 - 300, cardY + 46);
+          this.ctx.fillText(`Class: ${w.pClass}  |  Planet: ${w.planet}  |  Saved: ${w.savedAt}`, SCREEN_WIDTH / 2 - 300, cardY + 46);
+
+          if (w.level) {
+            this.ctx.fillStyle = COLOR_EXP;
+            this.ctx.textAlign = "right";
+            this.ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
+            this.ctx.fillText(`LVL ${w.level}`, SCREEN_WIDTH / 2 + 300, cardY + 36);
+          }
         }
       }
 
       const hasWorlds = this.worldsList.length > 0;
       const buttons = [
         { label: "ENTER SECTOR", x: SCREEN_WIDTH / 2 - 330, w: 155, active: true, color: COLOR_GOLD },
-        { label: "CREATE SECTOR", x: SCREEN_WIDTH / 2 - 165, w: 155, active: true, color: COLOR_WHITE },
+        { label: "CREATE SECTOR", x: SCREEN_WIDTH / 2 - 165, w: 155, active: true, color: COLOR_CYAN },
         { label: "DELETE", x: SCREEN_WIDTH / 2 + 5, w: 150, active: hasWorlds, color: COLOR_HP },
         { label: "MAIN MENU", x: SCREEN_WIDTH / 2 + 165, w: 155, active: true, color: COLOR_WHITE }
       ];
 
       for (const btn of buttons) {
-        this.ctx.fillStyle = btn.active ? "#1e2436" : "#12141c";
-        this.ctx.fillRect(btn.x, SCREEN_HEIGHT - 80, btn.w, 44);
-        this.ctx.strokeStyle = btn.active ? btn.color : "#333948";
-        this.ctx.strokeRect(btn.x, SCREEN_HEIGHT - 80, btn.w, 44);
-        this.ctx.fillStyle = btn.active ? btn.color : "#606880";
+        this._drawGlassPanel(btn.x, SCREEN_HEIGHT - 80, btn.w, 44, btn.active ? btn.color : "#2c3242", 6);
+        this.ctx.fillStyle = btn.active ? btn.color : "#555e72";
         this.ctx.textAlign = "center";
         this.ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
         this.ctx.fillText(btn.label, btn.x + btn.w / 2, SCREEN_HEIGHT - 53);
@@ -3318,17 +3978,20 @@ class AstroStrataEngine {
       return;
     }
 
+    // 3. Create World State
     if (this.state === "CREATE_WORLD") {
+      this._drawGlassPanel(SCREEN_WIDTH / 2 - 320, 30, 640, 565, COLOR_GOLD, 14, 52);
+
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 28px system-ui, -apple-system, sans-serif";
+      this.ctx.font = "bold 24px system-ui, -apple-system, sans-serif";
       this.ctx.textAlign = "center";
-      this.ctx.fillText("INITIALIZE SECTOR PROFILE", SCREEN_WIDTH / 2, 60);
+      this.ctx.fillText("INITIALIZE SECTOR PROFILE", SCREEN_WIDTH / 2, 64);
 
-      this.ctx.fillStyle = "#141824";
-      this.ctx.fillRect(SCREEN_WIDTH / 2 - 200, 175, 400, 44);
-      this.ctx.strokeStyle = this.nameInputActive ? COLOR_GOLD : "#44506c";
-      this.ctx.strokeRect(SCREEN_WIDTH / 2 - 200, 175, 400, 44);
+      this.ctx.fillStyle = COLOR_CYAN;
+      this.ctx.font = "bold 12px system-ui, -apple-system, sans-serif";
+      this.ctx.fillText("SECTOR DESIGNATION:", SCREEN_WIDTH / 2, 162);
 
+      this._drawGlassPanel(SCREEN_WIDTH / 2 - 200, 175, 400, 44, this.nameInputActive ? COLOR_GOLD : "#44506c", 6);
       this.ctx.fillStyle = COLOR_WHITE;
       this.ctx.font = "bold 16px system-ui, -apple-system, sans-serif";
       this.ctx.fillText(this.inputWorldName + (this.nameInputActive ? "_" : ""), SCREEN_WIDTH / 2, 203);
@@ -3336,28 +3999,36 @@ class AstroStrataEngine {
       const clist = Object.keys(CLASSES);
       for (let i = 0; i < clist.length; i++) {
         const cname = clist[i];
+        const cstats = CLASSES[cname];
         const cardX = SCREEN_WIDTH / 2 - 260 + i * 135;
-        this.ctx.fillStyle = (this.selectedCreateClass === cname) ? "#28344e" : "#141824";
-        this.ctx.fillRect(cardX, 275, 120, 180);
-        this.ctx.strokeStyle = (this.selectedCreateClass === cname) ? COLOR_GOLD : "#44506c";
-        this.ctx.strokeRect(cardX, 275, 120, 180);
+        const isSel = (this.selectedCreateClass === cname);
 
-        this.ctx.fillStyle = CLASSES[cname].color;
-        this.ctx.fillText(cname, cardX + 60, 305);
+        this._drawGlassPanel(cardX, 275, 120, 180, isSel ? COLOR_GOLD : "#3b4760", 8, 38);
+
+        this.ctx.fillStyle = cstats.color;
+        this.ctx.font = "bold 15px system-ui, -apple-system, sans-serif";
+        this.ctx.textAlign = "center";
+        this.ctx.fillText(cname, cardX + 60, 300);
+
+        this.ctx.fillStyle = COLOR_WHITE;
+        this.ctx.font = "11px system-ui, -apple-system, sans-serif";
+        this.ctx.fillText(`HP: ${cstats.hp}`, cardX + 60, 340);
+        this.ctx.fillText(`DMG: ${cstats.dmg}`, cardX + 60, 362);
+        this.ctx.fillText(`SPD: ${cstats.speed}`, cardX + 60, 384);
+        this.ctx.fillStyle = COLOR_CYAN;
+        this.ctx.fillText(`MINE: ${cstats.mine_speed}x`, cardX + 60, 408);
+        this.ctx.fillStyle = "#9aa5b8";
+        this.ctx.font = "10px system-ui, -apple-system, sans-serif";
+        this.ctx.fillText(cstats.weapon, cardX + 60, 436);
       }
 
-      this.ctx.fillStyle = "#1e2436";
-      this.ctx.fillRect(SCREEN_WIDTH / 2 - 220, 515, 220, 54);
-      this.ctx.strokeStyle = COLOR_GOLD;
-      this.ctx.strokeRect(SCREEN_WIDTH / 2 - 220, 515, 220, 54);
+      this._drawGlassPanel(SCREEN_WIDTH / 2 - 220, 515, 220, 54, COLOR_GOLD, 8);
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 16px system-ui, -apple-system, sans-serif";
+      this.ctx.font = "bold 15px system-ui, -apple-system, sans-serif";
+      this.ctx.textAlign = "center";
       this.ctx.fillText("LAUNCH SECTOR", SCREEN_WIDTH / 2 - 110, 547);
 
-      this.ctx.fillStyle = "#1e2436";
-      this.ctx.fillRect(SCREEN_WIDTH / 2 + 10, 515, 210, 54);
-      this.ctx.strokeStyle = "#404c64";
-      this.ctx.strokeRect(SCREEN_WIDTH / 2 + 10, 515, 210, 54);
+      this._drawGlassPanel(SCREEN_WIDTH / 2 + 10, 515, 210, 54, "#4a5670", 8);
       this.ctx.fillStyle = COLOR_WHITE;
       this.ctx.fillText("CANCEL", SCREEN_WIDTH / 2 + 115, 547);
       return;
@@ -3365,8 +4036,11 @@ class AstroStrataEngine {
 
     if (!this.player) return;
 
+    // 4. World & Entity Render Pass
     const pTy = Math.floor(this.player.y / TILE_SIZE);
-    this.ctx.fillStyle = (pTy < CRUST_SURFACE) ? (PLANET_DATA[this.world.current_planet]?.sky_color || "#87c3f5") : "#141620";
+    this.ctx.fillStyle = (pTy < CRUST_SURFACE)
+      ? (PLANET_DATA[this.world.current_planet]?.sky_color || "#87c3f5")
+      : "#10131c";
     this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
     const minTx = Math.max(0, Math.floor(this.camX / TILE_SIZE));
@@ -3399,14 +4073,33 @@ class AstroStrataEngine {
 
     this.lighting.render(this.ctx, this.player, this.world, this.camX, this.camY);
 
+    // 5. Smart Aim Reticle & Geological HUD
     const aim = this.getAimTarget();
     if (aim) {
-      const pDist = Math.hypot((aim.tx * TILE_SIZE + 16) - (this.player.x + this.player.w / 2), (aim.ty * TILE_SIZE + 16) - (this.player.y + this.player.h / 2));
-      const inReach = pDist <= 180;
+      const maxReach = (this.player.inv.countItem("Magnetosphere Ring") > 0) ? 245 : 180;
+      const pDist = Math.hypot(
+        (aim.tx * TILE_SIZE + 16) - (this.player.x + this.player.w / 2),
+        (aim.ty * TILE_SIZE + 16) - (this.player.y + this.player.h / 2)
+      );
+      const inReach = pDist <= maxReach;
       const rDx = Math.floor(aim.tx * TILE_SIZE - this.camX);
       const rDy = Math.floor(aim.ty * TILE_SIZE - this.camY);
 
-      this.ctx.strokeStyle = inReach ? COLOR_GOLD : "rgba(235, 60, 60, 0.6)";
+      const sel = this.player.inv.getSelected();
+      const idata = sel ? (ITEM_DEFINITIONS[sel.item] || {}) : {};
+
+      if (inReach && idata.aoe) {
+        this.ctx.strokeStyle = "rgba(90, 220, 255, 0.55)";
+        this.ctx.lineWidth = 1.5;
+        this.ctx.strokeRect(
+          rDx - idata.aoe * TILE_SIZE,
+          rDy - idata.aoe * TILE_SIZE,
+          (idata.aoe * 2 + 1) * TILE_SIZE,
+          (idata.aoe * 2 + 1) * TILE_SIZE
+        );
+      }
+
+      this.ctx.strokeStyle = inReach ? COLOR_GOLD : "rgba(235, 60, 60, 0.65)";
       this.ctx.lineWidth = 2;
       this.ctx.strokeRect(rDx, rDy, TILE_SIZE, TILE_SIZE);
 
@@ -3415,112 +4108,135 @@ class AstroStrataEngine {
 
       if (dmg && BLOCK_DATA[targetTile]) {
         const pct = Math.min(1.0, dmg / BLOCK_DATA[targetTile].hardness);
-        const barW = 32;
-        const barH = 5;
-        this.ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
-        this.ctx.fillRect(rDx, rDy - 8, barW, barH);
+        this.ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+        this.ctx.fillRect(rDx, rDy - 8, 32, 5);
         this.ctx.fillStyle = COLOR_GOLD;
-        this.ctx.fillRect(rDx, rDy - 8, Math.floor(barW * pct), barH);
-        this.ctx.strokeStyle = "#ffffff";
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(rDx, rDy - 8, barW, barH);
+        this.ctx.fillRect(rDx, rDy - 8, Math.floor(32 * pct), 5);
       }
 
       if (targetTile !== AIR && BLOCK_DATA[targetTile]) {
         const bdata = BLOCK_DATA[targetTile];
-        const hx = SCREEN_WIDTH - 290;
-        const hy = 64;
-        this.ctx.fillStyle = "rgba(18, 22, 32, 0.92)";
-        this.ctx.fillRect(hx, hy, 270, 85);
-        this.ctx.strokeStyle = COLOR_GOLD;
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(hx, hy, 270, 85);
+        const hx = SCREEN_WIDTH - 294;
+        const hy = 66;
+        this._drawGlassPanel(hx, hy, 276, 90, COLOR_GOLD, 8, 26);
 
         this.ctx.fillStyle = COLOR_GOLD;
         this.ctx.textAlign = "left";
         this.ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
-        this.ctx.fillText(bdata.name, hx + 12, hy + 20);
+        this.ctx.fillText(bdata.name, hx + 12, hy + 18);
 
         const evalInfo = evaluateMiningInteraction(this.player, targetTile);
         this.ctx.fillStyle = evalInfo.canDrop ? COLOR_EXP : COLOR_HP;
-        this.ctx.font = "11px system-ui, -apple-system, sans-serif";
-        this.ctx.fillText(`Mohs: ${bdata.mohs} | [${evalInfo.msg}]`, hx + 12, hy + 38);
+        this.ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
+        this.ctx.fillText(`Mohs ${bdata.mohs}  ·  ${evalInfo.msg}`, hx + 12, hy + 42);
+
         this.ctx.fillStyle = COLOR_CYAN;
-        this.ctx.fillText(`Req: ${bdata.req_tool} (${TIER_NAMES[bdata.req_tier]})`, hx + 12, hy + 54);
+        this.ctx.font = "11px system-ui, -apple-system, sans-serif";
+        this.ctx.fillText(`Req: ${bdata.req_tool} (${TIER_NAMES[bdata.req_tier]})`, hx + 12, hy + 58);
 
         const curDmg = dmg || 0.0;
         const pct = Math.min(1.0, curDmg / bdata.hardness);
-        this.ctx.fillStyle = "rgba(40, 50, 70, 0.8)";
-        this.ctx.fillRect(hx + 12, hy + 64, 246, 12);
-        this.ctx.fillStyle = COLOR_GOLD;
-        this.ctx.fillRect(hx + 12, hy + 64, Math.floor(246 * pct), 12);
-        this.ctx.fillStyle = COLOR_WHITE;
-        this.ctx.font = "bold 9px system-ui, -apple-system, sans-serif";
-        this.ctx.fillText(`${Math.floor(pct * 100)}% (${curDmg.toFixed(1)}s / ${bdata.hardness}s)`, hx + 85, hy + 73);
+        this._drawSegmentedBar(
+          hx + 12,
+          hy + 66,
+          252,
+          14,
+          pct,
+          "#ffe259",
+          "#ffa751",
+          8,
+          `${Math.floor(pct * 100)}% (${curDmg.toFixed(1)}s / ${bdata.hardness}s)`
+        );
       }
     }
 
+    // 6. Top Telemetry & Health HUD
     const layer = World.getLayerInfo(pTy, this.world.current_planet);
-    this.ctx.fillStyle = "rgba(18, 22, 32, 0.85)";
-    this.ctx.fillRect(SCREEN_WIDTH / 2 - 140, 14, 280, 64);
-    this.ctx.strokeStyle = "#404c64";
-    this.ctx.strokeRect(SCREEN_WIDTH / 2 - 140, 14, 280, 64);
+    this._drawGlassPanel(SCREEN_WIDTH / 2 - 150, 12, 300, 68, COLOR_CYAN, 10, 24);
 
     this.ctx.fillStyle = COLOR_GOLD;
-    this.ctx.textAlign = "left";
+    this.ctx.textAlign = "center";
     this.ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
-    this.ctx.fillText(`${this.world.current_planet}: ${layer.name}`, SCREEN_WIDTH / 2 - 128, 32);
+    this.ctx.fillText(`${this.world.current_planet.toUpperCase()} — ${layer.name.toUpperCase()}`, SCREEN_WIDTH / 2, 29);
+
     this.ctx.fillStyle = COLOR_WHITE;
     this.ctx.font = "11px system-ui, -apple-system, sans-serif";
-    this.ctx.fillText(`Depth: ${layer.depth} m | ${layer.pressure}`, SCREEN_WIDTH / 2 - 128, 50);
+    this.ctx.fillText(`Depth: ${layer.depth} m   |   ${layer.pressure}`, SCREEN_WIDTH / 2, 50);
+
     this.ctx.fillStyle = COLOR_CYAN;
-    this.ctx.fillText(`Thermal: ${layer.temp}`, SCREEN_WIDTH / 2 - 128, 66);
+    this.ctx.fillText(`Thermal Environment: ${layer.temp}`, SCREEN_WIDTH / 2, 68);
+    this.ctx.textAlign = "left";
 
     if (this.gameWon) {
-      this.ctx.fillStyle = "rgba(255, 215, 0, 0.2)";
-      this.ctx.fillRect(SCREEN_WIDTH / 2 - 180, 84, 360, 26);
-      this.ctx.strokeStyle = COLOR_GOLD;
-      this.ctx.strokeRect(SCREEN_WIDTH / 2 - 180, 84, 360, 26);
+      this._drawGlassPanel(SCREEN_WIDTH / 2 - 190, 86, 380, 28, COLOR_GOLD, 6);
       this.ctx.fillStyle = COLOR_GOLD;
       this.ctx.textAlign = "center";
       this.ctx.font = "bold 12px system-ui, sans-serif";
-      this.ctx.fillText("PLANETARY DYNAMO IGNITED — VICTORY!", SCREEN_WIDTH / 2, 101);
+      this.ctx.fillText("★ PLANETARY DYNAMO IGNITED — VICTORY! ★", SCREEN_WIDTH / 2, 104);
       this.ctx.textAlign = "left";
     }
 
-    this.ctx.fillStyle = COLOR_HP;
-    this.ctx.fillRect(20, 20, Math.floor((this.player.hp / this.player.max_hp) * 180), 16);
-    this.ctx.strokeStyle = COLOR_WHITE;
-    this.ctx.strokeRect(20, 20, 180, 16);
-    this.ctx.fillStyle = COLOR_WHITE;
-    this.ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
-    this.ctx.fillText(`HP ${Math.floor(this.player.hp)} / ${this.player.max_hp}`, 26, 32);
+    this._drawGlassPanel(14, 12, 290, 66, "#3b4b68", 8);
 
-    this.ctx.fillStyle = COLOR_EXP;
-    this.ctx.fillRect(20, 42, Math.floor((this.player.xp / this.player.xp_next) * 180), 12);
-    this.ctx.strokeStyle = COLOR_WHITE;
-    this.ctx.strokeRect(20, 42, 180, 12);
+    this._drawSegmentedBar(
+      24,
+      20,
+      185,
+      18,
+      this.player.hp / this.player.max_hp,
+      "#ff4b4b",
+      "#b81428",
+      10,
+      `HP ${Math.max(0, Math.floor(this.player.hp))} / ${this.player.max_hp}`
+    );
+
+    this._drawSegmentedBar(
+      24,
+      44,
+      185,
+      14,
+      this.player.xp / this.player.xp_next,
+      "#80ff72",
+      "#28a845",
+      10,
+      `XP ${this.player.xp} / ${this.player.xp_next}`
+    );
+
+    const totalDef =
+      (ITEM_DEFINITIONS[this.player.inv.armor.helmet]?.defense || 0) +
+      (ITEM_DEFINITIONS[this.player.inv.armor.chest]?.defense || 0) +
+      (ITEM_DEFINITIONS[this.player.inv.armor.boots]?.defense || 0);
+
     this.ctx.fillStyle = COLOR_GOLD;
-    this.ctx.fillText(`LVL ${this.player.level} (${this.player.pClass})`, 210, 32);
+    this.ctx.font = "bold 12px system-ui, -apple-system, sans-serif";
+    this.ctx.fillText(`LVL ${this.player.level}`, 218, 32);
+    this.ctx.fillStyle = COLOR_CYAN;
+    this.ctx.font = "11px system-ui, -apple-system, sans-serif";
+    this.ctx.fillText(this.player.pClass, 218, 48);
+    this.ctx.fillStyle = "#b8c6db";
+    this.ctx.fillText(`DEF +${totalDef}`, 218, 64);
 
+    // 7. Hotbar & Touch Controls (Playing State)
     if (this.state === "PLAYING") {
+      this._drawGlassPanel(SCREEN_WIDTH / 2 - 248, SCREEN_HEIGHT - 66, 496, 56, "#3d4c68", 8);
+
       for (let i = 0; i < 10; i++) {
         const bx = SCREEN_WIDTH / 2 - 240 + i * 48;
         const by = SCREEN_HEIGHT - 60;
-        this.ctx.fillStyle = (i === this.player.inv.selectedHotbar) ? "rgba(255, 215, 0, 0.4)" : "rgba(20, 24, 36, 0.85)";
-        this.ctx.fillRect(bx, by, 44, 44);
-        this.ctx.strokeStyle = (i === this.player.inv.selectedHotbar) ? COLOR_GOLD : "#404c64";
-        this.ctx.strokeRect(bx, by, 44, 44);
-
         const slot = this.player.inv.slots[i];
-        if (slot) {
-          this.drawItemIcon(this.ctx, slot.item, bx + 6, by + 6, 32, 32);
-          if (slot.count > 1) {
-            this.ctx.fillStyle = COLOR_GOLD;
-            this.ctx.font = "bold 12px system-ui, -apple-system, sans-serif";
-            this.ctx.fillText(`${slot.count}`, bx + 26, by + 38);
-          }
-        }
+        const isSel = (i === this.player.inv.selectedHotbar);
+        this._drawRaritySlot(bx, by, 44, 44, slot, isSel, `${(i + 1) % 10}`);
+      }
+
+      const activeSlot = this.player.inv.getSelected();
+      if (activeSlot) {
+        const activeName = BLOCK_DATA[activeSlot.item]?.name || String(activeSlot.item);
+        const rarity = this._getItemRarity(activeSlot.item);
+        this.ctx.font = "bold 12px system-ui, -apple-system, sans-serif";
+        this.ctx.textAlign = "center";
+        this.ctx.fillStyle = rarity.border === "#52607a" ? COLOR_WHITE : rarity.border;
+        this.ctx.fillText(activeName, SCREEN_WIDTH / 2, SCREEN_HEIGHT - 74);
+        this.ctx.textAlign = "left";
       }
 
       if (this.isTouchDevice) {
@@ -3531,18 +4247,14 @@ class AstroStrataEngine {
             if (touch.type === btn.id) { isActive = true; break; }
           }
 
-          this.ctx.fillStyle = isActive ? "rgba(255, 215, 0, 0.42)" : "rgba(16, 22, 34, 0.72)";
-          this.ctx.beginPath();
-          if (this.ctx.roundRect) {
-            this.ctx.roundRect(btn.x, btn.y, btn.w, btn.h, 10);
-          } else {
-            this.ctx.rect(btn.x, btn.y, btn.w, btn.h);
-          }
-          this.ctx.fill();
-
-          this.ctx.strokeStyle = isActive ? COLOR_GOLD : "rgba(90, 220, 255, 0.55)";
-          this.ctx.lineWidth = isActive ? 2.5 : 1.5;
-          this.ctx.stroke();
+          this._drawGlassPanel(
+            btn.x,
+            btn.y,
+            btn.w,
+            btn.h,
+            isActive ? COLOR_GOLD : "rgba(90, 220, 255, 0.6)",
+            8
+          );
 
           let displayLabel = btn.label;
           if (btn.id === "place") {
@@ -3554,7 +4266,9 @@ class AstroStrataEngine {
           }
 
           this.ctx.fillStyle = isActive ? COLOR_GOLD : COLOR_WHITE;
-          this.ctx.font = (displayLabel.length > 3) ? "bold 13px system-ui, -apple-system, sans-serif" : "bold 17px system-ui, -apple-system, sans-serif";
+          this.ctx.font = (displayLabel.length > 3)
+            ? "bold 13px system-ui, -apple-system, sans-serif"
+            : "bold 17px system-ui, -apple-system, sans-serif";
           this.ctx.textAlign = "center";
           this.ctx.textBaseline = "middle";
           this.ctx.fillText(displayLabel, btn.x + btn.w / 2, btn.y + btn.h / 2);
@@ -3563,43 +4277,30 @@ class AstroStrataEngine {
       }
     }
 
+    // 8. Workshop & Inventory Modal
     if (this.state === "INVENTORY") {
-      this.ctx.fillStyle = "rgba(10, 12, 18, 0.96)";
-      this.ctx.fillRect(INV_UI_X, INV_UI_Y, 780, 540);
-      this.ctx.strokeStyle = COLOR_GOLD;
-      this.ctx.lineWidth = 2;
-      this.ctx.strokeRect(INV_UI_X, INV_UI_Y, 780, 540);
+      this._drawGlassPanel(INV_UI_X, INV_UI_Y, 780, 540, COLOR_GOLD, 14, 50);
 
       this.ctx.fillStyle = COLOR_GOLD;
       this.ctx.font = "bold 20px system-ui, -apple-system, sans-serif";
       this.ctx.textAlign = "left";
-      this.ctx.fillText("WORKSHOP & FABRICATION MATRIX", INV_UI_X + 24, INV_UI_Y + 36);
+      this.ctx.fillText("WORKSHOP & FABRICATION MATRIX", INV_UI_X + 24, INV_UI_Y + 33);
 
-      this.ctx.fillStyle = "#e63c3c";
-      this.ctx.fillRect(INV_UI_X + 735, INV_UI_Y + 12, 30, 30);
-      this.ctx.strokeStyle = COLOR_WHITE;
-      this.ctx.lineWidth = 1;
-      this.ctx.strokeRect(INV_UI_X + 735, INV_UI_Y + 12, 30, 30);
+      this._drawGlassPanel(INV_UI_X + 735, INV_UI_Y + 12, 30, 30, COLOR_HP, 5);
       this.ctx.fillStyle = COLOR_WHITE;
-      this.ctx.font = "bold 16px system-ui, sans-serif";
+      this.ctx.font = "bold 15px system-ui, sans-serif";
       this.ctx.textAlign = "center";
-      this.ctx.fillText("✕", INV_UI_X + 750, INV_UI_Y + 33);
+      this.ctx.fillText("✕", INV_UI_X + 750, INV_UI_Y + 32);
       this.ctx.textAlign = "left";
 
       const armorSlots = ["helmet", "chest", "boots"];
       for (const aslot of armorSlots) {
         const arec = getArmorRect(aslot);
-        this.ctx.fillStyle = "#161c28";
-        this.ctx.fillRect(arec.x, arec.y, arec.w, arec.h);
-        this.ctx.strokeStyle = "#404c64";
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(arec.x, arec.y, arec.w, arec.h);
-
         const aItem = this.player.inv.armor[aslot];
-        if (aItem) {
-          this.drawItemIcon(this.ctx, aItem, arec.x + 7, arec.y + 7, 32, 32);
-        } else {
-          this.ctx.fillStyle = "#4a5266";
+        this._drawRaritySlot(arec.x, arec.y, arec.w, arec.h, aItem ? { item: aItem, count: 1 } : null, false);
+
+        if (!aItem) {
+          this.ctx.fillStyle = "#5a657d";
           this.ctx.font = "bold 9px system-ui, -apple-system, sans-serif";
           this.ctx.textAlign = "center";
           this.ctx.fillText(aslot.toUpperCase(), arec.x + arec.w / 2, arec.y + arec.h / 2 + 3);
@@ -3610,22 +4311,9 @@ class AstroStrataEngine {
       for (let i = 0; i < 30; i++) {
         const srec = getSlotRect(i);
         const isSelected = (this.selectedInvSlot === i);
-
-        this.ctx.fillStyle = isSelected ? "#2a3b5c" : "#1c2230";
-        this.ctx.fillRect(srec.x, srec.y, srec.w, srec.h);
-        this.ctx.strokeStyle = isSelected ? COLOR_GOLD : "#404c64";
-        this.ctx.lineWidth = isSelected ? 2.5 : 1;
-        this.ctx.strokeRect(srec.x, srec.y, srec.w, srec.h);
-
         const slot = this.player.inv.slots[i];
-        if (slot) {
-          this.drawItemIcon(this.ctx, slot.item, srec.x + 6, srec.y + 6, 32, 32);
-          if (slot.count > 1) {
-            this.ctx.fillStyle = COLOR_GOLD;
-            this.ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
-            this.ctx.fillText(`${slot.count}`, srec.x + 24, srec.y + 38);
-          }
-        }
+        const hk = (i < 10) ? `${(i + 1) % 10}` : "";
+        this._drawRaritySlot(srec.x, srec.y, srec.w, srec.h, slot, isSelected, hk);
       }
 
       const cardX = INV_UI_X + 648;
@@ -3633,29 +4321,26 @@ class AstroStrataEngine {
       const cardW = 108;
       const cardH = 142;
 
-      this.ctx.fillStyle = "#141824";
-      this.ctx.fillRect(cardX, cardY, cardW, cardH);
-      this.ctx.strokeStyle = (this.selectedInvSlot !== null) ? COLOR_GOLD : "#2e3646";
-      this.ctx.lineWidth = 1.5;
-      this.ctx.strokeRect(cardX, cardY, cardW, cardH);
+      const inspectedSlot = (this.selectedInvSlot !== null) ? this.player.inv.slots[this.selectedInvSlot] : null;
+      const cardRarity = this._getItemRarity(inspectedSlot ? inspectedSlot.item : null);
+      this._drawGlassPanel(cardX, cardY, cardW, cardH, inspectedSlot ? cardRarity.border : "#344056", 8);
 
-      if (this.selectedInvSlot !== null && this.player.inv.slots[this.selectedInvSlot]) {
-        const activeItem = this.player.inv.slots[this.selectedInvSlot].item;
+      if (inspectedSlot) {
+        const activeItem = inspectedSlot.item;
         const idata = ITEM_DEFINITIONS[activeItem] || {};
         const bdata = BLOCK_DATA[activeItem] || {};
 
         this.drawItemIcon(this.ctx, activeItem, cardX + cardW / 2 - 16, cardY + 8, 32, 32);
 
-        const displayName = bdata.name || activeItem;
-        this.ctx.fillStyle = COLOR_GOLD;
-        this.ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
+        const displayName = bdata.name || String(activeItem);
+        this.ctx.fillStyle = cardRarity.border === "#52607a" ? COLOR_GOLD : cardRarity.border;
+        this.ctx.font = "bold 10px system-ui, -apple-system, sans-serif";
         this.ctx.textAlign = "center";
-        this.ctx.fillText(displayName.length > 13 ? displayName.substring(0, 12) + "…" : displayName, cardX + cardW / 2, cardY + 52);
+        this.ctx.fillText(displayName.length > 14 ? displayName.substring(0, 13) + "…" : displayName, cardX + cardW / 2, cardY + 52);
 
-        const typeStr = idata.type ? idata.type.toUpperCase() : "BLOCK";
         this.ctx.fillStyle = COLOR_CYAN;
         this.ctx.font = "bold 9px system-ui, -apple-system, sans-serif";
-        this.ctx.fillText(typeStr, cardX + cardW / 2, cardY + 66);
+        this.ctx.fillText(`${cardRarity.label} ${idata.type ? idata.type.toUpperCase() : "BLOCK"}`, cardX + cardW / 2, cardY + 65);
 
         this.ctx.fillStyle = COLOR_WHITE;
         this.ctx.font = "10px system-ui, -apple-system, sans-serif";
@@ -3668,36 +4353,38 @@ class AstroStrataEngine {
         else if (bdata.mohs) statStr = `Mohs: ${bdata.mohs}`;
         this.ctx.fillText(statStr, cardX + cardW / 2, cardY + 80);
 
+        if (idata.aoe) {
+          this.ctx.fillStyle = COLOR_EXP;
+          this.ctx.font = "bold 9px system-ui, sans-serif";
+          this.ctx.fillText("3x3 AOE BLAST", cardX + cardW / 2, cardY + 94);
+        } else if (idata.veinMiner) {
+          this.ctx.fillStyle = COLOR_EXP;
+          this.ctx.font = "bold 9px system-ui, sans-serif";
+          this.ctx.fillText("VEIN HARVESTER", cardX + cardW / 2, cardY + 94);
+        }
+
         if (idata.type === "consumable" || idata.type === "armor") {
           const btnLabel = (idata.type === "consumable") ? "USE" : "EQUIP";
-          this.ctx.fillStyle = "#236437";
-          this.ctx.fillRect(cardX + 6, cardY + 111, cardW - 12, 24);
-          this.ctx.strokeStyle = COLOR_EXP;
-          this.ctx.lineWidth = 1;
-          this.ctx.strokeRect(cardX + 6, cardY + 111, cardW - 12, 24);
-          this.ctx.fillStyle = COLOR_WHITE;
+          this._drawGlassPanel(cardX + 6, cardY + 111, cardW - 12, 24, COLOR_EXP, 4);
+          this.ctx.fillStyle = COLOR_EXP;
           this.ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
           this.ctx.fillText(btnLabel, cardX + cardW / 2, cardY + 127);
         } else {
-          this.ctx.fillStyle = "#66728a";
+          this.ctx.fillStyle = "#7a869e";
           this.ctx.font = "9px system-ui, -apple-system, sans-serif";
-          this.ctx.fillText("Tap slot to move", cardX + cardW / 2, cardY + 126);
+          this.ctx.fillText("Tap slot to swap", cardX + cardW / 2, cardY + 126);
         }
         this.ctx.textAlign = "left";
       } else {
-        this.ctx.fillStyle = "#4a5266";
+        this.ctx.fillStyle = "#525e75";
         this.ctx.font = "11px system-ui, -apple-system, sans-serif";
         this.ctx.textAlign = "center";
-        this.ctx.fillText("Tap item", cardX + cardW / 2, cardY + 65);
-        this.ctx.fillText("to inspect", cardX + cardW / 2, cardY + 80);
+        this.ctx.fillText("Tap any slot", cardX + cardW / 2, cardY + 65);
+        this.ctx.fillText("to inspect", cardX + cardW / 2, cardY + 82);
         this.ctx.textAlign = "left";
       }
 
-      this.ctx.fillStyle = "#141824";
-      this.ctx.fillRect(INV_UI_X + 24, INV_UI_Y + 225, 140, 26);
-      this.ctx.strokeStyle = this.searchActive ? COLOR_CYAN : "#404c64";
-      this.ctx.lineWidth = 1;
-      this.ctx.strokeRect(INV_UI_X + 24, INV_UI_Y + 225, 140, 26);
+      this._drawGlassPanel(INV_UI_X + 24, INV_UI_Y + 225, 140, 26, this.searchActive ? COLOR_CYAN : "#404c64", 4);
       this.ctx.fillStyle = this.searchQuery ? COLOR_WHITE : "#7c8599";
       this.ctx.font = "12px system-ui, -apple-system, sans-serif";
       this.ctx.fillText(this.searchQuery || "Search...", INV_UI_X + 32, INV_UI_Y + 242);
@@ -3705,12 +4392,8 @@ class AstroStrataEngine {
       const categories = ["ALL", "TOOLS", "WEAPONS", "ARMOR", "ROCKETS", "BLOCKS"];
       let catX = INV_UI_X + 172;
       for (const cat of categories) {
-        const isSel = this.craftCategory === cat;
-        this.ctx.fillStyle = isSel ? "#2b3b55" : "#161c28";
-        this.ctx.fillRect(catX, INV_UI_Y + 225, 54, 26);
-        this.ctx.strokeStyle = isSel ? COLOR_GOLD : "#404c64";
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(catX, INV_UI_Y + 225, 54, 26);
+        const isSel = (this.craftCategory === cat);
+        this._drawGlassPanel(catX, INV_UI_Y + 225, 54, 26, isSel ? COLOR_GOLD : "#3b465e", 4);
         this.ctx.fillStyle = isSel ? COLOR_GOLD : COLOR_WHITE;
         this.ctx.font = "bold 10px system-ui, -apple-system, sans-serif";
         this.ctx.textAlign = "center";
@@ -3723,24 +4406,18 @@ class AstroStrataEngine {
       const maxScroll = Math.max(0, displayedRecipes.length - 9);
 
       this.ctx.fillStyle = COLOR_CYAN;
-      this.ctx.font = "11px system-ui, -apple-system, sans-serif";
+      this.ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
       const startIdx = displayedRecipes.length > 0 ? this.recipeScrollOffset + 1 : 0;
       const endIdx = Math.min(displayedRecipes.length, this.recipeScrollOffset + 9);
       this.ctx.fillText(`${startIdx}-${endIdx} / ${displayedRecipes.length}`, INV_UI_X + 530, INV_UI_Y + 242);
 
-      this.ctx.fillStyle = (this.recipeScrollOffset > 0) ? "#24324a" : "#151922";
-      this.ctx.fillRect(INV_UI_X + 680, INV_UI_Y + 225, 28, 26);
-      this.ctx.strokeStyle = (this.recipeScrollOffset > 0) ? COLOR_GOLD : "#3a4254";
-      this.ctx.strokeRect(INV_UI_X + 680, INV_UI_Y + 225, 28, 26);
+      this._drawGlassPanel(INV_UI_X + 680, INV_UI_Y + 225, 28, 26, (this.recipeScrollOffset > 0) ? COLOR_GOLD : "#323a4c", 4);
       this.ctx.fillStyle = (this.recipeScrollOffset > 0) ? COLOR_WHITE : "#555d70";
-      this.ctx.font = "bold 12px system-ui, -apple-system, sans-serif";
+      this.ctx.font = "bold 12px system-ui, sans-serif";
       this.ctx.textAlign = "center";
       this.ctx.fillText("▲", INV_UI_X + 694, INV_UI_Y + 242);
 
-      this.ctx.fillStyle = (this.recipeScrollOffset < maxScroll) ? "#24324a" : "#151922";
-      this.ctx.fillRect(INV_UI_X + 714, INV_UI_Y + 225, 28, 26);
-      this.ctx.strokeStyle = (this.recipeScrollOffset < maxScroll) ? COLOR_GOLD : "#3a4254";
-      this.ctx.strokeRect(INV_UI_X + 714, INV_UI_Y + 225, 28, 26);
+      this._drawGlassPanel(INV_UI_X + 714, INV_UI_Y + 225, 28, 26, (this.recipeScrollOffset < maxScroll) ? COLOR_GOLD : "#323a4c", 4);
       this.ctx.fillStyle = (this.recipeScrollOffset < maxScroll) ? COLOR_WHITE : "#555d70";
       this.ctx.fillText("▼", INV_UI_X + 728, INV_UI_Y + 242);
       this.ctx.textAlign = "left";
@@ -3759,30 +4436,33 @@ class AstroStrataEngine {
           const have = this.player.inv.countItem(rk);
           if (have < ramt) canCraft = false;
           const rName = BLOCK_DATA[rk]?.name || rk;
-          reqTexts.push(`${rName}:${have}/${ramt}`);
+          reqTexts.push(`${rName}: ${have}/${ramt}`);
         }
 
-        this.ctx.fillStyle = "#161c28";
-        this.ctx.fillRect(INV_UI_X + 24, recY, 720, 26);
-        this.ctx.strokeStyle = canCraft ? "rgba(90, 220, 255, 0.4)" : "#2e3646";
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(INV_UI_X + 24, recY, 720, 26);
+        const resRarity = this._getItemRarity(rec.result);
+        this._drawGlassPanel(
+          INV_UI_X + 24,
+          recY,
+          720,
+          26,
+          canCraft ? resRarity.border : "#283040",
+          4
+        );
+
+        this.drawItemIcon(this.ctx, rec.result, INV_UI_X + 30, recY + 3, 20, 20);
 
         const rName = BLOCK_DATA[rec.result]?.name || String(rec.result);
-        this.ctx.fillStyle = COLOR_GOLD;
+        this.ctx.fillStyle = canCraft ? COLOR_GOLD : "#7d879c";
         this.ctx.font = "bold 12px system-ui, -apple-system, sans-serif";
-        this.ctx.fillText(`[${reqStation.toUpperCase()}] ${rName} x${rec.count}`, INV_UI_X + 32, recY + 17);
+        this.ctx.fillText(`[${reqStation.toUpperCase()}] ${rName} x${rec.count}`, INV_UI_X + 56, recY + 17);
 
         this.ctx.fillStyle = canCraft ? COLOR_EXP : "#8890a0";
         this.ctx.font = "11px system-ui, -apple-system, sans-serif";
-        this.ctx.fillText(reqTexts.join("  "), INV_UI_X + 270, recY + 17);
+        this.ctx.fillText(reqTexts.join("   "), INV_UI_X + 300, recY + 17);
 
         const craftBtn = { x: INV_UI_X + 675, y: recY + 2, w: 65, h: 22 };
-        this.ctx.fillStyle = canCraft ? "#236437" : "#282d38";
-        this.ctx.fillRect(craftBtn.x, craftBtn.y, craftBtn.w, craftBtn.h);
-        this.ctx.strokeStyle = canCraft ? COLOR_EXP : "#424856";
-        this.ctx.strokeRect(craftBtn.x, craftBtn.y, craftBtn.w, craftBtn.h);
-        this.ctx.fillStyle = canCraft ? COLOR_WHITE : "#666e80";
+        this._drawGlassPanel(craftBtn.x, craftBtn.y, craftBtn.w, craftBtn.h, canCraft ? COLOR_EXP : "#384050", 4);
+        this.ctx.fillStyle = canCraft ? COLOR_EXP : "#60687a";
         this.ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
         this.ctx.textAlign = "center";
         this.ctx.fillText("CRAFT", craftBtn.x + 32, craftBtn.y + 15);
@@ -3790,39 +4470,27 @@ class AstroStrataEngine {
       }
     }
 
+    // 9. Interplanetary Star Map Modal
     if (this.state === "STAR_MAP") {
-      this.ctx.fillStyle = "rgba(8, 12, 22, 0.96)";
-      this.ctx.fillRect(INV_UI_X, INV_UI_Y, 820, 540);
-      this.ctx.strokeStyle = COLOR_CYAN;
-      this.ctx.lineWidth = 2;
-      this.ctx.strokeRect(INV_UI_X, INV_UI_Y, 820, 540);
+      this._drawGlassPanel(INV_UI_X, INV_UI_Y, 820, 540, COLOR_CYAN, 14, 52);
 
       this.ctx.fillStyle = COLOR_GOLD;
       this.ctx.font = "bold 20px system-ui, -apple-system, sans-serif";
       this.ctx.textAlign = "left";
-      this.ctx.fillText("AEROSPACE STAR MAP (TIER 1 - 15)", INV_UI_X + 24, INV_UI_Y + 36);
+      this.ctx.fillText("AEROSPACE NAVIGATION TELEMETRY (TIER 1 - 15)", INV_UI_X + 24, INV_UI_Y + 34);
 
       const maxOffset = Math.max(0, PLANET_ORDER.length - 4);
-      this.ctx.fillStyle = (this.planetScrollOffset > 0) ? "#24324a" : "#151922";
-      this.ctx.fillRect(INV_UI_X + 685, INV_UI_Y + 14, 32, 28);
-      this.ctx.strokeStyle = COLOR_GOLD;
-      this.ctx.strokeRect(INV_UI_X + 685, INV_UI_Y + 14, 32, 28);
+      this._drawGlassPanel(INV_UI_X + 685, INV_UI_Y + 14, 32, 28, COLOR_GOLD, 4);
       this.ctx.fillStyle = COLOR_WHITE;
       this.ctx.font = "bold 13px system-ui, sans-serif";
       this.ctx.textAlign = "center";
       this.ctx.fillText("▲", INV_UI_X + 701, INV_UI_Y + 33);
 
-      this.ctx.fillStyle = (this.planetScrollOffset < maxOffset) ? "#24324a" : "#151922";
-      this.ctx.fillRect(INV_UI_X + 725, INV_UI_Y + 14, 32, 28);
-      this.ctx.strokeStyle = COLOR_GOLD;
-      this.ctx.strokeRect(INV_UI_X + 725, INV_UI_Y + 14, 32, 28);
+      this._drawGlassPanel(INV_UI_X + 725, INV_UI_Y + 14, 32, 28, COLOR_GOLD, 4);
       this.ctx.fillStyle = COLOR_WHITE;
       this.ctx.fillText("▼", INV_UI_X + 741, INV_UI_Y + 33);
 
-      this.ctx.fillStyle = "#e63c3c";
-      this.ctx.fillRect(INV_UI_X + 770, INV_UI_Y + 12, 34, 32);
-      this.ctx.strokeStyle = COLOR_WHITE;
-      this.ctx.strokeRect(INV_UI_X + 770, INV_UI_Y + 12, 34, 32);
+      this._drawGlassPanel(INV_UI_X + 770, INV_UI_Y + 12, 34, 32, COLOR_HP, 5);
       this.ctx.fillStyle = COLOR_WHITE;
       this.ctx.font = "bold 16px system-ui, sans-serif";
       this.ctx.fillText("✕", INV_UI_X + 787, INV_UI_Y + 34);
@@ -3833,59 +4501,68 @@ class AstroStrataEngine {
         const pKey = visiblePlanets[idx];
         const pdata = PLANET_DATA[pKey];
         const cardY = INV_UI_Y + 70 + idx * 105;
+        const isCurrent = (pKey === this.world.current_planet);
 
-        this.ctx.fillStyle = (pKey === this.world.current_planet) ? "#20344a" : "#141c2a";
-        this.ctx.fillRect(INV_UI_X + 24, cardY, 760, 95);
-        this.ctx.strokeStyle = COLOR_CYAN;
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(INV_UI_X + 24, cardY, 760, 95);
+        this._drawGlassPanel(INV_UI_X + 24, cardY, 760, 95, isCurrent ? COLOR_GOLD : COLOR_CYAN, 8);
 
-        this.ctx.fillStyle = COLOR_WHITE;
-        this.ctx.font = "bold 15px system-ui, -apple-system, sans-serif";
-        this.ctx.fillText(`${pdata.name} (Tier ${pdata.tier})`, INV_UI_X + 40, cardY + 28);
+        this.ctx.fillStyle = BLOCK_DATA[pdata.surface_block]?.color || pdata.sky_color;
+        this.ctx.beginPath();
+        this.ctx.arc(INV_UI_X + 62, cardY + 48, 22, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
+
+        this.ctx.fillStyle = isCurrent ? COLOR_GOLD : COLOR_WHITE;
+        this.ctx.font = "bold 16px system-ui, -apple-system, sans-serif";
+        this.ctx.fillText(`${pdata.name}  ·  Tier ${pdata.tier}${isCurrent ? " [CURRENT SECTOR]" : ""}`, INV_UI_X + 100, cardY + 28);
+
         this.ctx.fillStyle = COLOR_CYAN;
         this.ctx.font = "12px system-ui, -apple-system, sans-serif";
-        this.ctx.fillText(`Gravity: ${pdata.gravity}g | Hazard: ${pdata.hazard} | Req: ${pdata.req_rocket || "None"}`, INV_UI_X + 40, cardY + 50);
-        this.ctx.fillStyle = "#9aa5b8";
-        this.ctx.fillText(pdata.desc, INV_UI_X + 40, cardY + 72);
+        this.ctx.fillText(`Gravity: ${pdata.gravity}g   |   Hazard: ${pdata.hazard}   |   Vessel: ${pdata.req_rocket || "Standard"}`, INV_UI_X + 100, cardY + 50);
 
-        this.ctx.fillStyle = "#1e2e44";
-        this.ctx.fillRect(INV_UI_X + 650, cardY + 30, 110, 36);
-        this.ctx.strokeStyle = COLOR_GOLD;
-        this.ctx.strokeRect(INV_UI_X + 650, cardY + 30, 110, 36);
-        this.ctx.fillStyle = COLOR_GOLD;
+        this.ctx.fillStyle = "#a2aec4";
+        this.ctx.fillText(pdata.desc, INV_UI_X + 100, cardY + 72);
+
+        this._drawGlassPanel(INV_UI_X + 650, cardY + 30, 110, 36, isCurrent ? "#465268" : COLOR_GOLD, 6);
+        this.ctx.fillStyle = isCurrent ? "#7d8aa3" : COLOR_GOLD;
         this.ctx.textAlign = "center";
-        this.ctx.fillText("LAUNCH", INV_UI_X + 705, cardY + 53);
+        this.ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
+        this.ctx.fillText(isCurrent ? "ORBITING" : "LAUNCH", INV_UI_X + 705, cardY + 53);
         this.ctx.textAlign = "left";
       }
     }
 
+    // 10. Pause Overlay Modal
     if (this.state === "PAUSE") {
-      this.ctx.fillStyle = "rgba(5, 5, 10, 0.85)";
+      this.ctx.fillStyle = "rgba(6, 8, 14, 0.82)";
       this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
+      this._drawGlassPanel(SCREEN_WIDTH / 2 - 210, 180, 420, 300, COLOR_GOLD, 14, 54);
+
       this.ctx.fillStyle = COLOR_GOLD;
-      this.ctx.font = "bold 28px system-ui, -apple-system, sans-serif";
+      this.ctx.font = "bold 24px system-ui, -apple-system, sans-serif";
       this.ctx.textAlign = "center";
-      this.ctx.fillText("EXPEDITION PAUSED", SCREEN_WIDTH / 2, 230);
+      this.ctx.fillText("EXPEDITION PAUSED", SCREEN_WIDTH / 2, 216);
 
       const pauseOpts = [
-        { label: "RESUME SECTOR", y: 300 },
-        { label: "SAVE SECTOR PROGRESS", y: 354 },
-        { label: "QUIT TO SECTOR ARCHIVE", y: 408 }
+        { label: "RESUME SECTOR", y: 300, color: COLOR_CYAN },
+        { label: "SAVE SECTOR PROGRESS", y: 354, color: COLOR_GOLD },
+        { label: "QUIT TO SECTOR ARCHIVE", y: 408, color: COLOR_HP }
       ];
 
       for (const opt of pauseOpts) {
-        this.ctx.fillStyle = "#1e2436";
-        this.ctx.fillRect(SCREEN_WIDTH / 2 - 160, opt.y, 320, 42);
-        this.ctx.strokeStyle = COLOR_GOLD;
-        this.ctx.strokeRect(SCREEN_WIDTH / 2 - 160, opt.y, 320, 42);
+        this._drawGlassPanel(SCREEN_WIDTH / 2 - 160, opt.y, 320, 42, opt.color, 6);
         this.ctx.fillStyle = COLOR_WHITE;
         this.ctx.font = "bold 14px system-ui, -apple-system, sans-serif";
         this.ctx.fillText(opt.label, SCREEN_WIDTH / 2, opt.y + 26);
       }
     }
   }
+
+  // ===========================================================================
+  // CONTINUOUS ANIMATION LOOP
+  // ===========================================================================
 
   run() {
     const loop = () => {
@@ -3896,10 +4573,11 @@ class AstroStrataEngine {
     requestAnimationFrame(loop);
   }
 }
+// =============================================================================
+// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 5 / 5)
+// Bulletproof Engine Bootstrapper, Audio Unlock, Hardware Input Initialization
+// =============================================================================
 
-// =============================================================================
-// BULLETPROOF ENGINE BOOTSTRAPPER
-// =============================================================================
 function startAstroStrataApp() {
   const overlay = document.getElementById("loading-overlay");
   const startBtn = document.getElementById("start-btn");
@@ -3909,21 +4587,27 @@ function startAstroStrataApp() {
   const dismissAndPlay = (e) => {
     if (e) {
       e.stopPropagation();
+      if (e.cancelable) e.preventDefault();
     }
 
-    // Completely remove the overlay from DOM so canvas pointer events never get eaten
-    if (overlay) {
-      overlay.style.display = "none";
-      if (overlay.parentNode) {
-        overlay.parentNode.removeChild(overlay);
-      }
-    }
-
+    // Initialize or resume the procedural Web Audio synthesizer on user gesture
     try {
       if (gameInstance && gameInstance.sound) {
         gameInstance.sound.init();
       }
-    } catch (audioErr) {}
+    } catch (audioErr) {
+      console.warn("Web Audio bootstrap deferred:", audioErr);
+    }
+
+    // Completely decouple and remove modal from DOM so canvas pointer events are never blocked
+    if (overlay) {
+      overlay.classList.add("fade-out");
+      setTimeout(() => {
+        if (overlay && overlay.parentNode) {
+          overlay.parentNode.removeChild(overlay);
+        }
+      }, 350);
+    }
 
     if (gameInstance) {
       gameInstance.draw();
@@ -3932,12 +4616,22 @@ function startAstroStrataApp() {
 
   if (startBtn) {
     startBtn.addEventListener("click", dismissAndPlay);
-    startBtn.addEventListener("touchend", dismissAndPlay);
+    startBtn.addEventListener("touchend", dismissAndPlay, { passive: false });
   }
   if (overlay) {
     overlay.addEventListener("click", dismissAndPlay);
-    overlay.addEventListener("touchend", dismissAndPlay);
+    overlay.addEventListener("touchend", dismissAndPlay, { passive: false });
   }
+
+  // Handle dynamic screen resizing and Retina pixel ratio updates
+  window.addEventListener("resize", () => {
+    if (gameInstance && gameInstance.canvas) {
+      gameInstance.dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+      gameInstance.canvas.width = Math.floor(SCREEN_WIDTH * gameInstance.dpr);
+      gameInstance.canvas.height = Math.floor(SCREEN_HEIGHT * gameInstance.dpr);
+      gameInstance.draw();
+    }
+  });
 
   try {
     gameInstance = new AstroStrataEngine();

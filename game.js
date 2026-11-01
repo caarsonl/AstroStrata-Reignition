@@ -1,9 +1,9 @@
 // =============================================================================
 // ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 1 / 4)
-// Core Engine Configuration, Geological Registries & Material Database
+// Core Constants, Complete Geolith Registry, Planetary Matrix & Item Catalog
 // =============================================================================
 
-const VERSION_STRING = "v0.3.2-mobile";
+const VERSION_STRING = "v0.3.3-stable";
 const SCREEN_WIDTH = 1280;
 const SCREEN_HEIGHT = 720;
 const TILE_SIZE = 32;
@@ -36,9 +36,9 @@ const LOWER_MANTLE_BOTTOM = 115;
 const OUTER_CORE_BOTTOM = 140;
 const INNER_CORE_BOTTOM = WORLD_HEIGHT;
 
-// ==========================================
-// TILE & BLOCK IDENTIFIERS
-// ==========================================
+// =============================================================================
+// TILE & BLOCK IDENTIFIERS (0 - 68)
+// =============================================================================
 const AIR = 0;
 const DIRT = 1;
 const GRASS = 2;
@@ -121,6 +121,9 @@ const TIER_NAMES = {
   5: "Core Tech / Cosmic Tier"
 };
 
+// =============================================================================
+// COMPREHENSIVE BLOCK DATABASE (ALL 68 BLOCKS REGISTERED)
+// =============================================================================
 const BLOCK_DATA = {
   [CHEST]: { name: "Loot Cache", hardness: 1.2, mohs: 2.5, color: "#a56e2d", drop: CHEST, req_tier: 0, req_tool: "Axe", desc: "Subterranean cache with survival supplies." },
   [DIRT]: { name: "Dirt", hardness: 0.7, mohs: 1.5, color: "#734b2d", drop: DIRT, req_tier: 0, req_tool: "Shovel", desc: "Soft organic topsoil." },
@@ -146,7 +149,7 @@ const BLOCK_DATA = {
   [BASALT]: { name: "Dense Basalt", hardness: 3.8, mohs: 6.0, color: "#2d2d37", drop: BASALT, req_tier: 3, req_tool: "Pickaxe", desc: "Aphanitic mafic volcanic rock.", xp: 30 },
   [OBSIDIAN]: { name: "Mantle Obsidian", hardness: 5.0, mohs: 6.0, color: "#1c1428", drop: "Obsidian", req_tier: 4, req_tool: "Pickaxe", desc: "Conchoidal volcanic glass.", xp: 60 },
   [MAGMA_STONE]: { name: "Magma Stone", hardness: 4.2, mohs: 7.0, color: "#9b3719", drop: MAGMA_STONE, req_tier: 4, req_tool: "Pickaxe", desc: "Superheated Lower Mantle thermal block.", xp: 45, light: 70 },
-  [MOLTEN_CORE]: { name: "Molten Iron Slag", hardness: 5.5, mohs: 7.5, color: "#eb6914", drop: "Liquid Iron", req_tier: 5, req_tool: "Drill", desc: "Superpressured molten iron-nickel.", xp: 80, light: 120 },
+  [MOLTEN_CORE]: { name: "Molten Iron Slag", hardness: 5.5, mohs: 7.5, color: "#eb6914", drop: "Core Metal", req_tier: 5, req_tool: "Drill", desc: "Superpressured molten iron-nickel.", xp: 80, light: 120 },
   [INNER_CORE_METAL]: { name: "Solid Core Alloy", hardness: 6.5, mohs: 8.5, color: "#e1e1f5", drop: "Core Metal", req_tier: 5, req_tool: "Drill", desc: "Crystalline iron-nickel under 330 GPa.", xp: 140, light: 80 },
   [CORE_CRYSTAL]: { name: "Inner Core Shard", hardness: 8.0, mohs: 9.5, color: "#fff096", drop: "Core Shard", req_tier: 5, req_tool: "Drill", desc: "Harmonic energy crystal from Earth's core.", xp: 250, light: 150 },
   [LAVA]: { name: "Liquid Lava", hardness: 999, mohs: 0.0, color: "#ff550a", drop: null, req_tier: 0, req_tool: "Bucket", desc: "Viscous molten silicate melt.", light: 145, liquid: true },
@@ -154,6 +157,37 @@ const BLOCK_DATA = {
   [LAUNCHPAD]: { name: "Aerospace Launchpad", hardness: 3.2, mohs: 6.5, color: "#4b5064", drop: LAUNCHPAD, req_tier: 3, req_tool: "Pickaxe", desc: "Station for assembling & launching Rockets.", light: 100 },
   [ASSEMBLER]: { name: "Circuit Assembler", hardness: 2.5, mohs: 5.5, color: "#237387", drop: ASSEMBLER, req_tier: 2, req_tool: "Pickaxe", desc: "Precision fabricator for electronics." },
   [PARTICLE_COLLIDER]: { name: "Particle Collider", hardness: 4.5, mohs: 7.5, color: "#9632d2", drop: PARTICLE_COLLIDER, req_tier: 4, req_tool: "Pickaxe", desc: "Synchrotron for antimatter synthesis.", light: 130 },
+
+  [MOON_REGOLITH]: { name: "Lunar Regolith", hardness: 1.4, mohs: 4.0, color: "#9a9aa6", drop: MOON_REGOLITH, req_tier: 1, req_tool: "Pickaxe", desc: "Fine meteoritic lunar dust." },
+  [HELIUM3_ORE]: { name: "Helium-3 Ore", hardness: 2.8, mohs: 5.5, color: "#70d6ff", drop: "Helium-3", req_tier: 2, req_tool: "Pickaxe", desc: "Regolith saturated with solar fusion isotopes.", xp: 45 },
+  [MARTIAN_SOIL]: { name: "Martian Soil", hardness: 1.6, mohs: 4.5, color: "#c2593f", drop: MARTIAN_SOIL, req_tier: 1, req_tool: "Pickaxe", desc: "Iron-oxide rich planetary regolith." },
+  [TITANIUM_ORE]: { name: "Titanium Ore", hardness: 3.4, mohs: 6.0, color: "#b8cce0", drop: "Titanium Ore", req_tier: 3, req_tool: "Pickaxe", desc: "High-grade aerospace rutile vein.", xp: 60 },
+  [VENUS_ACID_STONE]: { name: "Venusian Acid Stone", hardness: 2.4, mohs: 5.5, color: "#9e9444", drop: VENUS_ACID_STONE, req_tier: 2, req_tool: "Pickaxe", desc: "Sulfuric-etched volcanic rock." },
+  [SULFUR_ORE]: { name: "Sulfur Ore", hardness: 3.6, mohs: 6.0, color: "#f5e027", drop: "Sulfur", req_tier: 3, req_tool: "Pickaxe", desc: "Bright crystalline brimstone deposit.", xp: 75 },
+  [SOLAR_BASALT]: { name: "Solar Basalt", hardness: 3.0, mohs: 6.0, color: "#3d3142", drop: SOLAR_BASALT, req_tier: 3, req_tool: "Pickaxe", desc: "Radiation-baked Hermian crust." },
+  [CINNABAR_ORE]: { name: "Cinnabar Ore", hardness: 4.2, mohs: 6.5, color: "#ff3b56", drop: "Cinnabar", req_tier: 4, req_tool: "Pickaxe", desc: "Thermal mercury-sulfide crystal.", xp: 95 },
+  [EUROPA_ICE]: { name: "Europan Glacial Ice", hardness: 2.2, mohs: 5.0, color: "#8ccfff", drop: EUROPA_ICE, req_tier: 2, req_tool: "Pickaxe", desc: "Cryogenic high-density water ice." },
+  [LITHIUM_BRINE_ORE]: { name: "Lithium Brine Ore", hardness: 4.4, mohs: 6.5, color: "#d8f0ff", drop: "Lithium Brine", req_tier: 4, req_tool: "Pickaxe", desc: "Frozen alkali battery salt pocket.", xp: 110 },
+  [TITAN_METHANE_CRUST]: { name: "Methane Crust", hardness: 2.8, mohs: 5.5, color: "#9c7a38", drop: TITAN_METHANE_CRUST, req_tier: 3, req_tool: "Pickaxe", desc: "Solidified waxy hydrocarbon sediment." },
+  [HYDROCARBON_ORE]: { name: "Hydrocarbon Ore", hardness: 4.6, mohs: 7.0, color: "#ffae36", drop: "Hydrocarbon", req_tier: 4, req_tool: "Pickaxe", desc: "Polymerized organic fuel vein.", xp: 130 },
+  [IO_BRIMSTONE]: { name: "Ionian Brimstone", hardness: 3.5, mohs: 6.5, color: "#a84419", drop: IO_BRIMSTONE, req_tier: 3, req_tool: "Pickaxe", desc: "Tidal-heated volcanic silicate." },
+  [PYROCLASTIC_ORE]: { name: "Pyroclastic Ore", hardness: 5.0, mohs: 7.5, color: "#ff621f", drop: "Pyroclastic Ore", req_tier: 4, req_tool: "Pickaxe", desc: "Incandescent geothermal core mineral.", xp: 155, light: 90 },
+  [ENCELADUS_CRUST]: { name: "Enceladan Ice", hardness: 3.2, mohs: 6.0, color: "#6899bd", drop: ENCELADUS_CRUST, req_tier: 3, req_tool: "Pickaxe", desc: "Plume-compacted cryo-silicate." },
+  [DEUTERIUM_ORE]: { name: "Deuterium Ore", hardness: 5.4, mohs: 7.5, color: "#4ff0ff", drop: "Deuterium", req_tier: 4, req_tool: "Pickaxe", desc: "Heavy hydrogen fusion lattice.", xp: 180, light: 80 },
+  [CERES_MATRIX]: { name: "Cerean Regolith", hardness: 3.8, mohs: 6.5, color: "#545663", drop: CERES_MATRIX, req_tier: 4, req_tool: "Pickaxe", desc: "Carbonaceous chondrite asteroid matrix." },
+  [PALLADIUM_ORE]: { name: "Palladium Ore", hardness: 5.8, mohs: 8.0, color: "#e3d6f5", drop: "Palladium", req_tier: 5, req_tool: "Drill", desc: "Rare platinum-group asteroid metal.", xp: 210 },
+  [TRITON_NITROGEN_ICE]: { name: "Nitrogen Ice", hardness: 4.0, mohs: 7.0, color: "#3b6285", drop: TRITON_NITROGEN_ICE, req_tier: 4, req_tool: "Pickaxe", desc: "Super-cooled solid nitrogen sheet." },
+  [NEODYMIUM_ORE]: { name: "Neodymium Ore", hardness: 6.2, mohs: 8.0, color: "#c264ff", drop: "Neodymium", req_tier: 5, req_tool: "Drill", desc: "Ferromagnetic rare-earth crystal.", xp: 240, light: 90 },
+  [PLUTO_THOLIN_STONE]: { name: "Tholin Stone", hardness: 4.5, mohs: 7.5, color: "#4d2f4a", drop: PLUTO_THOLIN_STONE, req_tier: 4, req_tool: "Pickaxe", desc: "UV-irradiated Kuiper belt bedrock." },
+  [DARK_MATTER_ORE]: { name: "Dark Matter Ore", hardness: 6.8, mohs: 8.5, color: "#8c3bff", drop: "Dark Matter", req_tier: 5, req_tool: "Drill", desc: "Baryonic lattice trapping WIMPs.", xp: 290, light: 110 },
+  [SEDNA_OORT_SLATE]: { name: "Oort Slate", hardness: 4.8, mohs: 7.5, color: "#5c1f38", drop: SEDNA_OORT_SLATE, req_tier: 4, req_tool: "Pickaxe", desc: "Deep-space crimson sedimentary rock." },
+  [TACHYON_ORE]: { name: "Tachyon Ore", hardness: 7.2, mohs: 9.0, color: "#00ffcc", drop: "Tachyon Shard", req_tier: 5, req_tool: "Drill", desc: "Cherenkov-glowing superluminal vein.", xp: 340, light: 130 },
+  [PROXIMA_STELLAR_STONE]: { name: "Stellar Stone", hardness: 5.2, mohs: 8.0, color: "#7d2429", drop: PROXIMA_STELLAR_STONE, req_tier: 5, req_tool: "Drill", desc: "Flare-scorched exoplanetary crust." },
+  [ANTIMATTER_ORE]: { name: "Antimatter Geode", hardness: 7.8, mohs: 9.2, color: "#ff2e93", drop: "Antimatter", req_tier: 5, req_tool: "Drill", desc: "Magnetically suspended positron cluster.", xp: 400, light: 150 },
+  [GLIESE_CHRONO_ROCK]: { name: "Chrono Rock", hardness: 5.6, mohs: 8.5, color: "#432c7a", drop: GLIESE_CHRONO_ROCK, req_tier: 5, req_tool: "Drill", desc: "Tidally warped metamorphic rock." },
+  [CHRONOS_ORE]: { name: "Chronos Crystal", hardness: 8.4, mohs: 9.5, color: "#ffe657", drop: "Chronos Crystal", req_tier: 5, req_tool: "Drill", desc: "Time-dilated harmonic quartz.", xp: 480, light: 160 },
+  [OMEGA_SINGULARITY_MATRIX]: { name: "Singularity Matrix", hardness: 6.0, mohs: 9.0, color: "#1c355e", drop: OMEGA_SINGULARITY_MATRIX, req_tier: 5, req_tool: "Drill", desc: "Hyper-compressed event horizon alloy." },
+  [SINGULARITY_ORE]: { name: "Singularity Core", hardness: 9.2, mohs: 10.0, color: "#ffffff", drop: "Singularity Core", req_tier: 5, req_tool: "Drill", desc: "Stabilized micro-black-hole.", xp: 650, light: 180 },
 
   [STONE_PILLAR]: { name: "Stone Pillar", hardness: 1.8, mohs: 5.5, color: "#a0a0a8", drop: STONE_PILLAR, req_tier: 1, req_tool: "Pickaxe", desc: "Classical carved architectural pillar." },
   [MARBLE_BLOCK]: { name: "Marble Block", hardness: 1.6, mohs: 4.5, color: "#ebf0f5", drop: MARBLE_BLOCK, req_tier: 1, req_tool: "Pickaxe", desc: "Pristine calcitic metamorphic rock." },
@@ -164,6 +198,9 @@ const BLOCK_DATA = {
   [CRYSTAL_GLASS]: { name: "Crystal Glass", hardness: 1.0, mohs: 6.5, color: "#bef0ff", drop: CRYSTAL_GLASS, req_tier: 1, req_tool: "Pickaxe", desc: "Diamond-reinforced blast glass." }
 };
 
+// =============================================================================
+// PLANETARY CONFIGURATION & ORDER
+// =============================================================================
 const PLANET_DATA = {
   "Earth": { tier: 0, name: "Earth", gravity: 0.42, sky_color: "#87c3f5", hazard: "None", req_rocket: null, base_block: STONE, surface_block: GRASS, ore_block: COAL_ORE, desc: "Cradle of humanity." },
   "Moon": { tier: 1, name: "Luna", gravity: 0.16, sky_color: "#0a0a12", hazard: "Vacuum (Low Oxygen)", req_rocket: "Tier 1 Rocket", base_block: MOON_REGOLITH, surface_block: MOON_REGOLITH, ore_block: HELIUM3_ORE, desc: "Airless satellite rich in Helium-3." },
@@ -189,6 +226,9 @@ const PLANET_ORDER = [
   "Proxima b", "Gliese 581g", "Omega Prime"
 ];
 
+// =============================================================================
+// CLASS SPECIFICATIONS
+// =============================================================================
 const CLASSES = {
   "Warrior": { hp: 150, dmg: 18, speed: 4.4, mine_speed: 1.0, color: "#d23c3c", weapon: "Greatsword" },
   "Mage": { hp: 95, dmg: 26, speed: 4.1, mine_speed: 1.0, color: "#4682f0", weapon: "Plasma Wand" },
@@ -196,6 +236,9 @@ const CLASSES = {
   "Miner": { hp: 130, dmg: 14, speed: 4.3, mine_speed: 1.8, color: "#e6a01e", weapon: "Core Drill" }
 };
 
+// =============================================================================
+// COMPLETE ITEM DEFINITIONS
+// =============================================================================
 const ITEM_DEFINITIONS = {
   "Wood Sword": { type: "weapon", dmg: 8, desc: "Carved wooden blade. 8 damage." },
   "Stone Sword": { type: "weapon", dmg: 12, desc: "Granite broadsword. 12 damage." },
@@ -238,8 +281,8 @@ const ITEM_DEFINITIONS = {
   "Obsidian Pickaxe": { type: "tool", tool_type: "pickaxe", tier: 4, mult: 3.0, desc: "Tier 4: 3.0x speed. Magma Stone." },
   "Diamond Pickaxe": { type: "tool", tool_type: "pickaxe", tier: 4, mult: 4.4, desc: "Tier 4: 4.4x speed. Heavy pick." },
   "Titanium Pickaxe": { type: "tool", tool_type: "pickaxe", tier: 4, mult: 5.2, desc: "Tier 4: 5.2x speed. Aerospace alloy." },
-  "Cryo Breaker": { type: "tool", tool_type: "pickaxe", tier: 5, mult: 6.0, desc: "Tier 5: 6.0x speed. Ultrasonic pick." },
-  "Core Drill": { type: "tool", tool_type: "drill", tier: 5, mult: 7.5, desc: "Tier 5: 7.5x speed. Ultra-pressure drill." },
+  "Cryo Breaker": { type: "tool", tool_type: "drill", tier: 5, mult: 6.0, desc: "Tier 5 Drill: 6.0x speed. Ultrasonic pick." },
+  "Core Drill": { type: "tool", tool_type: "drill", tier: 5, mult: 7.5, desc: "Tier 5 Drill: 7.5x speed. Ultra-pressure drill." },
 
   "Dynamite": { type: "explosive", desc: "High explosive stick. Blasts 3x3 tiles on click." },
   "Prospecting Scanner": { type: "scanner", desc: "Geological pulse detector. Pings ore veins." },
@@ -249,9 +292,9 @@ const ITEM_DEFINITIONS = {
   "Mining Charm": { type: "accessory", desc: "Grants +35% mining speed bonus." },
 
   "Iron Helmet": { type: "armor", slot: "helmet", defense: 4, desc: "Hardened headgear. +4 Defense." },
-  "Thermal Suit": { type: "armor", slot: "chest", defense: 8, desc: "Nullifies Mantle thermal radiation." },
-  "Acid-Resistant Suit": { type: "armor", slot: "chest", defense: 14, desc: "Venusian suit. Immune to acid & heat." },
-  "Core Exosuit": { type: "armor", slot: "chest", defense: 24, desc: "Withstands 330+ GPa pressure." },
+  "Thermal Suit": { type: "armor", slot: "chest", defense: 8, desc: "Nullifies Mantle thermal radiation. +8 Defense." },
+  "Acid-Resistant Suit": { type: "armor", slot: "chest", defense: 14, desc: "Venusian suit. Immune to acid & heat. +14 Defense." },
+  "Core Exosuit": { type: "armor", slot: "chest", defense: 24, desc: "Withstands 330+ GPa pressure & all hazards. +24 Defense." },
   "Core Striders": { type: "armor", slot: "boots", defense: 6, desc: "Reinforced boots. +6 Defense & Lava Mobility." },
 
   "Health Potion": { type: "consumable", heal: 50, desc: "Restores 50 HP immediately." },
@@ -299,6 +342,9 @@ for (let t = 1; t <= 15; t++) {
   };
 }
 
+// =============================================================================
+// COMPREHENSIVE RECIPES DATABASE
+// =============================================================================
 const RECIPES = [
   { result: CHEST, count: 1, req: { [PLANKS]: 8 }, station: "workbench" },
   { result: PLANKS, count: 4, req: { [WOOD]: 1 }, station: "hand" },
@@ -353,7 +399,7 @@ const RECIPES = [
 
   { result: ASSEMBLER, count: 1, req: { "Iron Ingot": 6, "Gold Ingot": 2, [GLASS]: 2 }, station: "workbench" },
   { result: LAUNCHPAD, count: 1, req: { "Iron Ingot": 12, "Gold Ingot": 4, "Diamond": 2 }, station: "workbench" },
-  { result: PARTICLE_COLLIDER, count: 1, req: { [INNER_CORE_METAL]: 8, "Dark Matter": 4, "Quantum Processor": 2 }, station: "assembler" },
+  { result: PARTICLE_COLLIDER, count: 1, req: { "Core Metal": 8, "Dark Matter": 4, "Quantum Processor": 2 }, station: "assembler" },
 
   { result: "Micro Circuit", count: 2, req: { "Gold Ingot": 1, "Iron Ingot": 1, [GLASS]: 1 }, station: "assembler" },
   { result: "Quantum Processor", count: 1, req: { "Micro Circuit": 2, "Diamond": 1, "Helium-3": 2 }, station: "assembler" },
@@ -560,10 +606,10 @@ const TOUCH_CONTROLS = {
   }
 };
 
-// ==========================================
+// =============================================================================
 // UNIFIED SPRITE & TEXTURE ATLAS (SINGLE CANVAS)
-// Prevents Safari GPU Process Crashes & Memory Leaks
-// ==========================================
+// Prevents Mobile WebKit Context Crashes & High-Memory Pressure
+// =============================================================================
 class UnifiedTextureAtlas {
   constructor() {
     this.atlas = document.createElement("canvas");
@@ -612,7 +658,6 @@ class UnifiedTextureAtlas {
       const { sx, sy } = this._allocSlot("b_" + bid);
       const base = this._hexToRgb(data.color);
       const hi = `rgb(${Math.min(255, base.r + 45)}, ${Math.min(255, base.g + 45)}, ${Math.min(255, base.b + 45)})`;
-      const mid = `rgb(${Math.floor(base.r * 0.82)}, ${Math.floor(base.g * 0.82)}, ${Math.floor(base.b * 0.82)})`;
       const dark = `rgb(${Math.floor(base.r * 0.58)}, ${Math.floor(base.g * 0.58)}, ${Math.floor(base.b * 0.58)})`;
 
       ctx.save();
@@ -639,7 +684,7 @@ class UnifiedTextureAtlas {
         ctx.beginPath(); ctx.moveTo(2, 13); ctx.lineTo(29, 13); ctx.stroke();
         ctx.fillStyle = "#ffd700";
         ctx.fillRect(14, 10, 4, 6);
-      } else if (data.name.includes("Ore") || data.name.includes("Crystal") || data.name.includes("Shard")) {
+      } else if (data.name.includes("Ore") || data.name.includes("Crystal") || data.name.includes("Shard") || data.name.includes("Core")) {
         ctx.fillStyle = "#6e6e76";
         ctx.fillRect(0, 0, 32, 32);
         const gems = [[8, 8, 5], [22, 10, 4], [11, 22, 6], [23, 23, 5]];
@@ -721,14 +766,22 @@ class UnifiedTextureAtlas {
                      name.includes("Diamond") ? "#50e1ff" :
                      name.includes("Obsidian") ? "#6e37b4" :
                      name.includes("Titanium") ? "#78a0c8" :
-                     name.includes("Cryo") ? "#a0f0ff" :
-                     name.includes("Core") ? "#ff461e" :
-                     name.includes("Singularity") ? "#b432ff" : "#5adcff";
+                     name.includes("Cryo") || name.includes("Frost") ? "#a0f0ff" :
+                     name.includes("Core") || name.includes("Magma") || name.includes("Thermal") ? "#ff461e" :
+                     name.includes("Singularity") || name.includes("Dark Matter") ? "#b432ff" : "#5adcff";
 
       ctx.save();
       ctx.translate(sx, sy);
 
-      if (idata.tool_type === "pickaxe" || name.includes("Pickaxe")) {
+      if (idata.tool_type === "drill") {
+        ctx.fillStyle = "#464c5e"; ctx.fillRect(6, 14, 12, 10);
+        ctx.fillStyle = tColor;
+        ctx.beginPath(); ctx.moveTo(18, 12); ctx.lineTo(29, 19); ctx.lineTo(18, 26); ctx.closePath(); ctx.fill();
+      } else if (idata.tool_type === "hammer") {
+        ctx.strokeStyle = "#643c1e"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(22, 10); ctx.stroke();
+        ctx.fillStyle = tColor; ctx.fillRect(15, 4, 12, 10);
+      } else if (idata.tool_type === "pickaxe" || name.includes("Pickaxe")) {
         ctx.strokeStyle = "#643c1e"; ctx.lineWidth = 3;
         ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(21, 11); ctx.stroke();
         ctx.strokeStyle = tColor; ctx.lineWidth = 4;
@@ -742,6 +795,16 @@ class UnifiedTextureAtlas {
         ctx.strokeStyle = "#643c1e"; ctx.lineWidth = 3;
         ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(21, 11); ctx.stroke();
         ctx.fillStyle = tColor; ctx.beginPath(); ctx.arc(23, 9, 6, 0, Math.PI * 2); ctx.fill();
+      } else if (idata.type === "ranged") {
+        ctx.strokeStyle = tColor; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(14, 16, 10, -Math.PI * 0.45, Math.PI * 0.45); ctx.stroke();
+        ctx.strokeStyle = "#e6e6f0"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(15, 6); ctx.lineTo(15, 26); ctx.stroke();
+      } else if (idata.type === "magic") {
+        ctx.strokeStyle = "#643c1e"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(7, 25); ctx.lineTo(22, 10); ctx.stroke();
+        ctx.fillStyle = tColor; ctx.beginPath(); ctx.arc(23, 9, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(22, 8, 2, 2);
       } else if (idata.type === "weapon" || name.includes("Blade") || name.includes("Sword") || name.includes("Dagger")) {
         ctx.strokeStyle = "#ffd700"; ctx.lineWidth = 3;
         ctx.beginPath(); ctx.moveTo(8, 18); ctx.lineTo(14, 24); ctx.stroke();
@@ -762,6 +825,10 @@ class UnifiedTextureAtlas {
         ctx.fillStyle = "#b48c50"; ctx.fillRect(14, 5, 4, 3);
         ctx.fillStyle = name.includes("Health") ? "#e62828" : name.includes("Swift") ? "#ffd700" : "#50dcff";
         ctx.beginPath(); ctx.arc(16, 20, 8, 0, Math.PI * 2); ctx.fill();
+      } else if (idata.type === "explosive") {
+        ctx.fillStyle = "#dc2828"; ctx.fillRect(11, 10, 10, 16);
+        ctx.strokeStyle = "#ffd700"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(16, 10); ctx.lineTo(20, 4); ctx.stroke();
       } else if (idata.type === "rocket") {
         ctx.fillStyle = "#ffffff";
         ctx.beginPath(); ctx.moveTo(16, 3); ctx.lineTo(23, 23); ctx.lineTo(9, 23); ctx.closePath(); ctx.fill();
@@ -795,9 +862,9 @@ class UnifiedTextureAtlas {
   }
 }
 
-// ==========================================
+// =============================================================================
 // PROCEDURAL AUDIO SYNTHESIZER
-// ==========================================
+// =============================================================================
 class SoundEngine {
   constructor() {
     this.ctx = null;
@@ -887,10 +954,9 @@ class SoundEngine {
   }
 }
 
-// ==========================================
+// =============================================================================
 // PRE-BAKED RADIAL LIGHTING ENGINE
-// Zero per-frame gradient allocations (Maintains 60 FPS on Mobile)
-// ==========================================
+// =============================================================================
 class OptimizedLighting {
   constructor() {
     this.canvas = document.createElement("canvas");
@@ -976,9 +1042,9 @@ class OptimizedLighting {
 // Entities, Particle Dynamics, Physics System & World Generation
 // =============================================================================
 
-// ==========================================
+// =============================================================================
 // PARTICLES & FLOATING TEXTS
-// ==========================================
+// =============================================================================
 class Particle {
   constructor(x, y, vx, vy, color, size, life) {
     this.x = x;
@@ -1032,14 +1098,21 @@ class FloatingText {
   }
 }
 
-// ==========================================
-// INVENTORY MANAGER
-// ==========================================
+// =============================================================================
+// INVENTORY MANAGER (WITH SPLIT-STACK FIX & OVERFLOW PROTECTION)
+// =============================================================================
 class InventoryManager {
   constructor() {
     this.slots = new Array(30).fill(null);
     this.armor = { helmet: null, chest: null, boots: null };
     this.selectedHotbar = 0;
+  }
+
+  canAddItem(item) {
+    for (let i = 0; i < 30; i++) {
+      if (this.slots[i] === null || this.slots[i].item === item) return true;
+    }
+    return false;
   }
 
   addItem(item, count = 1) {
@@ -1059,16 +1132,18 @@ class InventoryManager {
   }
 
   removeItem(item, count = 1) {
+    if (this.countItem(item) < count) return false;
+    let remaining = count;
     for (let i = 0; i < 30; i++) {
       if (this.slots[i] && this.slots[i].item === item) {
-        if (this.slots[i].count >= count) {
-          this.slots[i].count -= count;
-          if (this.slots[i].count <= 0) this.slots[i] = null;
-          return true;
-        }
+        const take = Math.min(remaining, this.slots[i].count);
+        this.slots[i].count -= take;
+        remaining -= take;
+        if (this.slots[i].count <= 0) this.slots[i] = null;
+        if (remaining <= 0) return true;
       }
     }
-    return false;
+    return true;
   }
 
   countItem(item) {
@@ -1084,9 +1159,9 @@ class InventoryManager {
   }
 }
 
-// ==========================================
+// =============================================================================
 // WORLD GENERATOR & LIQUIDS
-// ==========================================
+// =============================================================================
 class World {
   constructor(width, height) {
     this.width = width;
@@ -1333,9 +1408,9 @@ class World {
   }
 }
 
-// ==========================================
-// ENTITIES: SLIME, PROJECTILE, PLAYER
-// ==========================================
+// =============================================================================
+// ENTITIES: SLIME ENEMY, PROJECTILE & PLAYER
+// =============================================================================
 class SlimeEnemy {
   constructor(x, y, etype = "Crust") {
     this.x = x;
@@ -1353,6 +1428,10 @@ class SlimeEnemy {
     this.onGround = false;
   }
 
+  _isSolid(world, tx, ty) {
+    return ![AIR, TORCH, LAVA, LANTERN, NEON_LAMP, WOOD_TABLE, WOOD_CHAIR].includes(world.getTile(tx, ty));
+  }
+
   update(world, player) {
     this.vy = Math.min(9, this.vy + 0.35);
     this.jumpTimer--;
@@ -1363,28 +1442,68 @@ class SlimeEnemy {
     }
 
     if (this.onGround) this.vx *= 0.82;
-    this.x += this.vx;
-    this.y += this.vy;
 
-    const tx = Math.floor((this.x + this.w / 2) / TILE_SIZE);
-    const ty = Math.floor((this.y + this.h) / TILE_SIZE);
-    if (![AIR, TORCH, LAVA, LANTERN, NEON_LAMP].includes(world.getTile(tx, ty))) {
-      this.y = ty * TILE_SIZE - this.h;
-      this.vy = 0;
-      this.onGround = true;
-    } else {
-      this.onGround = false;
+    // Horizontal collision preventing phase-through on cliffs and blocks
+    this.x += this.vx;
+    this.x = Math.max(TILE_SIZE, Math.min(this.x, (world.width - 2) * TILE_SIZE));
+    const left = Math.floor(this.x / TILE_SIZE);
+    const right = Math.floor((this.x + this.w - 1) / TILE_SIZE);
+    const top = Math.floor(this.y / TILE_SIZE);
+    const bottom = Math.floor((this.y + this.h - 1) / TILE_SIZE);
+
+    for (let ty = top; ty <= bottom; ty++) {
+      for (let tx = left; tx <= right; tx++) {
+        if (this._isSolid(world, tx, ty)) {
+          if (this.vx > 0) this.x = tx * TILE_SIZE - this.w;
+          else if (this.vx < 0) this.x = (tx + 1) * TILE_SIZE;
+          this.vx = -this.vx * 0.5;
+        }
+      }
+    }
+
+    // Vertical collision
+    this.y += this.vy;
+    this.onGround = false;
+    const vLeft = Math.floor(this.x / TILE_SIZE);
+    const vRight = Math.floor((this.x + this.w - 1) / TILE_SIZE);
+    const vTop = Math.floor(this.y / TILE_SIZE);
+    const vBottom = Math.floor((this.y + this.h) / TILE_SIZE);
+
+    for (let ty = vTop; ty <= vBottom; ty++) {
+      for (let tx = vLeft; tx <= vRight; tx++) {
+        if (this._isSolid(world, tx, ty)) {
+          if (this.vy > 0) {
+            this.y = ty * TILE_SIZE - this.h;
+            this.onGround = true;
+          } else if (this.vy < 0) {
+            this.y = (ty + 1) * TILE_SIZE;
+          }
+          this.vy = 0;
+        }
+      }
     }
   }
 
   draw(ctx, camX, camY) {
+    const dx = Math.floor(this.x - camX);
+    const dy = Math.floor(this.y - camY);
+
     ctx.fillStyle = this.color;
     ctx.beginPath();
-    ctx.ellipse(this.x - camX + this.w / 2, this.y - camY + this.h / 2, this.w / 2, this.h / 2, 0, 0, Math.PI * 2);
+    ctx.ellipse(dx + this.w / 2, dy + this.h / 2, this.w / 2, this.h / 2, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(this.x - camX + 8, this.y - camY + 6, 3, 3);
-    ctx.fillRect(this.x - camX + 16, this.y - camY + 6, 3, 3);
+    ctx.fillRect(dx + 8, dy + 6, 3, 3);
+    ctx.fillRect(dx + 16, dy + 6, 3, 3);
+
+    // Floating HP bar displayed when damaged
+    if (this.hp < this.max_hp) {
+      const pct = Math.max(0, this.hp / this.max_hp);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+      ctx.fillRect(dx - 2, dy - 9, 32, 5);
+      ctx.fillStyle = COLOR_HP;
+      ctx.fillRect(dx - 2, dy - 9, Math.floor(32 * pct), 5);
+    }
   }
 }
 
@@ -1462,6 +1581,7 @@ class Player {
     this.attackCooldown = 0;
     this.swingAnim = 0;
     this.speedBuffTimer = 0;
+    this.invulnTimer = 0;
   }
 
   addXp(amt, floatTexts, sound) {
@@ -1641,17 +1761,12 @@ class Player {
 // Main Engine Controller, Unified Draw, Inspector Card & Mobile Bootstrap
 // =============================================================================
 
-// =============================================================================
-// ASTROSTRATA: REIGNITION — COMPLETE ZERO-DEPENDENCY ENGINE (PART 4 / 4)
-// Main Engine Controller, Unified Draw, Inspector Card & Mobile Bootstrap
-// =============================================================================
-
 class AstroStrataEngine {
   constructor() {
     this.canvas = document.getElementById("gameCanvas");
     this.ctx = this.canvas.getContext("2d");
 
-    // Retina / High-DPI crisp rendering
+    // Crisp high-DPI scaling for Retina and mobile displays
     this.dpr = Math.min(window.devicePixelRatio || 1, 2.5);
     this.canvas.width = Math.floor(SCREEN_WIDTH * this.dpr);
     this.canvas.height = Math.floor(SCREEN_HEIGHT * this.dpr);
@@ -1702,7 +1817,18 @@ class AstroStrataEngine {
     this.setupListeners();
   }
 
-  // Safe Surface Respawn System (Prevents spawning inside underground rock)
+  checkStationOk(reqStation) {
+    if (!reqStation || reqStation === "hand") return true;
+    const map = {
+      workbench: WORKBENCH,
+      furnace: FURNACE,
+      assembler: ASSEMBLER,
+      launchpad: LAUNCHPAD,
+      particle_collider: PARTICLE_COLLIDER
+    };
+    return this.isNearStation(map[reqStation] || WORKBENCH);
+  }
+
   respawnPlayer() {
     this.player.hp = this.player.max_hp;
     this.player.vx = 0;
@@ -1802,6 +1928,7 @@ class AstroStrataEngine {
     try {
       const raw = localStorage.getItem(SAVES_INDEX_KEY);
       this.worldsList = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(this.worldsList)) this.worldsList = [];
     } catch (e) {
       this.worldsList = [];
     }
@@ -1854,13 +1981,11 @@ class AstroStrataEngine {
 
   loadSectorGame(sectorId) {
     let data = null;
-    const raw = localStorage.getItem(SECTOR_DATA_PREFIX + sectorId);
-    if (raw) {
-      try {
-        data = JSON.parse(raw);
-      } catch (e) {
-        console.warn("Sector parse error, re-generating sector:", e);
-      }
+    try {
+      const raw = localStorage.getItem(SECTOR_DATA_PREFIX + sectorId);
+      if (raw) data = JSON.parse(raw);
+    } catch (e) {
+      console.warn("Sector parse error, re-generating sector:", e);
     }
 
     const sectorMeta = this.worldsList.find(w => w.id === sectorId) || {
@@ -1875,23 +2000,27 @@ class AstroStrataEngine {
       this.world.current_planet = data.world.planet || sectorMeta.planet || "Earth";
 
       const pData = data.player;
-      this.player = new Player(pData.x, pData.y, pData.pClass || sectorMeta.pClass || "Warrior");
-      this.player.hp = pData.hp;
-      this.player.max_hp = pData.max_hp;
-      this.player.level = pData.level;
-      this.player.xp = pData.xp;
-      this.player.xp_next = pData.xp_next;
-      this.player.inv.slots = pData.slots;
-      this.player.inv.armor = pData.armor;
+      this.player = new Player(pData.x || (WORLD_WIDTH / 2) * TILE_SIZE, pData.y || 20 * TILE_SIZE, pData.pClass || sectorMeta.pClass || "Warrior");
+      this.player.hp = pData.hp || this.player.max_hp;
+      this.player.max_hp = pData.max_hp || 150;
+      this.player.level = pData.level || 1;
+      this.player.xp = pData.xp || 0;
+      this.player.xp_next = pData.xp_next || 100;
+      if (Array.isArray(pData.slots) && pData.slots.length === 30) {
+        this.player.inv.slots = pData.slots;
+      }
+      if (pData.armor && typeof pData.armor === "object") {
+        this.player.inv.armor = pData.armor;
+      }
     } else {
       this.world = new World(WORLD_WIDTH, WORLD_HEIGHT);
       this.world.generate(sectorMeta.planet || "Earth");
 
       const spawnX = Math.floor(WORLD_WIDTH / 2) * TILE_SIZE;
-      let spawnY = 50 * TILE_SIZE;
+      let spawnY = 20 * TILE_SIZE;
       for (let y = 0; y < WORLD_HEIGHT; y++) {
         if (this.world.getTile(Math.floor(WORLD_WIDTH / 2), y) !== AIR) {
-          spawnY = (y - 2) * TILE_SIZE;
+          spawnY = Math.max(2, y - 2) * TILE_SIZE;
           break;
         }
       }
@@ -1936,10 +2065,10 @@ class AstroStrataEngine {
       this.world.generate("Earth");
 
       const spawnX = Math.floor(WORLD_WIDTH / 2) * TILE_SIZE;
-      let spawnY = 50 * TILE_SIZE;
+      let spawnY = 20 * TILE_SIZE;
       for (let y = 0; y < WORLD_HEIGHT; y++) {
         if (this.world.getTile(Math.floor(WORLD_WIDTH / 2), y) !== AIR) {
-          spawnY = (y - 2) * TILE_SIZE;
+          spawnY = Math.max(2, y - 2) * TILE_SIZE;
           break;
         }
       }
@@ -1982,7 +2111,9 @@ class AstroStrataEngine {
   deleteSelectedSector() {
     if (this.worldsList.length === 0) return;
     const target = this.worldsList[this.selectedWorldIdx];
-    localStorage.removeItem(SECTOR_DATA_PREFIX + target.id);
+    try {
+      localStorage.removeItem(SECTOR_DATA_PREFIX + target.id);
+    } catch (e) {}
     this.worldsList.splice(this.selectedWorldIdx, 1);
     this.selectedWorldIdx = Math.max(0, this.selectedWorldIdx - 1);
     this.saveSectorIndex();
@@ -2004,10 +2135,10 @@ class AstroStrataEngine {
     this.world.generate(targetPlanet);
 
     const spawnX = Math.floor(WORLD_WIDTH / 2) * TILE_SIZE;
-    let spawnY = 50 * TILE_SIZE;
+    let spawnY = 20 * TILE_SIZE;
     for (let y = 0; y < WORLD_HEIGHT; y++) {
       if (this.world.getTile(Math.floor(WORLD_WIDTH / 2), y) !== AIR) {
-        spawnY = (y - 2) * TILE_SIZE;
+        spawnY = Math.max(2, y - 2) * TILE_SIZE;
         break;
       }
     }
@@ -2138,15 +2269,15 @@ class AstroStrataEngine {
 
     const getCanvasPos = (e) => {
       const rect = this.canvas.getBoundingClientRect();
-      const sx = SCREEN_WIDTH / rect.width;
-      const sy = SCREEN_HEIGHT / rect.height;
+      const sx = SCREEN_WIDTH / (rect.width || SCREEN_WIDTH);
+      const sy = SCREEN_HEIGHT / (rect.height || SCREEN_HEIGHT);
       return { x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sy };
     };
 
     const getTouchPos = (touch) => {
       const rect = this.canvas.getBoundingClientRect();
-      const sx = SCREEN_WIDTH / rect.width;
-      const sy = SCREEN_HEIGHT / rect.height;
+      const sx = SCREEN_WIDTH / (rect.width || SCREEN_WIDTH);
+      const sy = SCREEN_HEIGHT / (rect.height || SCREEN_HEIGHT);
       return { x: (touch.clientX - rect.left) * sx, y: (touch.clientY - rect.top) * sy };
     };
 
@@ -2176,7 +2307,7 @@ class AstroStrataEngine {
     });
 
     this.canvas.addEventListener("mousedown", (e) => {
-      this.sound.init();
+      try { this.sound.init(); } catch (err) {}
       const pos = getCanvasPos(e);
       this.mouse.x = pos.x;
       this.mouse.y = pos.y;
@@ -2209,7 +2340,7 @@ class AstroStrataEngine {
 
     this.canvas.addEventListener("touchstart", (e) => {
       e.preventDefault();
-      this.sound.init();
+      try { this.sound.init(); } catch (err) {}
       this.isTouchDevice = true;
 
       for (let i = 0; i < e.changedTouches.length; i++) {
@@ -2221,15 +2352,15 @@ class AstroStrataEngine {
           this.invTouchStartX = pos.x;
           this.invTouchStartOffset = this.recipeScrollOffset;
           this.invHasDragged = false;
+          this.activeTouches.set(t.identifier, { type: "inv_ui", ...pos });
+          continue;
         }
 
         if (this.state !== "PLAYING") {
           this.mouse.x = pos.x;
           this.mouse.y = pos.y;
           this.activeTouches.set(t.identifier, { type: "menu", ...pos });
-          if (this.state !== "INVENTORY") {
-            this.handleLeftClick();
-          }
+          this.handleLeftClick();
           continue;
         }
 
@@ -2333,7 +2464,7 @@ class AstroStrataEngine {
           }
         }
 
-        if (this.state === "INVENTORY" && this.invTouchStartY !== undefined) {
+        if (this.state === "INVENTORY" && existing.type === "inv_ui" && this.invTouchStartY !== undefined) {
           const dy = pos.y - this.invTouchStartY;
           if (Math.abs(dy) > 8) {
             this.invHasDragged = true;
@@ -2359,7 +2490,7 @@ class AstroStrataEngine {
         const existing = this.activeTouches.get(t.identifier);
         const pos = getTouchPos(t);
 
-        if (this.state === "INVENTORY" && !this.invHasDragged) {
+        if (this.state === "INVENTORY" && existing && existing.type === "inv_ui" && !this.invHasDragged) {
           this.mouse.x = pos.x;
           this.mouse.y = pos.y;
           this.handleLeftClick();
@@ -2398,7 +2529,7 @@ class AstroStrataEngine {
     const my = this.mouse.y;
 
     if (this.state === "MENU") {
-      if (mx >= SCREEN_WIDTH / 2 - 160 && mx <= SCREEN_WIDTH / 2 + 160 && my >= 310 && my <= 358) {
+      if (mx >= SCREEN_WIDTH / 2 - 200 && mx <= SCREEN_WIDTH / 2 + 200 && my >= 290 && my <= 380) {
         this.loadSectorIndex();
         this.state = "WORLD_SELECT";
         this.sound.play("click");
@@ -2418,9 +2549,15 @@ class AstroStrataEngine {
       const bDelete = { x: SCREEN_WIDTH / 2 + 5, y: SCREEN_HEIGHT - 80, w: 150, h: 44 };
       const bBack = { x: SCREEN_WIDTH / 2 + 165, y: SCREEN_HEIGHT - 80, w: 155, h: 44 };
 
-      if (mx >= bPlay.x && mx <= bPlay.x + bPlay.w && my >= bPlay.y && my <= bPlay.y + bPlay.h && this.worldsList.length > 0) {
-        const targetSector = this.worldsList[this.selectedWorldIdx];
-        this.loadSectorGame(targetSector.id);
+      if (mx >= bPlay.x && mx <= bPlay.x + bPlay.w && my >= bPlay.y && my <= bPlay.y + bPlay.h) {
+        if (this.worldsList.length > 0) {
+          const targetSector = this.worldsList[this.selectedWorldIdx] || this.worldsList[0];
+          this.loadSectorGame(targetSector.id);
+        } else {
+          this.state = "CREATE_WORLD";
+          this.inputWorldName = "Sector 1";
+          this.sound.play("click");
+        }
       } else if (mx >= bCreate.x && mx <= bCreate.x + bCreate.w && my >= bCreate.y && my <= bCreate.y + bCreate.h) {
         this.state = "CREATE_WORLD";
         this.inputWorldName = `Sector ${this.worldsList.length + 1}`;
@@ -2434,6 +2571,11 @@ class AstroStrataEngine {
     } else if (this.state === "CREATE_WORLD") {
       const nameBox = { x: SCREEN_WIDTH / 2 - 200, y: 175, w: 400, h: 44 };
       this.nameInputActive = (mx >= nameBox.x && mx <= nameBox.x + nameBox.w && my >= nameBox.y && my <= nameBox.y + nameBox.h);
+      if (this.nameInputActive && this.isTouchDevice) {
+        const entered = window.prompt("Enter Sector Name:", this.inputWorldName);
+        if (entered !== null) this.inputWorldName = entered.slice(0, 18) || "New Sector";
+        this.nameInputActive = false;
+      }
 
       const clist = Object.keys(CLASSES);
       for (let i = 0; i < clist.length; i++) {
@@ -2619,6 +2761,14 @@ class AstroStrataEngine {
     if (mx >= rx && mx <= rx + 140 && my >= INV_UI_Y + 225 && my <= INV_UI_Y + 251) {
       this.searchActive = true;
       this.sound.play("click");
+      if (this.isTouchDevice) {
+        const q = window.prompt("Search Recipes:", this.searchQuery);
+        if (q !== null) {
+          this.searchQuery = q.slice(0, 20);
+          this.recipeScrollOffset = 0;
+        }
+        this.searchActive = false;
+      }
       return;
     } else {
       this.searchActive = false;
@@ -2644,11 +2794,16 @@ class AstroStrataEngine {
       const actBtn = { x: cardX + 6, y: cardY + 111, w: 96, h: 24 };
 
       if (mx >= actBtn.x && mx <= actBtn.x + actBtn.w && my >= actBtn.y && my <= actBtn.y + actBtn.h) {
-        if (idata.type === "consumable" && idata.heal) {
-          this.player.hp = Math.min(this.player.max_hp, this.player.hp + idata.heal);
+        if (idata.type === "consumable") {
+          if (idata.heal) {
+            this.player.hp = Math.min(this.player.max_hp, this.player.hp + idata.heal);
+            this.floatTexts.push(new FloatingText(this.player.x, this.player.y, `+${idata.heal} HP`, COLOR_EXP));
+          } else if (idata.buff === "speed") {
+            this.player.speedBuffTimer = 60 * 30;
+            this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "SPEED BOOST (30s)!", COLOR_GOLD));
+          }
           this.player.inv.removeItem(curItem, 1);
           this.sound.play("potion");
-          this.floatTexts.push(new FloatingText(this.player.x, this.player.y, `+${idata.heal} HP`, COLOR_EXP));
           if (!this.player.inv.slots[this.selectedInvSlot]) this.selectedInvSlot = null;
           return;
         } else if (idata.type === "armor") {
@@ -2739,11 +2894,15 @@ class AstroStrataEngine {
 
       if (mx >= craftBtn.x && mx <= craftBtn.x + craftBtn.w && my >= craftBtn.y && my <= craftBtn.y + craftBtn.h) {
         const reqStation = rec.station || "hand";
-        const stationOk = (reqStation === "hand" || this.isNearStation(reqStation === "workbench" ? WORKBENCH : reqStation === "furnace" ? FURNACE : reqStation === "assembler" ? ASSEMBLER : LAUNCHPAD));
+        const stationOk = this.checkStationOk(reqStation);
 
-        let canCraft = stationOk;
+        let canCraft = stationOk && this.player.inv.canAddItem(rec.result);
+        const reqTexts = [];
         for (const [rk, ramt] of Object.entries(rec.req)) {
-          if (this.player.inv.countItem(rk) < ramt) canCraft = false;
+          const have = this.player.inv.countItem(rk);
+          if (have < ramt) canCraft = false;
+          const rName = BLOCK_DATA[rk]?.name || rk;
+          reqTexts.push(`${rName}:${have}/${ramt}`);
         }
 
         if (canCraft) {
@@ -2762,11 +2921,20 @@ class AstroStrataEngine {
   }
 
   handleStarMapClick(mx, my) {
-    const boxX = Math.floor((SCREEN_WIDTH - 820) / 2);
-    const boxY = Math.floor((SCREEN_HEIGHT - 540) / 2);
-
-    if (mx >= boxX + 770 && mx <= boxX + 802 && my >= boxY + 16 && my <= boxY + 48) {
+    if (mx >= INV_UI_X + 770 && mx <= INV_UI_X + 804 && my >= INV_UI_Y + 12 && my <= INV_UI_Y + 44) {
       this.state = "PLAYING";
+      this.sound.play("click");
+      return;
+    }
+
+    const maxOffset = Math.max(0, PLANET_ORDER.length - 4);
+    if (mx >= INV_UI_X + 685 && mx <= INV_UI_X + 717 && my >= INV_UI_Y + 14 && my <= INV_UI_Y + 42) {
+      this.planetScrollOffset = Math.max(0, this.planetScrollOffset - 1);
+      this.sound.play("click");
+      return;
+    }
+    if (mx >= INV_UI_X + 725 && mx <= INV_UI_X + 757 && my >= INV_UI_Y + 14 && my <= INV_UI_Y + 42) {
+      this.planetScrollOffset = Math.min(maxOffset, this.planetScrollOffset + 1);
       this.sound.play("click");
       return;
     }
@@ -2774,9 +2942,8 @@ class AstroStrataEngine {
     const visiblePlanets = PLANET_ORDER.slice(this.planetScrollOffset, this.planetScrollOffset + 4);
     for (let idx = 0; idx < visiblePlanets.length; idx++) {
       const pKey = visiblePlanets[idx];
-      const pdata = PLANET_DATA[pKey];
-      const cardY = boxY + 80 + idx * 95;
-      const lBtn = { x: boxX + 620, y: cardY + 24, w: 110, h: 36 };
+      const cardY = INV_UI_Y + 70 + idx * 105;
+      const lBtn = { x: INV_UI_X + 650, y: cardY + 30, w: 110, h: 36 };
       if (mx >= lBtn.x && mx <= lBtn.x + lBtn.w && my >= lBtn.y && my <= lBtn.y + lBtn.h) {
         this.travelToPlanet(pKey);
         return;
@@ -2834,7 +3001,7 @@ class AstroStrataEngine {
     if (pDist > 180) return;
 
     const t = this.world.getTile(tgx, tgy);
-    if (t === AIR || t === LAVA) return;
+    if (t === AIR || t === LAVA || !BLOCK_DATA[t]) return;
 
     const evalMine = evaluateMiningInteraction(this.player, t);
     const key = `${tgx},${tgy}`;
@@ -2880,29 +3047,43 @@ class AstroStrataEngine {
 
   processEnvironmentalHazards() {
     const pTy = Math.floor(this.player.y / TILE_SIZE);
-    const hasExosuit = this.player.inv.armor.chest === "Core Exosuit";
-    const hasThermal = this.player.inv.armor.chest === "Thermal Suit";
-    const hasOxygen = this.player.inv.countItem("Oxygen Tank") > 0;
+    const chest = this.player.inv.armor.chest;
+    const boots = this.player.inv.armor.boots;
+
+    const hasExosuit = (chest === "Core Exosuit");
+    const hasAcidSuit = (chest === "Acid-Resistant Suit") || hasExosuit;
+    const hasThermal = (chest === "Thermal Suit") || hasAcidSuit;
+    const hasStriders = (boots === "Core Striders") || hasExosuit;
+    const hasOxygen = (this.player.inv.countItem("Oxygen Tank") > 0) || hasExosuit;
 
     if (this.world.current_planet !== "Earth") {
       const haz = PLANET_DATA[this.world.current_planet]?.hazard || "";
-      if (haz.includes("Vacuum") && !hasOxygen && !hasExosuit && Math.random() < 0.08) {
+      if (haz.includes("Vacuum") && !hasOxygen && Math.random() < 0.08) {
         this.player.hp -= 1.2;
         this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "OXYGEN DEPRIVATION!", COLOR_CYAN));
+      } else if ((haz.includes("Acid") || haz.includes("Toxic")) && !hasAcidSuit && Math.random() < 0.08) {
+        this.player.hp -= 1.5;
+        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "CORROSIVE ATMOSPHERE!", COLOR_EXP));
+      } else if ((haz.includes("Radiation") || haz.includes("Volcanic") || haz.includes("Flares")) && !hasThermal && Math.random() < 0.08) {
+        this.player.hp -= 1.8;
+        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "THERMAL RADIATION!", COLOR_HEAT));
+      } else if (haz.includes("Crush") && !hasExosuit && Math.random() < 0.1) {
+        this.player.hp -= 3.5;
+        this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "GRAVITY CRUSH!", COLOR_PRESSURE));
       }
     } else {
       if (pTy >= OUTER_CORE_BOTTOM && !hasExosuit && Math.random() < 0.15) {
         this.player.hp -= 4.0;
         this.sound.play("hurt");
         this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "PRESSURE CRUSH!", COLOR_PRESSURE));
-      } else if (pTy >= UPPER_MANTLE_BOTTOM && !hasThermal && !hasExosuit && Math.random() < 0.15) {
+      } else if (pTy >= UPPER_MANTLE_BOTTOM && !hasThermal && Math.random() < 0.15) {
         this.player.hp -= 1.5;
         this.sound.play("hurt");
         this.floatTexts.push(new FloatingText(this.player.x, this.player.y, "EXTREME HEAT!", COLOR_HEAT));
       }
     }
 
-    if (this.player.inLava) {
+    if (this.player.inLava && !hasStriders) {
       this.player.hp -= 1.5;
       if (Math.random() < 0.2) this.sound.play("hurt");
     }
@@ -2963,15 +3144,16 @@ class AstroStrataEngine {
           continue;
         }
 
+        const pgx = Math.floor(p.x / TILE_SIZE);
+        const pgy = Math.floor(p.y / TILE_SIZE);
+
         if (p.type === "dynamite") {
-          const gx = Math.floor(p.x / TILE_SIZE);
-          const gy = Math.floor(p.y / TILE_SIZE);
-          if (p.life <= 0 || this.world.getTile(gx, gy) !== AIR) {
+          if (p.life <= 0 || this.world.getTile(pgx, pgy) !== AIR) {
             this.sound.play("boom");
             for (let dx = -1; dx <= 1; dx++) {
               for (let dy = -1; dy <= 1; dy++) {
-                const tx = gx + dx;
-                const ty = gy + dy;
+                const tx = pgx + dx;
+                const ty = pgy + dy;
                 if (![AIR, LAVA, INNER_CORE_METAL, CORE_CRYSTAL].includes(this.world.getTile(tx, ty))) {
                   const drop = BLOCK_DATA[this.world.getTile(tx, ty)]?.drop;
                   if (drop) this.player.inv.addItem(drop, 1);
@@ -2982,6 +3164,9 @@ class AstroStrataEngine {
             this.projectiles.splice(i, 1);
             continue;
           }
+        } else if (![AIR, TORCH, LAVA, LANTERN, NEON_LAMP].includes(this.world.getTile(pgx, pgy))) {
+          this.projectiles.splice(i, 1);
+          continue;
         }
 
         if (p.life <= 0) this.projectiles.splice(i, 1);
@@ -2993,8 +3178,11 @@ class AstroStrataEngine {
         const distToPlayer = Math.hypot((e.x + e.w / 2) - (this.player.x + this.player.w / 2), (e.y + e.h / 2) - (this.player.y + this.player.h / 2));
         if (distToPlayer < 24) {
           if (!this.player.invulnTimer || this.player.invulnTimer <= 0) {
-            const def = (this.player.inv.armor.helmet ? 4 : 0) + (this.player.inv.armor.chest ? 8 : 0);
-            const taken = Math.max(3, e.damage - def);
+            const hDef = ITEM_DEFINITIONS[this.player.inv.armor.helmet]?.defense || 0;
+            const cDef = ITEM_DEFINITIONS[this.player.inv.armor.chest]?.defense || 0;
+            const bDef = ITEM_DEFINITIONS[this.player.inv.armor.boots]?.defense || 0;
+            const def = hDef + cDef + bDef;
+            const taken = Math.max(2, e.damage - def);
             this.player.hp -= taken;
             this.player.invulnTimer = 35;
             this.player.vy = -3.5;
@@ -3011,10 +3199,24 @@ class AstroStrataEngine {
 
       if (this.player.invulnTimer > 0) this.player.invulnTimer--;
 
-      if (this.enemies.length < 3 && Math.random() < 0.005) {
-        const spawnSide = Math.random() < 0.5 ? -250 : 250;
-        const etype = Math.floor(this.player.y / TILE_SIZE) > UPPER_MANTLE_BOTTOM ? "Mantle" : "Crust";
-        this.enemies.push(new SlimeEnemy(this.player.x + spawnSide, this.player.y - 40, etype));
+      if (this.enemies.length < 3 && Math.random() < 0.008) {
+        const spawnSide = Math.random() < 0.5 ? -220 : 220;
+        const sx = Math.max(64, Math.min((this.world.width - 3) * TILE_SIZE, this.player.x + spawnSide));
+        const stx = Math.floor(sx / TILE_SIZE);
+        let sty = Math.floor(this.player.y / TILE_SIZE);
+
+        let foundAir = false;
+        for (let dy = -6; dy <= 6; dy++) {
+          if (this.world.getTile(stx, sty + dy) === AIR && this.world.getTile(stx, sty + dy + 1) !== AIR) {
+            sty = sty + dy;
+            foundAir = true;
+            break;
+          }
+        }
+        if (foundAir) {
+          const etype = (sty > LOWER_MANTLE_BOTTOM) ? "Core" : (sty > UPPER_MANTLE_BOTTOM) ? "Mantle" : "Crust";
+          this.enemies.push(new SlimeEnemy(stx * TILE_SIZE, sty * TILE_SIZE - 24, etype));
+        }
       }
 
       for (let i = this.particles.length - 1; i >= 0; i--) {
@@ -3030,6 +3232,7 @@ class AstroStrataEngine {
 
   draw() {
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    this.ctx.textBaseline = "alphabetic";
 
     this.ctx.fillStyle = COLOR_BG_DARK;
     this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -3071,7 +3274,7 @@ class AstroStrataEngine {
       if (this.worldsList.length === 0) {
         this.ctx.fillStyle = "#8892b0";
         this.ctx.font = "16px system-ui, -apple-system, sans-serif";
-        this.ctx.fillText("No sectors established. Click 'CREATE SECTOR' below.", SCREEN_WIDTH / 2, 240);
+        this.ctx.fillText("No sectors established. Tap 'CREATE SECTOR' or 'ENTER SECTOR' below.", SCREEN_WIDTH / 2, 240);
       } else {
         for (let i = 0; i < Math.min(5, this.worldsList.length); i++) {
           const w = this.worldsList[i];
@@ -3096,7 +3299,7 @@ class AstroStrataEngine {
 
       const hasWorlds = this.worldsList.length > 0;
       const buttons = [
-        { label: "ENTER SECTOR", x: SCREEN_WIDTH / 2 - 330, w: 155, active: hasWorlds, color: COLOR_GOLD },
+        { label: "ENTER SECTOR", x: SCREEN_WIDTH / 2 - 330, w: 155, active: true, color: COLOR_GOLD },
         { label: "CREATE SECTOR", x: SCREEN_WIDTH / 2 - 165, w: 155, active: true, color: COLOR_WHITE },
         { label: "DELETE", x: SCREEN_WIDTH / 2 + 5, w: 150, active: hasWorlds, color: COLOR_HP },
         { label: "MAIN MENU", x: SCREEN_WIDTH / 2 + 165, w: 155, active: true, color: COLOR_WHITE }
@@ -3160,7 +3363,8 @@ class AstroStrataEngine {
       return;
     }
 
-    // Gameplay render
+    if (!this.player) return;
+
     const pTy = Math.floor(this.player.y / TILE_SIZE);
     this.ctx.fillStyle = (pTy < CRUST_SURFACE) ? (PLANET_DATA[this.world.current_planet]?.sky_color || "#87c3f5") : "#141620";
     this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -3188,12 +3392,12 @@ class AstroStrataEngine {
     }
 
     for (const e of this.enemies) e.draw(this.ctx, this.camX, this.camY);
-    if (this.player) this.player.draw(this.ctx, this.camX, this.camY, this.atlas);
+    this.player.draw(this.ctx, this.camX, this.camY, this.atlas);
     for (const p of this.projectiles) p.draw(this.ctx, this.camX, this.camY);
     for (const pt of this.particles) pt.draw(this.ctx, this.camX, this.camY);
     for (const ft of this.floatTexts) ft.draw(this.ctx, this.camX, this.camY);
 
-    if (this.player) this.lighting.render(this.ctx, this.player, this.world, this.camX, this.camY);
+    this.lighting.render(this.ctx, this.player, this.world, this.camX, this.camY);
 
     const aim = this.getAimTarget();
     if (aim) {
@@ -3271,6 +3475,18 @@ class AstroStrataEngine {
     this.ctx.fillText(`Depth: ${layer.depth} m | ${layer.pressure}`, SCREEN_WIDTH / 2 - 128, 50);
     this.ctx.fillStyle = COLOR_CYAN;
     this.ctx.fillText(`Thermal: ${layer.temp}`, SCREEN_WIDTH / 2 - 128, 66);
+
+    if (this.gameWon) {
+      this.ctx.fillStyle = "rgba(255, 215, 0, 0.2)";
+      this.ctx.fillRect(SCREEN_WIDTH / 2 - 180, 84, 360, 26);
+      this.ctx.strokeStyle = COLOR_GOLD;
+      this.ctx.strokeRect(SCREEN_WIDTH / 2 - 180, 84, 360, 26);
+      this.ctx.fillStyle = COLOR_GOLD;
+      this.ctx.textAlign = "center";
+      this.ctx.font = "bold 12px system-ui, sans-serif";
+      this.ctx.fillText("PLANETARY DYNAMO IGNITED — VICTORY!", SCREEN_WIDTH / 2, 101);
+      this.ctx.textAlign = "left";
+    }
 
     this.ctx.fillStyle = COLOR_HP;
     this.ctx.fillRect(20, 20, Math.floor((this.player.hp / this.player.max_hp) * 180), 16);
@@ -3448,6 +3664,7 @@ class AstroStrataEngine {
         else if (idata.defense) statStr = `DEF: +${idata.defense}`;
         else if (idata.mult) statStr = `${idata.mult}x SPD`;
         else if (idata.heal) statStr = `+${idata.heal} HP`;
+        else if (idata.buff === "speed") statStr = "+50% SPD (30s)";
         else if (bdata.mohs) statStr = `Mohs: ${bdata.mohs}`;
         this.ctx.fillText(statStr, cardX + cardW / 2, cardY + 80);
 
@@ -3534,9 +3751,9 @@ class AstroStrataEngine {
         const recY = INV_UI_Y + 260 + idx * 29;
 
         const reqStation = rec.station || "hand";
-        const stationOk = (reqStation === "hand" || this.isNearStation(reqStation === "workbench" ? WORKBENCH : reqStation === "furnace" ? FURNACE : reqStation === "assembler" ? ASSEMBLER : LAUNCHPAD));
+        const stationOk = this.checkStationOk(reqStation);
 
-        let canCraft = stationOk;
+        let canCraft = stationOk && this.player.inv.canAddItem(rec.result);
         const reqTexts = [];
         for (const [rk, ramt] of Object.entries(rec.req)) {
           const have = this.player.inv.countItem(rk);
@@ -3574,14 +3791,42 @@ class AstroStrataEngine {
     }
 
     if (this.state === "STAR_MAP") {
-      this.ctx.fillStyle = "rgba(8, 12, 22, 0.95)";
+      this.ctx.fillStyle = "rgba(8, 12, 22, 0.96)";
       this.ctx.fillRect(INV_UI_X, INV_UI_Y, 820, 540);
       this.ctx.strokeStyle = COLOR_CYAN;
+      this.ctx.lineWidth = 2;
       this.ctx.strokeRect(INV_UI_X, INV_UI_Y, 820, 540);
 
       this.ctx.fillStyle = COLOR_GOLD;
       this.ctx.font = "bold 20px system-ui, -apple-system, sans-serif";
+      this.ctx.textAlign = "left";
       this.ctx.fillText("AEROSPACE STAR MAP (TIER 1 - 15)", INV_UI_X + 24, INV_UI_Y + 36);
+
+      const maxOffset = Math.max(0, PLANET_ORDER.length - 4);
+      this.ctx.fillStyle = (this.planetScrollOffset > 0) ? "#24324a" : "#151922";
+      this.ctx.fillRect(INV_UI_X + 685, INV_UI_Y + 14, 32, 28);
+      this.ctx.strokeStyle = COLOR_GOLD;
+      this.ctx.strokeRect(INV_UI_X + 685, INV_UI_Y + 14, 32, 28);
+      this.ctx.fillStyle = COLOR_WHITE;
+      this.ctx.font = "bold 13px system-ui, sans-serif";
+      this.ctx.textAlign = "center";
+      this.ctx.fillText("▲", INV_UI_X + 701, INV_UI_Y + 33);
+
+      this.ctx.fillStyle = (this.planetScrollOffset < maxOffset) ? "#24324a" : "#151922";
+      this.ctx.fillRect(INV_UI_X + 725, INV_UI_Y + 14, 32, 28);
+      this.ctx.strokeStyle = COLOR_GOLD;
+      this.ctx.strokeRect(INV_UI_X + 725, INV_UI_Y + 14, 32, 28);
+      this.ctx.fillStyle = COLOR_WHITE;
+      this.ctx.fillText("▼", INV_UI_X + 741, INV_UI_Y + 33);
+
+      this.ctx.fillStyle = "#e63c3c";
+      this.ctx.fillRect(INV_UI_X + 770, INV_UI_Y + 12, 34, 32);
+      this.ctx.strokeStyle = COLOR_WHITE;
+      this.ctx.strokeRect(INV_UI_X + 770, INV_UI_Y + 12, 34, 32);
+      this.ctx.fillStyle = COLOR_WHITE;
+      this.ctx.font = "bold 16px system-ui, sans-serif";
+      this.ctx.fillText("✕", INV_UI_X + 787, INV_UI_Y + 34);
+      this.ctx.textAlign = "left";
 
       const visiblePlanets = PLANET_ORDER.slice(this.planetScrollOffset, this.planetScrollOffset + 4);
       for (let idx = 0; idx < visiblePlanets.length; idx++) {
@@ -3592,6 +3837,7 @@ class AstroStrataEngine {
         this.ctx.fillStyle = (pKey === this.world.current_planet) ? "#20344a" : "#141c2a";
         this.ctx.fillRect(INV_UI_X + 24, cardY, 760, 95);
         this.ctx.strokeStyle = COLOR_CYAN;
+        this.ctx.lineWidth = 1;
         this.ctx.strokeRect(INV_UI_X + 24, cardY, 760, 95);
 
         this.ctx.fillStyle = COLOR_WHITE;
@@ -3599,14 +3845,18 @@ class AstroStrataEngine {
         this.ctx.fillText(`${pdata.name} (Tier ${pdata.tier})`, INV_UI_X + 40, cardY + 28);
         this.ctx.fillStyle = COLOR_CYAN;
         this.ctx.font = "12px system-ui, -apple-system, sans-serif";
-        this.ctx.fillText(`Gravity: ${pdata.gravity}g | Hazard: ${pdata.hazard}`, INV_UI_X + 40, cardY + 50);
+        this.ctx.fillText(`Gravity: ${pdata.gravity}g | Hazard: ${pdata.hazard} | Req: ${pdata.req_rocket || "None"}`, INV_UI_X + 40, cardY + 50);
+        this.ctx.fillStyle = "#9aa5b8";
+        this.ctx.fillText(pdata.desc, INV_UI_X + 40, cardY + 72);
 
         this.ctx.fillStyle = "#1e2e44";
         this.ctx.fillRect(INV_UI_X + 650, cardY + 30, 110, 36);
         this.ctx.strokeStyle = COLOR_GOLD;
         this.ctx.strokeRect(INV_UI_X + 650, cardY + 30, 110, 36);
         this.ctx.fillStyle = COLOR_GOLD;
-        this.ctx.fillText("LAUNCH", INV_UI_X + 680, cardY + 52);
+        this.ctx.textAlign = "center";
+        this.ctx.fillText("LAUNCH", INV_UI_X + 705, cardY + 53);
+        this.ctx.textAlign = "left";
       }
     }
 
@@ -3647,50 +3897,33 @@ class AstroStrataEngine {
   }
 }
 
-// ==========================================
+// =============================================================================
 // BULLETPROOF ENGINE BOOTSTRAPPER
-// ==========================================
+// =============================================================================
 function startAstroStrataApp() {
   const overlay = document.getElementById("loading-overlay");
   const startBtn = document.getElementById("start-btn");
 
   let gameInstance = null;
-  try {
-    gameInstance = new AstroStrataEngine();
-  } catch (err) {
-    console.error("Game engine startup error:", err);
-    alert("Engine Startup Error: " + err.message + "\nCheck browser console for stack trace.");
-    return;
-  }
 
   const dismissAndPlay = (e) => {
     if (e) {
       e.stopPropagation();
-      e.preventDefault();
     }
 
+    // Completely remove the overlay from DOM so canvas pointer events never get eaten
     if (overlay) {
-      overlay.classList.add("fade-out");
-      overlay.style.pointerEvents = "none";
       overlay.style.display = "none";
+      if (overlay.parentNode) {
+        overlay.parentNode.removeChild(overlay);
+      }
     }
 
     try {
       if (gameInstance && gameInstance.sound) {
         gameInstance.sound.init();
       }
-    } catch (audioErr) {
-      console.warn("Audio Context init suppressed:", audioErr);
-    }
-
-    try {
-      const docEl = document.documentElement;
-      if (docEl.requestFullscreen) {
-        docEl.requestFullscreen().catch(() => {});
-      } else if (docEl.webkitRequestFullscreen) {
-        docEl.webkitRequestFullscreen();
-      }
-    } catch (fsErr) {}
+    } catch (audioErr) {}
 
     if (gameInstance) {
       gameInstance.draw();
@@ -3698,20 +3931,21 @@ function startAstroStrataApp() {
   };
 
   if (startBtn) {
-    startBtn.onclick = dismissAndPlay;
-    startBtn.ontouchend = dismissAndPlay;
+    startBtn.addEventListener("click", dismissAndPlay);
+    startBtn.addEventListener("touchend", dismissAndPlay);
   }
-
   if (overlay) {
-    overlay.onclick = (e) => {
-      dismissAndPlay(e);
-    };
-    overlay.ontouchend = (e) => {
-      dismissAndPlay(e);
-    };
+    overlay.addEventListener("click", dismissAndPlay);
+    overlay.addEventListener("touchend", dismissAndPlay);
   }
 
-  gameInstance.run();
+  try {
+    gameInstance = new AstroStrataEngine();
+    gameInstance.run();
+  } catch (err) {
+    console.error("Game engine startup error:", err);
+    alert("Engine Startup Error: " + err.message);
+  }
 }
 
 if (document.readyState === "loading") {

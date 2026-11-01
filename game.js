@@ -4065,40 +4065,10 @@ class AstroStrataEngine {
     if (!this.player) return;
 
     // 4. World & Entity Render Pass
-const skyColor = PLANET_DATA[this.world.current_planet]?.sky_color || "#87c3f5";
-this.ctx.fillStyle = skyColor;
-this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-const minTx = Math.max(0, Math.floor(this.camX / TILE_SIZE));
-const maxTx = Math.min(this.world.width, Math.ceil((this.camX + SCREEN_WIDTH) / TILE_SIZE));
-const minTy = Math.max(0, Math.floor(this.camY / TILE_SIZE));
-const maxTy = Math.min(this.world.height, Math.ceil((this.camY + SCREEN_HEIGHT) / TILE_SIZE));
-
-for (let x = minTx; x < maxTx; x++) {
-  const surfY = this.world.getSurfaceY(x);
-
-  for (let y = minTy; y < maxTy; y++) {
-    const dx = Math.floor(x * TILE_SIZE - this.camX);
-    const dy = Math.floor(y * TILE_SIZE - this.camY);
-    const t = this.world.getTile(x, y);
-
-    if (t === AIR) {
-      // Subterranean background wall (only drawn underground below true surface)
-      if (y >= surfY) {
-        this.ctx.fillStyle = "#10131c";
-        this.ctx.fillRect(dx, dy, TILE_SIZE, TILE_SIZE);
-      }
-    } else {
-      this.atlas.draw(this.ctx, "b_" + t, dx, dy, TILE_SIZE, TILE_SIZE);
-
-      const dmg = this.world.damage_map.get(`${x},${y}`);
-      if (dmg && BLOCK_DATA[t]) {
-        const stage = Math.min(9, Math.floor((dmg / BLOCK_DATA[t].hardness) * 10));
-        this.atlas.draw(this.ctx, "crack_" + stage, dx, dy, TILE_SIZE, TILE_SIZE);
-      }
-    }
-  }
-}
+// 4. World & Entity Render Pass
+    const skyColor = PLANET_DATA[this.world.current_planet]?.sky_color || "#87c3f5";
+    this.ctx.fillStyle = skyColor;
+    this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
     const minTx = Math.max(0, Math.floor(this.camX / TILE_SIZE));
     const maxTx = Math.min(this.world.width, Math.ceil((this.camX + SCREEN_WIDTH) / TILE_SIZE));
@@ -4106,11 +4076,19 @@ for (let x = minTx; x < maxTx; x++) {
     const maxTy = Math.min(this.world.height, Math.ceil((this.camY + SCREEN_HEIGHT) / TILE_SIZE));
 
     for (let x = minTx; x < maxTx; x++) {
+      const surfY = this.world.getSurfaceY ? this.world.getSurfaceY(x) : CRUST_SURFACE;
+
       for (let y = minTy; y < maxTy; y++) {
+        const dx = Math.floor(x * TILE_SIZE - this.camX);
+        const dy = Math.floor(y * TILE_SIZE - this.camY);
         const t = this.world.getTile(x, y);
-        if (t !== AIR) {
-          const dx = Math.floor(x * TILE_SIZE - this.camX);
-          const dy = Math.floor(y * TILE_SIZE - this.camY);
+
+        if (t === AIR) {
+          if (y >= surfY) {
+            this.ctx.fillStyle = "#10131c";
+            this.ctx.fillRect(dx, dy, TILE_SIZE, TILE_SIZE);
+          }
+        } else {
           this.atlas.draw(this.ctx, "b_" + t, dx, dy, TILE_SIZE, TILE_SIZE);
 
           const dmg = this.world.damage_map.get(`${x},${y}`);

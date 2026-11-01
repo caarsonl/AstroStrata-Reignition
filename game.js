@@ -1284,17 +1284,27 @@ class OptimizedLighting {
   }
 
   render(mainCtx, player, world, camX, camY) {
+    const pTx = Math.floor((player.x + player.w / 2) / TILE_SIZE);
     const pTy = Math.floor(player.y / TILE_SIZE);
+    const surfY = world.getSurfaceY(pTx);
+
     let amb = "#28262a";
     if (world.current_planet === "Earth") {
-      if (pTy < CRUST_SURFACE) amb = "#b0b0ba";
-      else if (pTy < CRUST_BOTTOM) amb = "#28262a";
-      else if (pTy < UPPER_MANTLE_BOTTOM) amb = "#231c1e";
-      else if (pTy < LOWER_MANTLE_BOTTOM) amb = "#502819";
-      else if (pTy < OUTER_CORE_BOTTOM) amb = "#964b14";
-      else amb = "#b4aa82";
+      if (pTy <= surfY) {
+        amb = "#b0b0ba";
+      } else if (pTy < CRUST_BOTTOM) {
+        amb = "#28262a";
+      } else if (pTy < UPPER_MANTLE_BOTTOM) {
+        amb = "#231c1e";
+      } else if (pTy < LOWER_MANTLE_BOTTOM) {
+        amb = "#502819";
+      } else if (pTy < OUTER_CORE_BOTTOM) {
+        amb = "#964b14";
+      } else {
+        amb = "#b4aa82";
+      }
     } else {
-      amb = (pTy < CRUST_SURFACE) ? "#2d2d37" : "#191920";
+      amb = (pTy <= surfY) ? "#2d2d37" : "#191920";
     }
 
     this.ctx.fillStyle = amb;
@@ -1474,7 +1484,18 @@ class World {
     this.fluid_tick = 0;
     this.current_planet = "Earth";
   }
-
+  // Add inside the World class (Part 3)
+// Place inside class World (Part 3), right above getTile(x, y):
+  getSurfaceY(tx) {
+    if (tx < 0 || tx >= this.width) return CRUST_SURFACE;
+    for (let y = 0; y < this.height; y++) {
+      const t = this.tiles[tx][y];
+      if (t !== AIR && t !== LEAVES && t !== WOOD && t !== LAVA) {
+        return y;
+      }
+    }
+    return CRUST_SURFACE;
+  }
   _spawnVein(oreId, minY, maxY, count, size, validHosts) {
     for (let i = 0; i < count; i++) {
       let vx = 3 + Math.floor(Math.random() * (this.width - 6));
@@ -1694,15 +1715,22 @@ class World {
     }
   }
 
-  static getLayerInfo(tileY, planetName = "Earth") {
+  static getLayerInfo(tileY, tileX, world) {
+    const planetName = world ? world.current_planet : "Earth";
+    const surfY = world ? world.getSurfaceY(tileX) : CRUST_SURFACE;
+
     if (planetName !== "Earth") {
       const pdata = PLANET_DATA[planetName] || PLANET_DATA["Moon"];
-      const depth = Math.max(0, Math.floor((tileY - CRUST_SURFACE) * 12));
+      const depth = Math.max(0, Math.floor((tileY - surfY) * 12));
       return { name: pdata.name, depth, temp: "Alien Lithosphere", pressure: pdata.hazard };
     }
-    if (tileY < CRUST_SURFACE) return { name: "Atmosphere", depth: 0, temp: "22 C", pressure: "1.0 atm" };
+
+    // Above or at ground level
+    if (tileY <= surfY) {
+      return { name: "Atmosphere", depth: 0, temp: "22 C", pressure: "1.0 atm" };
+    }
     if (tileY < CRUST_BOTTOM) {
-      const d = Math.floor((tileY - CRUST_SURFACE) * 13);
+      const d = Math.floor((tileY - surfY) * 13);
       return { name: "Crust", depth: d, temp: `${25 + Math.floor(d * 0.07)} C`, pressure: `${(d * 0.0003).toFixed(2)} GPa` };
     }
     if (tileY < UPPER_MANTLE_BOTTOM) {
@@ -1720,7 +1748,7 @@ class World {
     const d = 1550 + Math.floor((tileY - OUTER_CORE_BOTTOM) * 18.2);
     return { name: "Inner Core (Solid)", depth: d, temp: `${5400 + Math.floor((d - 1550) * 1.2)} C`, pressure: `${(330 + (d - 1550) * 0.6).toFixed(1)} GPa` };
   }
-}
+} // end of class World
 
 // =============================================================================
 // ENTITIES: SLIME ENEMY, PROJECTILE & PLAYER
@@ -4037,11 +4065,40 @@ class AstroStrataEngine {
     if (!this.player) return;
 
     // 4. World & Entity Render Pass
-    const pTy = Math.floor(this.player.y / TILE_SIZE);
-    this.ctx.fillStyle = (pTy < CRUST_SURFACE)
-      ? (PLANET_DATA[this.world.current_planet]?.sky_color || "#87c3f5")
-      : "#10131c";
-    this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+const skyColor = PLANET_DATA[this.world.current_planet]?.sky_color || "#87c3f5";
+this.ctx.fillStyle = skyColor;
+this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+const minTx = Math.max(0, Math.floor(this.camX / TILE_SIZE));
+const maxTx = Math.min(this.world.width, Math.ceil((this.camX + SCREEN_WIDTH) / TILE_SIZE));
+const minTy = Math.max(0, Math.floor(this.camY / TILE_SIZE));
+const maxTy = Math.min(this.world.height, Math.ceil((this.camY + SCREEN_HEIGHT) / TILE_SIZE));
+
+for (let x = minTx; x < maxTx; x++) {
+  const surfY = this.world.getSurfaceY(x);
+
+  for (let y = minTy; y < maxTy; y++) {
+    const dx = Math.floor(x * TILE_SIZE - this.camX);
+    const dy = Math.floor(y * TILE_SIZE - this.camY);
+    const t = this.world.getTile(x, y);
+
+    if (t === AIR) {
+      // Subterranean background wall (only drawn underground below true surface)
+      if (y >= surfY) {
+        this.ctx.fillStyle = "#10131c";
+        this.ctx.fillRect(dx, dy, TILE_SIZE, TILE_SIZE);
+      }
+    } else {
+      this.atlas.draw(this.ctx, "b_" + t, dx, dy, TILE_SIZE, TILE_SIZE);
+
+      const dmg = this.world.damage_map.get(`${x},${y}`);
+      if (dmg && BLOCK_DATA[t]) {
+        const stage = Math.min(9, Math.floor((dmg / BLOCK_DATA[t].hardness) * 10));
+        this.atlas.draw(this.ctx, "crack_" + stage, dx, dy, TILE_SIZE, TILE_SIZE);
+      }
+    }
+  }
+}
 
     const minTx = Math.max(0, Math.floor(this.camX / TILE_SIZE));
     const maxTx = Math.min(this.world.width, Math.ceil((this.camX + SCREEN_WIDTH) / TILE_SIZE));
@@ -4151,7 +4208,10 @@ class AstroStrataEngine {
     }
 
     // 6. Top Telemetry & Health HUD
-    const layer = World.getLayerInfo(pTy, this.world.current_planet);
+    // 6. Top Telemetry & Health HUD
+    const pTx = Math.floor((this.player.x + this.player.w / 2) / TILE_SIZE);
+    const pTy = Math.floor(this.player.y / TILE_SIZE);
+    const layer = World.getLayerInfo(pTy, pTx, this.world);
     this._drawGlassPanel(SCREEN_WIDTH / 2 - 150, 12, 300, 68, COLOR_CYAN, 10, 24);
 
     this.ctx.fillStyle = COLOR_GOLD;

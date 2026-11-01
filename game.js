@@ -1480,21 +1480,32 @@ class World {
     this.width = width;
     this.height = height;
     this.tiles = Array.from({ length: width }, () => new Array(height).fill(AIR));
+    this.surfaceHeights = new Array(width).fill(CRUST_SURFACE);
     this.damage_map = new Map();
     this.fluid_tick = 0;
     this.current_planet = "Earth";
   }
-  // Add inside the World class (Part 3)
-// Place inside class World (Part 3), right above getTile(x, y):
+
+  // Precompute surface heights once per world generation
+  recomputeSurfaces() {
+    for (let x = 0; x < this.width; x++) {
+      let found = CRUST_SURFACE;
+      for (let y = 0; y < this.height; y++) {
+        const t = this.tiles[x][y];
+        // Solid ground surface definition (ignores trees, foliage, and transparent furniture)
+        if (t !== AIR && t !== LEAVES && t !== WOOD && t !== LAVA && t !== TORCH && t !== LANTERN) {
+          found = y;
+          break;
+        }
+      }
+      this.surfaceHeights[x] = found;
+    }
+  }
+
+  // Instant O(1) lookup during rendering (Eliminates the lag)
   getSurfaceY(tx) {
     if (tx < 0 || tx >= this.width) return CRUST_SURFACE;
-    for (let y = 0; y < this.height; y++) {
-      const t = this.tiles[tx][y];
-      if (t !== AIR && t !== LEAVES && t !== WOOD && t !== LAVA) {
-        return y;
-      }
-    }
-    return CRUST_SURFACE;
+    return this.surfaceHeights[tx];
   }
   _spawnVein(oreId, minY, maxY, count, size, validHosts) {
     for (let i = 0; i < count; i++) {
@@ -1587,6 +1598,9 @@ class World {
     } else {
       this._generateExtraterrestrial(planetName);
     }
+    
+    // Add this line at the bottom of generate():
+    this.recomputeSurfaces();
   }
 
   _generateEarth() {
@@ -1680,6 +1694,19 @@ class World {
     if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
       this.tiles[x][y] = tile;
       this.damage_map.delete(`${x},${y}`);
+
+      // Recalculate surface height for this specific column if near surface
+      if (y <= this.surfaceHeights[x] + 2) {
+        let found = CRUST_SURFACE;
+        for (let cy = 0; cy < this.height; cy++) {
+          const t = this.tiles[x][cy];
+          if (t !== AIR && t !== LEAVES && t !== WOOD && t !== LAVA && t !== TORCH && t !== LANTERN) {
+            found = cy;
+            break;
+          }
+        }
+        this.surfaceHeights[x] = found;
+      }
     }
   }
 
@@ -2105,6 +2132,11 @@ class AstroStrataEngine {
   constructor() {
     this.canvas = document.getElementById("gameCanvas");
     this.ctx = this.canvas.getContext("2d");
+    // In AstroStrataEngine constructor:
+    const isMobileTablet = (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+    this.dpr = isMobileTablet ? 1.5 : Math.min(window.devicePixelRatio || 1, 2.0);
+    this.canvas.width = Math.floor(SCREEN_WIDTH * this.dpr);
+    this.canvas.height = Math.floor(SCREEN_HEIGHT * this.dpr);
 
     // Crisp high-DPI scaling for Retina, mobile and desktop displays
     this.dpr = Math.min(window.devicePixelRatio || 1, 2.5);
@@ -4066,6 +4098,7 @@ class AstroStrataEngine {
 
     // 4. World & Entity Render Pass
 // 4. World & Entity Render Pass
+    // 4. World & Entity Render Pass
     const skyColor = PLANET_DATA[this.world.current_planet]?.sky_color || "#87c3f5";
     this.ctx.fillStyle = skyColor;
     this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -4076,7 +4109,7 @@ class AstroStrataEngine {
     const maxTy = Math.min(this.world.height, Math.ceil((this.camY + SCREEN_HEIGHT) / TILE_SIZE));
 
     for (let x = minTx; x < maxTx; x++) {
-      const surfY = this.world.getSurfaceY ? this.world.getSurfaceY(x) : CRUST_SURFACE;
+      const surfY = this.world.getSurfaceY(x);
 
       for (let y = minTy; y < maxTy; y++) {
         const dx = Math.floor(x * TILE_SIZE - this.camX);
@@ -4084,7 +4117,8 @@ class AstroStrataEngine {
         const t = this.world.getTile(x, y);
 
         if (t === AIR) {
-          if (y >= surfY) {
+          // Only draw subterranean cave walls if distinctly below the local ground line
+          if (y > surfY + 1) {
             this.ctx.fillStyle = "#10131c";
             this.ctx.fillRect(dx, dy, TILE_SIZE, TILE_SIZE);
           }
